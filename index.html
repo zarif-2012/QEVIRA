@@ -2,17 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#6c5ce7">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#6c5ce7"
+  >
+
+  <meta
+    name="description"
+    content="QEVIRA real-time messaging app"
+  >
+
   <title>QEVIRA</title>
 
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- ================= AUTH ================= -->
+  <!-- ==================================================
+       AUTH SCREEN
+  ================================================== -->
 
   <section id="authScreen" class="auth-screen">
 
@@ -21,9 +40,14 @@
       <div class="auth-logo">Q</div>
 
       <h1>QEVIRA</h1>
-      <p id="authSubtitle">Create your account</p>
 
-      <!-- SIGN UP -->
+      <p id="authSubtitle">
+        Create your account
+      </p>
+
+
+      <!-- ================= SIGN UP ================= -->
+
       <form id="signupForm">
 
         <input
@@ -43,14 +67,22 @@
           required
         >
 
-        <button id="signupBtn" type="submit">
+        <button
+          id="signupBtn"
+          type="submit"
+        >
           Create account
         </button>
 
       </form>
 
-      <!-- LOGIN -->
-      <form id="loginForm" class="hidden">
+
+      <!-- ================= LOGIN ================= -->
+
+      <form
+        id="loginForm"
+        class="hidden"
+      >
 
         <input
           id="loginEmail"
@@ -68,19 +100,32 @@
           required
         >
 
-        <button id="loginBtn" type="submit">
+        <button
+          id="loginBtn"
+          type="submit"
+        >
           Login
         </button>
 
       </form>
 
+
       <p id="authMessage"></p>
 
+
       <div class="auth-switch">
-        <span id="switchText">Already have an account?</span>
-        <button id="switchAuthBtn" type="button">
+
+        <span id="switchText">
+          Already have an account?
+        </span>
+
+        <button
+          id="switchAuthBtn"
+          type="button"
+        >
           Login
         </button>
+
       </div>
 
     </div>
@@ -88,145 +133,288 @@
   </section>
 
 
-  <!-- ================= MAIN APP ================= -->
+  <!-- ==================================================
+       MAIN APP
+  ================================================== -->
 
-  <main id="app" class="app hidden">
+  <main
+    id="app"
+    class="app hidden"
+  >
 
-    <!-- TOP BAR -->
+    <!-- ================= TOP BAR ================= -->
 
     <header class="topbar">
 
       <div class="brand">
-        <div class="brand-dot">Q</div>
+
+        <div class="brand-dot">
+          Q
+        </div>
 
         <div>
-          <strong>QEVIRA</strong>
+
+          <strong>
+            QEVIRA
+          </strong>
+
           <small id="currentUserEmail"></small>
+
         </div>
+
       </div>
 
-      <button id="darkModeBtn" class="icon-btn" type="button">
+
+      <button
+        id="darkModeBtn"
+        class="icon-btn"
+        type="button"
+      >
         🌙
       </button>
 
     </header>
 
 
-    <!-- ================= CHATS ================= -->
+    <!-- ==================================================
+         CHATS PAGE
+    ================================================== -->
 
-    <section id="chatsPage" class="page active-page">
+    <section
+      id="chatsPage"
+      class="page active-page"
+    >
 
       <div class="page-header">
 
         <div>
-          <span class="page-label">MESSAGES</span>
-          <h2>Chats</h2>
+
+          <span class="page-label">
+            MESSAGES
+          </span>
+
+          <h2>
+            Chats
+          </h2>
+
         </div>
 
-        <button id="newChatBtn" class="round-btn" type="button">
+
+        <button
+          id="newChatBtn"
+          class="round-btn"
+          type="button"
+        >
           +
         </button>
 
       </div>
 
+
       <div class="search-box">
+
         🔎
+
         <input
           id="searchInput"
           type="search"
           placeholder="Search people..."
         >
+
       </div>
 
-      <div id="chatList" class="list"></div>
 
-      <div id="chatEmpty" class="empty-state">
-        <div class="empty-icon">💬</div>
-        <h3>No chats yet</h3>
-        <p>Find someone in Contacts and start chatting.</p>
+      <div
+        id="chatList"
+        class="list"
+      ></div>
+
+
+      <div
+        id="chatEmpty"
+        class="empty-state"
+      >
+
+        <div class="empty-icon">
+          💬
+        </div>
+
+        <h3>
+          No chats yet
+        </h3>
+
+        <p>
+          Find someone in Contacts and start chatting.
+        </p>
+
       </div>
 
     </section>
 
 
-    <!-- ================= CONTACTS ================= -->
+    <!-- ==================================================
+         CONTACTS PAGE
+    ================================================== -->
 
-    <section id="contactsPage" class="page hidden">
+    <section
+      id="contactsPage"
+      class="page hidden"
+    >
 
       <div class="page-header">
 
         <div>
-          <span class="page-label">PEOPLE</span>
-          <h2>Contacts</h2>
+
+          <span class="page-label">
+            PEOPLE
+          </span>
+
+          <h2>
+            Contacts
+          </h2>
+
         </div>
 
       </div>
 
+
       <div class="search-box">
+
         🔎
+
         <input
           id="contactsSearchInput"
           type="search"
           placeholder="Search contacts..."
         >
+
       </div>
 
-      <div id="contactsList" class="list"></div>
+
+      <div
+        id="contactsList"
+        class="list"
+      ></div>
 
     </section>
 
 
-    <!-- ================= PROFILE ================= -->
+    <!-- ==================================================
+         PROFILE PAGE
+    ================================================== -->
 
-    <section id="profilePage" class="page hidden">
+    <section
+      id="profilePage"
+      class="page hidden"
+    >
 
       <div class="page-header">
 
         <div>
-          <span class="page-label">ACCOUNT</span>
-          <h2>Profile</h2>
+
+          <span class="page-label">
+            ACCOUNT
+          </span>
+
+          <h2>
+            Profile
+          </h2>
+
         </div>
 
       </div>
 
+
       <div class="profile-card">
 
-        <div id="profileAvatar" class="profile-avatar">
+        <div
+          id="profileAvatar"
+          class="profile-avatar"
+        >
           Q
         </div>
 
-        <h2 id="profileName">QEVIRA User</h2>
 
-        <p id="profileUsername">@user</p>
+        <h2 id="profileName">
+          QEVIRA User
+        </h2>
+
+
+        <p id="profileUsername">
+          @user
+        </p>
+
 
         <p id="profileEmail"></p>
 
       </div>
 
-      <button id="logoutBtn" class="logout-btn" type="button">
+
+      <button
+        id="logoutBtn"
+        class="logout-btn"
+        type="button"
+      >
         Log out
       </button>
 
     </section>
 
 
-    <!-- ================= BOTTOM NAV ================= -->
+    <!-- ==================================================
+         BOTTOM NAVIGATION
+    ================================================== -->
 
     <nav class="bottom-nav">
 
-      <button class="nav-btn active" data-page="chatsPage">
-        <span>💬</span>
-        <small>Chats</small>
+      <button
+        class="nav-btn active"
+        data-page="chatsPage"
+        type="button"
+      >
+
+        <span>
+          💬
+        </span>
+
+        <small>
+          Chats
+        </small>
+
       </button>
 
-      <button class="nav-btn" data-page="contactsPage">
-        <span>👥</span>
-        <small>Contacts</small>
+
+      <button
+        class="nav-btn"
+        data-page="contactsPage"
+        type="button"
+      >
+
+        <span>
+          👥
+        </span>
+
+        <small>
+          Contacts
+        </small>
+
       </button>
 
-      <button class="nav-btn" data-page="profilePage">
-        <span>👤</span>
-        <small>Profile</small>
+
+      <button
+        class="nav-btn"
+        data-page="profilePage"
+        type="button"
+      >
+
+        <span>
+          👤
+        </span>
+
+        <small>
+          Profile
+        </small>
+
       </button>
 
     </nav>
@@ -234,32 +422,54 @@
   </main>
 
 
-  <!-- ================= CHAT MODAL ================= -->
+  <!-- ==================================================
+       CHAT MODAL
+  ================================================== -->
 
-  <div id="chatModal" class="chat-modal hidden">
+  <div
+    id="chatModal"
+    class="chat-modal hidden"
+  >
 
     <div class="chat-window">
 
       <header class="chat-header">
 
-        <button id="closeChatModal" class="chat-back" type="button">
+        <button
+          id="closeChatModal"
+          class="chat-back"
+          type="button"
+        >
           ←
         </button>
 
+
         <div class="chat-user-info">
 
-          <div id="chatAvatar" class="mini-avatar">
+          <div
+            id="chatAvatar"
+            class="mini-avatar"
+          >
             Q
           </div>
 
+
           <div>
-            <strong id="chatTitle">Chat</strong>
-            <small id="chatStatus">Online</small>
+
+            <strong id="chatTitle">
+              Chat
+            </strong>
+
+            <small id="chatStatus">
+              Online
+            </small>
+
           </div>
 
         </div>
 
-        <!-- CALL BUTTONS -->
+
+        <!-- ================= CALL BUTTONS ================= -->
 
         <div class="call-buttons">
 
@@ -268,15 +478,18 @@
             class="call-btn"
             type="button"
             title="Voice call"
+            aria-label="Voice call"
           >
             📞
           </button>
+
 
           <button
             id="videoCallBtn"
             class="call-btn"
             type="button"
             title="Video call"
+            aria-label="Video call"
           >
             🎥
           </button>
@@ -286,10 +499,20 @@
       </header>
 
 
-      <div id="messages" class="messages"></div>
+      <!-- ================= MESSAGES ================= -->
+
+      <div
+        id="messages"
+        class="messages"
+      ></div>
 
 
-      <form id="messageForm" class="message-form">
+      <!-- ================= MESSAGE FORM ================= -->
+
+      <form
+        id="messageForm"
+        class="message-form"
+      >
 
         <input
           id="messageInput"
@@ -298,6 +521,7 @@
           autocomplete="off"
           required
         >
+
 
         <button type="submit">
           ➤
@@ -310,34 +534,58 @@
   </div>
 
 
-  <!-- ================= INCOMING CALL ================= -->
+  <!-- ==================================================
+       INCOMING CALL
+  ================================================== -->
 
-  <div id="incomingCallOverlay" class="call-overlay hidden">
+  <div
+    id="incomingCallOverlay"
+    class="call-overlay hidden"
+  >
 
     <div class="call-card">
 
-      <div id="incomingCallAvatar" class="large-call-avatar">
+      <div
+        id="incomingCallAvatar"
+        class="large-call-avatar"
+      >
         Q
       </div>
+
 
       <h2 id="incomingCallName">
         Incoming call
       </h2>
 
+
       <p id="incomingCallType">
         Someone is calling you
       </p>
 
+
       <div class="incoming-actions">
 
-        <button id="declineCallBtn" class="decline-btn" type="button">
+        <button
+          id="declineCallBtn"
+          class="decline-btn"
+          type="button"
+        >
           ❌
-          <span>Decline</span>
+          <span>
+            Decline
+          </span>
         </button>
 
-        <button id="acceptCallBtn" class="accept-btn" type="button">
+
+        <button
+          id="acceptCallBtn"
+          class="accept-btn"
+          type="button"
+        >
           ✅
-          <span>Accept</span>
+          <span>
+            Accept
+          </span>
         </button>
 
       </div>
@@ -347,11 +595,19 @@
   </div>
 
 
-  <!-- ================= ACTIVE CALL ================= -->
+  <!-- ==================================================
+       ACTIVE CALL
+  ================================================== -->
 
-  <div id="activeCallOverlay" class="call-overlay hidden">
+  <div
+    id="activeCallOverlay"
+    class="call-overlay hidden"
+  >
 
     <div class="active-call-screen">
+
+
+      <!-- REMOTE VIDEO -->
 
       <video
         id="remoteVideo"
@@ -359,6 +615,9 @@
         autoplay
         playsinline
       ></video>
+
+
+      <!-- LOCAL VIDEO -->
 
       <video
         id="localVideo"
@@ -368,15 +627,26 @@
         playsinline
       ></video>
 
-      <div id="voiceCallDisplay" class="voice-call-display hidden">
 
-        <div id="activeCallAvatar" class="large-call-avatar">
+      <!-- VOICE CALL DISPLAY -->
+
+      <div
+        id="voiceCallDisplay"
+        class="voice-call-display hidden"
+      >
+
+        <div
+          id="activeCallAvatar"
+          class="large-call-avatar"
+        >
           Q
         </div>
+
 
         <h2 id="activeCallName">
           Calling...
         </h2>
+
 
         <p id="activeCallType">
           Voice call
@@ -384,17 +654,32 @@
 
       </div>
 
+
+      <!-- CALL CONTROLS -->
+
       <div class="call-control-bar">
 
-        <button id="muteCallBtn" type="button">
+        <button
+          id="muteCallBtn"
+          type="button"
+        >
           🎤
         </button>
 
-        <button id="cameraCallBtn" type="button">
+
+        <button
+          id="cameraCallBtn"
+          type="button"
+        >
           📹
         </button>
 
-        <button id="endCallBtn" class="end-call-btn" type="button">
+
+        <button
+          id="endCallBtn"
+          class="end-call-btn"
+          type="button"
+        >
           ☎️
         </button>
 
@@ -405,72 +690,169 @@
   </div>
 
 
-  <!-- SUPABASE -->
+  <!-- ==================================================
+       SUPABASE
+  ================================================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- QEVIRA -->
+
+  <!-- ==================================================
+       QEVIRA APP
+  ================================================== -->
 
   <script src="app.js"></script>
 
 
-  <!-- PAGE NAVIGATION + DARK MODE -->
+  <!-- ==================================================
+       PAGE NAVIGATION + DARK MODE
+  ================================================== -->
 
   <script>
 
-    document.querySelectorAll(".nav-btn").forEach(button => {
+    /* ================= PAGE NAVIGATION ================= */
 
-      button.addEventListener("click", () => {
+    document
+      .querySelectorAll(".nav-btn")
+      .forEach(button => {
 
-        const pageId = button.dataset.page;
+        button.addEventListener("click", () => {
 
-        document.querySelectorAll(".page").forEach(page => {
-          page.classList.add("hidden");
-          page.classList.remove("active-page");
+          const pageId =
+            button.dataset.page;
+
+
+          document
+            .querySelectorAll(".page")
+            .forEach(page => {
+
+              page.classList.add("hidden");
+
+              page.classList.remove(
+                "active-page"
+              );
+
+            });
+
+
+          const page =
+            document.getElementById(pageId);
+
+
+          if (page) {
+
+            page.classList.remove(
+              "hidden"
+            );
+
+            page.classList.add(
+              "active-page"
+            );
+
+          }
+
+
+          document
+            .querySelectorAll(".nav-btn")
+            .forEach(btn => {
+
+              btn.classList.remove(
+                "active"
+              );
+
+            });
+
+
+          button.classList.add("active");
+
         });
-
-        const page = document.getElementById(pageId);
-
-        if (page) {
-          page.classList.remove("hidden");
-          page.classList.add("active-page");
-        }
-
-        document.querySelectorAll(".nav-btn").forEach(btn => {
-          btn.classList.remove("active");
-        });
-
-        button.classList.add("active");
 
       });
 
-    });
 
+    /* ================= DARK MODE ================= */
 
-    const darkModeBtn = document.getElementById("darkModeBtn");
-
-    darkModeBtn.addEventListener("click", () => {
-
-      document.body.classList.toggle("dark-mode");
-
-      const dark =
-        document.body.classList.contains("dark-mode");
-
-      darkModeBtn.textContent = dark ? "☀️" : "🌙";
-
-      localStorage.setItem(
-        "qevira-dark-mode",
-        dark ? "1" : "0"
+    const darkModeBtn =
+      document.getElementById(
+        "darkModeBtn"
       );
 
-    });
+
+    darkModeBtn.addEventListener(
+      "click",
+      () => {
+
+        document.body.classList.toggle(
+          "dark-mode"
+        );
 
 
-    if (localStorage.getItem("qevira-dark-mode") === "1") {
+        const dark =
+          document.body.classList.contains(
+            "dark-mode"
+          );
 
-      document.body.classList.add("dark-mode");
+
+        darkModeBtn.textContent =
+          dark ? "☀️" : "🌙";
+
+
+        localStorage.setItem(
+          "qevira-dark-mode",
+          dark ? "1" : "0"
+        );
+
+      }
+    );
+
+
+    /* ================= RESTORE DARK MODE ================= */
+
+    if (
+      localStorage.getItem(
+        "qevira-dark-mode"
+      ) === "1"
+    ) {
+
+      document.body.classList.add(
+        "dark-mode"
+      );
 
       darkModeBtn.textContent = "☀️";
+
+    }
+
+
+    /* ==================================================
+       PWA SERVICE WORKER
+    ================================================== */
+
+    if ("serviceWorker" in navigator) {
+
+      window.addEventListener(
+        "load",
+        () => {
+
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then(() => {
+
+              console.log(
+                "QEVIRA PWA service worker registered"
+              );
+
+            })
+            .catch(error => {
+
+              console.error(
+                "QEVIRA PWA registration failed:",
+                error
+              );
+
+            });
+
+        }
+      );
 
     }
 
