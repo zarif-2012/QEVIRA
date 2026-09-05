@@ -12,11 +12,6 @@
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
 
-
-// ======================================================
-// PASTE YOUR EXISTING PUBLISHABLE KEY BETWEEN THE QUOTES
-// ======================================================
-
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
 
