@@ -1,21 +1,23 @@
 {
   "name": "QEVIRA",
   "short_name": "QEVIRA",
-  "description": "QEVIRA real-time messaging app",
-  "start_url": "./",
+  "id": "/QEVIRA/",
+  "start_url": "/QEVIRA/",
+  "scope": "/QEVIRA/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6c5ce7",
   "orientation": "portrait-primary",
+  "description": "QEVIRA real-time messaging app",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "/QEVIRA/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "/QEVIRA/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
