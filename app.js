@@ -12,7 +12,8 @@ const SUPABASE_URL =
 // 🔴 PASTE YOUR SUPABASE PUBLISHABLE KEY BETWEEN THE QUOTES
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
-
+const SUPABASE_PUBLISHABLE_KEY =
+ sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
