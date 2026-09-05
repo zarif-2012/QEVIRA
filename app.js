@@ -1,71 +1,37 @@
 // ======================================================
-// QEVIRA — REAL SUPABASE AUTH + REAL 1-TO-1 MESSAGING
+// QEVIRA
+// REAL SUPABASE AUTH + REAL 1-TO-1 MESSAGING
+// REAL WEBRTC VOICE + VIDEO CALLING
 // ======================================================
+
+
 // ======================================================
-// 1. SUPABASE CONFIGURATION
+// 1. SUPABASE CONFIG
 // ======================================================
 
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
 
-// Paste your Supabase PUBLISHABLE key between the quotes
+
+// ======================================================
+// PASTE YOUR EXISTING PUBLISHABLE KEY BETWEEN THE QUOTES
+// ======================================================
+
 const SUPABASE_PUBLISHABLE_KEY =
-  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
-
+  "PASTE_YOUR_EXISTING_PUBLISHABLE_KEY_HERE";
 
 
 // ======================================================
-// 2. DOM ELEMENTS
-// ======================================================
 
-const authScreen = document.getElementById("authScreen");
-const app = document.getElementById("app");
-
-const signupForm = document.getElementById("signupForm");
-const loginForm = document.getElementById("loginForm");
-
-const signupEmail = document.getElementById("signupEmail");
-const signupPassword = document.getElementById("signupPassword");
-
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-
-const signupBtn = document.getElementById("signupBtn");
-const loginBtn = document.getElementById("loginBtn");
-
-const authMessage = document.getElementById("authMessage");
-const authSubtitle = document.getElementById("authSubtitle");
-
-const switchAuthBtn = document.getElementById("switchAuthBtn");
-const switchText = document.getElementById("switchText");
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-const currentUserEmail = document.getElementById("currentUserEmail");
-const profileEmail = document.getElementById("profileEmail");
-
-const chatList = document.getElementById("chatList");
-const contactsList = document.getElementById("contactsList");
-
-const searchInput = document.getElementById("searchInput");
-
-const chatModal = document.getElementById("chatModal");
-const closeChatModal = document.getElementById("closeChatModal");
-
-const chatTitle = document.getElementById("chatTitle");
-const messages = document.getElementById("messages");
-
-const messageForm = document.getElementById("messageForm");
-const messageInput = document.getElementById("messageInput");
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
 
 
 // ======================================================
-// 3. APP STATE
+// 2. STATE
 // ======================================================
 
 let currentUser = null;
@@ -73,274 +39,306 @@ let currentProfile = null;
 let currentChatUser = null;
 
 let realtimeChannel = null;
-let authMode = "login";
+
+
+// CALL STATE
+
+let callChannel = null;
+let peerConnection = null;
+
+let localStream = null;
+let remoteStream = null;
+
+let isVideoCall = false;
+let isCallMuted = false;
+let isCameraOff = false;
+
+let incomingOffer = null;
+let incomingCaller = null;
 
 
 // ======================================================
-// 4. SMALL HELPERS
+// 3. DOM HELPERS
 // ======================================================
 
-function setAuthMessage(message, isError = false) {
-  if (!authMessage) return;
-
-  authMessage.textContent = message;
-  authMessage.style.color = isError ? "red" : "";
-}
-
-function setButtonLoading(button, loading, normalText) {
-  if (!button) return;
-
-  button.disabled = loading;
-  button.textContent = loading ? "Please wait..." : normalText;
-}
+const $ = id => document.getElementById(id);
 
 
 // ======================================================
-// 5. SHOW LOGIN
+// 4. AUTH UI
 // ======================================================
+
+let authMode = "signup";
+
 
 function showLogin() {
+
   authMode = "login";
 
-  if (loginForm) loginForm.style.display = "block";
-  if (signupForm) signupForm.style.display = "none";
+  $("signupForm").classList.add("hidden");
+  $("loginForm").classList.remove("hidden");
 
-  if (authSubtitle) {
-    authSubtitle.textContent = "Login to continue to QEVIRA";
-  }
+  $("authSubtitle").textContent =
+    "Welcome back";
 
-  if (switchText) {
-    switchText.textContent = "Don't have an account?";
-  }
+  $("switchText").textContent =
+    "Don't have an account?";
 
-  if (switchAuthBtn) {
-    switchAuthBtn.textContent = "Create account";
-  }
+  $("switchAuthBtn").textContent =
+    "Sign up";
 
-  setAuthMessage("");
+  $("authMessage").textContent = "";
 }
 
-
-// ======================================================
-// 6. SHOW SIGNUP
-// ======================================================
 
 function showSignup() {
+
   authMode = "signup";
 
-  if (loginForm) loginForm.style.display = "none";
-  if (signupForm) signupForm.style.display = "block";
+  $("loginForm").classList.add("hidden");
+  $("signupForm").classList.remove("hidden");
 
-  if (authSubtitle) {
-    authSubtitle.textContent = "Create your QEVIRA account";
-  }
+  $("authSubtitle").textContent =
+    "Create your account";
 
-  if (switchText) {
-    switchText.textContent = "Already have an account?";
-  }
+  $("switchText").textContent =
+    "Already have an account?";
 
-  if (switchAuthBtn) {
-    switchAuthBtn.textContent = "Login";
-  }
+  $("switchAuthBtn").textContent =
+    "Login";
 
-  setAuthMessage("");
+  $("authMessage").textContent = "";
 }
 
 
-// ======================================================
-// 7. SWITCH LOGIN / SIGNUP
-// ======================================================
+$("switchAuthBtn").addEventListener(
+  "click",
+  () => {
 
-if (switchAuthBtn) {
-  switchAuthBtn.addEventListener("click", () => {
-    if (authMode === "login") {
-      showSignup();
-    } else {
+    if (authMode === "signup") {
       showLogin();
+    } else {
+      showSignup();
     }
-  });
-}
+
+  }
+);
 
 
 // ======================================================
-// 8. SIGN UP
+// 5. SIGN UP
 // ======================================================
 
 async function signUp() {
-  if (!signupEmail || !signupPassword) return;
 
-  const email = signupEmail.value.trim();
-  const password = signupPassword.value;
+  const email =
+    $("signupEmail").value.trim();
 
-  if (!email || !password) {
-    setAuthMessage("Please enter your email and password.", true);
-    return;
-  }
+  const password =
+    $("signupPassword").value;
+
+  $("authMessage").textContent =
+    "Creating account...";
 
   if (password.length < 6) {
-    setAuthMessage(
-      "Password must contain at least 6 characters.",
-      true
-    );
+
+    $("authMessage").textContent =
+      "Password must be at least 6 characters.";
+
     return;
   }
 
-  setButtonLoading(signupBtn, true, "Create account");
-  setAuthMessage("Creating your account...");
 
-  try {
-    const { data, error } = await supabaseClient.auth.signUp({
+  const { data, error } =
+    await supabaseClient.auth.signUp({
       email,
       password
     });
 
-    if (error) {
-      throw error;
-    }
 
-    if (data.user) {
-      setAuthMessage(
-        "Account created successfully. You can now login."
-      );
-    } else {
-      setAuthMessage(
-        "Check your email to confirm your account."
-      );
-    }
+  if (error) {
 
-    if (signupPassword) {
-      signupPassword.value = "";
-    }
+    $("authMessage").textContent =
+      error.message;
 
-  } catch (error) {
-    console.error("Signup error:", error);
-
-    setAuthMessage(
-      error.message || "Unable to create account.",
-      true
-    );
-  }
-
-  setButtonLoading(signupBtn, false, "Create account");
-}
-
-
-// ======================================================
-// 9. LOGIN
-// ======================================================
-
-async function signInWithPassword() {
-  if (!loginEmail || !loginPassword) return;
-
-  const email = loginEmail.value.trim();
-  const password = loginPassword.value;
-
-  if (!email || !password) {
-    setAuthMessage("Please enter your email and password.", true);
     return;
   }
 
-  setButtonLoading(loginBtn, true, "Login");
-  setAuthMessage("Logging in...");
 
-  try {
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+  if (data.user) {
 
-    if (error) {
-      throw error;
-    }
+    $("authMessage").textContent =
+      "Account created. Check your email if confirmation is required.";
 
-    currentUser = data.user;
-
-    await showApp();
-
-  } catch (error) {
-    console.error("Login error:", error);
-
-    setAuthMessage(
-      error.message || "Login failed.",
-      true
-    );
   }
 
-  setButtonLoading(loginBtn, false, "Login");
 }
 
 
+$("signupForm").addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+    signUp();
+
+  }
+);
+
+
 // ======================================================
-// 10. SHOW APP
+// 6. LOGIN
+// ======================================================
+
+async function signInWithPassword() {
+
+  const email =
+    $("loginEmail").value.trim();
+
+  const password =
+    $("loginPassword").value;
+
+  $("authMessage").textContent =
+    "Logging in...";
+
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+
+  if (error) {
+
+    $("authMessage").textContent =
+      error.message;
+
+    return;
+  }
+
+
+  currentUser = data.user;
+
+  await showApp();
+
+}
+
+
+$("loginForm").addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+    signInWithPassword();
+
+  }
+);
+
+
+// ======================================================
+// 7. SHOW APP
 // ======================================================
 
 async function showApp() {
-  if (!currentUser) return;
 
-  if (authScreen) {
-    authScreen.style.display = "none";
-  }
+  $("authScreen").classList.add("hidden");
 
-  if (app) {
-    app.style.display = "block";
-  }
+  $("app").classList.remove("hidden");
 
-  if (currentUserEmail) {
-    currentUserEmail.textContent =
-      currentUser.email || "";
-  }
+  $("currentUserEmail").textContent =
+    currentUser.email || "";
 
-  if (profileEmail) {
-    profileEmail.textContent =
-      currentUser.email || "";
-  }
+  $("profileEmail").textContent =
+    currentUser.email || "";
+
 
   await loadCurrentProfile();
+
   await loadContacts();
+
   await loadChatList();
 
   setupRealtime();
+
+  setupCallChannel();
+
 }
 
 
 // ======================================================
-// 11. LOAD CURRENT PROFILE
+// 8. PROFILE
 // ======================================================
 
 async function loadCurrentProfile() {
+
   if (!currentUser) return;
 
-  try {
-    const { data, error } = await supabaseClient
+
+  const { data, error } =
+    await supabaseClient
       .from("profiles")
       .select("*")
       .eq("id", currentUser.id)
       .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
 
-    currentProfile = data;
+  if (error) {
 
-  } catch (error) {
-    console.error("Profile loading error:", error);
+    console.log(
+      "Profile loading error:",
+      error.message
+    );
+
+    return;
   }
+
+
+  currentProfile = data;
+
+
+  if (!data) return;
+
+
+  const name =
+    data.display_name ||
+    "QEVIRA User";
+
+
+  const username =
+    data.username ||
+    "user";
+
+
+  $("profileName").textContent =
+    name;
+
+  $("profileUsername").textContent =
+    "@" + username;
+
+
+  $("profileAvatar").textContent =
+    name.charAt(0).toUpperCase();
+
 }
 
 
 // ======================================================
-// 12. LOAD CONTACTS
+// 9. CONTACTS
 // ======================================================
 
+let allContacts = [];
+
+
 async function loadContacts() {
-  if (!contactsList || !currentUser) return;
 
-  contactsList.innerHTML = "Loading users...";
+  if (!currentUser) return;
 
-  try {
-    const { data, error } = await supabaseClient
+
+  const { data, error } =
+    await supabaseClient
       .from("profiles")
       .select("*")
       .neq("id", currentUser.id)
@@ -348,388 +346,589 @@ async function loadContacts() {
         ascending: true
       });
 
-    if (error) {
-      throw error;
-    }
 
-    contactsList.innerHTML = "";
+  if (error) {
 
-    if (!data || data.length === 0) {
-      contactsList.innerHTML =
-        "<p>No other users yet.</p>";
-      return;
-    }
+    console.log(
+      "Contacts error:",
+      error.message
+    );
 
-    data.forEach(profile => {
-      const item = createContactElement(profile);
-      contactsList.appendChild(item);
-    });
-
-  } catch (error) {
-    console.error("Contacts error:", error);
-
-    contactsList.innerHTML =
-      "<p>Unable to load users.</p>";
+    return;
   }
+
+
+  allContacts = data || [];
+
+  renderContacts(allContacts);
+
 }
 
 
-// ======================================================
-// 13. CREATE CONTACT ELEMENT
-// ======================================================
+function renderContacts(users) {
 
-function createContactElement(profile) {
-  const item = document.createElement("div");
+  const list =
+    $("contactsList");
 
-  item.className = "contact-item";
-
-  const name =
-    profile.display_name ||
-    profile.username ||
-    "QEVIRA User";
-
-  const username =
-    profile.username
-      ? "@" + profile.username
-      : "";
-
-  item.innerHTML = `
-    <div class="contact-avatar">
-      ${escapeHtml(name.charAt(0).toUpperCase())}
-    </div>
-
-    <div class="contact-info">
-      <strong>${escapeHtml(name)}</strong>
-      <span>${escapeHtml(username)}</span>
-    </div>
-  `;
-
-  item.addEventListener("click", () => {
-    openChat(profile);
-  });
-
-  return item;
-}
+  list.innerHTML = "";
 
 
-// ======================================================
-// 14. LOAD CHAT LIST
-// ======================================================
+  if (!users.length) {
 
-async function loadChatList() {
-  if (!chatList || !currentUser) return;
-
-  chatList.innerHTML = "Loading chats...";
-
-  try {
-    const { data, error } = await supabaseClient
-      .from("messages")
-      .select("*")
-      .or(
-        `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
-      )
-      .order("created_at", {
-        ascending: false
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    chatList.innerHTML = "";
-
-    if (!data || data.length === 0) {
-      chatList.innerHTML =
-        "<p>No chats yet.</p>";
-      return;
-    }
-
-    const userIds = new Set();
-
-    data.forEach(message => {
-      const otherUserId =
-        message.sender_id === currentUser.id
-          ? message.receiver_id
-          : message.sender_id;
-
-      userIds.add(otherUserId);
-    });
-
-    for (const userId of userIds) {
-      await addChatListUser(userId, data);
-    }
-
-  } catch (error) {
-    console.error("Chat list error:", error);
-
-    chatList.innerHTML =
-      "<p>Unable to load chats.</p>";
-  }
-}
-
-
-// ======================================================
-// 15. ADD CHAT USER TO CHAT LIST
-// ======================================================
-
-async function addChatListUser(userId, allMessages) {
-  if (!chatList) return;
-
-  try {
-    const { data: profile, error } =
-      await supabaseClient
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!profile) return;
-
-    const latestMessage =
-      allMessages.find(message =>
-        message.sender_id === userId ||
-        message.receiver_id === userId
-      );
-
-    const item = document.createElement("div");
-
-    item.className = "chat-list-item";
-
-    const name =
-      profile.display_name ||
-      profile.username ||
-      "QEVIRA User";
-
-    const preview =
-      latestMessage?.body || "";
-
-    item.innerHTML = `
-      <div class="contact-avatar">
-        ${escapeHtml(name.charAt(0).toUpperCase())}
-      </div>
-
-      <div class="contact-info">
-        <strong>${escapeHtml(name)}</strong>
-        <span>${escapeHtml(preview)}</span>
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>No contacts yet</h3>
+        <p>Other QEVIRA users will appear here.</p>
       </div>
     `;
 
-    item.addEventListener("click", () => {
-      openChat(profile);
-    });
-
-    chatList.appendChild(item);
-
-  } catch (error) {
-    console.error("Chat user error:", error);
+    return;
   }
+
+
+  users.forEach(user => {
+
+    const element =
+      createUserElement(user);
+
+    list.appendChild(element);
+
+  });
+
 }
 
 
-// ======================================================
-// 16. OPEN CHAT
-// ======================================================
+function createUserElement(user) {
 
-async function openChat(profile) {
-  if (!profile || !currentUser) return;
+  const div =
+    document.createElement("div");
 
-  currentChatUser = profile;
+  div.className =
+    "user-card";
+
 
   const name =
-    profile.display_name ||
-    profile.username ||
+    user.display_name ||
+    user.username ||
     "QEVIRA User";
 
-  if (chatTitle) {
-    chatTitle.textContent = name;
-  }
 
-  if (chatModal) {
-    chatModal.style.display = "flex";
-  }
+  const username =
+    user.username ||
+    "user";
 
-  await loadMessages();
+
+  const firstLetter =
+    name.charAt(0).toUpperCase();
+
+
+  div.innerHTML = `
+    <div class="avatar">
+      ${escapeHtml(firstLetter)}
+    </div>
+
+    <div class="user-info">
+      <strong>
+        ${escapeHtml(name)}
+      </strong>
+
+      <small>
+        @${escapeHtml(username)}
+      </small>
+    </div>
+
+    <button
+      class="chat-open-btn"
+      type="button"
+    >
+      Chat
+    </button>
+  `;
+
+
+  div
+    .querySelector(".chat-open-btn")
+    .addEventListener(
+      "click",
+      () => openChat(user)
+    );
+
+
+  return div;
+
 }
 
 
 // ======================================================
-// 17. LOAD MESSAGES
+// CONTACT SEARCH
+// ======================================================
+
+const contactsSearchInput =
+  $("contactsSearchInput");
+
+
+contactsSearchInput.addEventListener(
+  "input",
+  () => {
+
+    const query =
+      contactsSearchInput.value
+        .trim()
+        .toLowerCase();
+
+
+    const filtered =
+      allContacts.filter(user => {
+
+        const name =
+          (
+            user.display_name ||
+            ""
+          ).toLowerCase();
+
+        const username =
+          (
+            user.username ||
+            ""
+          ).toLowerCase();
+
+
+        return (
+          name.includes(query) ||
+          username.includes(query)
+        );
+
+      });
+
+
+    renderContacts(filtered);
+
+  }
+);
+
+
+// ======================================================
+// 10. CHAT LIST
+// ======================================================
+
+let chatUsers = [];
+
+
+async function loadChatList() {
+
+  if (!currentUser) return;
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("messages")
+      .select(
+        "sender_id,receiver_id,created_at"
+      )
+      .or(
+        `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.log(
+      "Chat list error:",
+      error.message
+    );
+
+    return;
+  }
+
+
+  const ids = [];
+
+
+  (data || []).forEach(message => {
+
+    const otherId =
+      message.sender_id === currentUser.id
+        ? message.receiver_id
+        : message.sender_id;
+
+
+    if (
+      otherId &&
+      !ids.includes(otherId)
+    ) {
+
+      ids.push(otherId);
+
+    }
+
+  });
+
+
+  if (!ids.length) {
+
+    chatUsers = [];
+
+    renderChatList();
+
+    return;
+  }
+
+
+  const { data: profiles } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .in("id", ids);
+
+
+  chatUsers =
+    profiles || [];
+
+
+  renderChatList();
+
+}
+
+
+function renderChatList() {
+
+  const list =
+    $("chatList");
+
+  list.innerHTML = "";
+
+
+  const empty =
+    $("chatEmpty");
+
+
+  if (!chatUsers.length) {
+
+    empty.classList.remove("hidden");
+
+    return;
+  }
+
+
+  empty.classList.add("hidden");
+
+
+  chatUsers.forEach(user => {
+
+    list.appendChild(
+      createUserElement(user)
+    );
+
+  });
+
+}
+
+
+// ======================================================
+// CHAT SEARCH
+// ======================================================
+
+$("searchInput").addEventListener(
+  "input",
+  () => {
+
+    const query =
+      $("searchInput").value
+        .trim()
+        .toLowerCase();
+
+
+    const filtered =
+      chatUsers.filter(user => {
+
+        const name =
+          (
+            user.display_name ||
+            ""
+          ).toLowerCase();
+
+        const username =
+          (
+            user.username ||
+            ""
+          ).toLowerCase();
+
+
+        return (
+          name.includes(query) ||
+          username.includes(query)
+        );
+
+      });
+
+
+    const list =
+      $("chatList");
+
+    list.innerHTML = "";
+
+
+    filtered.forEach(user => {
+
+      list.appendChild(
+        createUserElement(user)
+      );
+
+    });
+
+  }
+);
+
+
+// ======================================================
+// 11. OPEN CHAT
+// ======================================================
+
+async function openChat(user) {
+
+  currentChatUser =
+    user;
+
+
+  const name =
+    user.display_name ||
+    user.username ||
+    "QEVIRA User";
+
+
+  $("chatTitle").textContent =
+    name;
+
+
+  $("chatAvatar").textContent =
+    name.charAt(0).toUpperCase();
+
+
+  $("chatModal").classList.remove(
+    "hidden"
+  );
+
+
+  await loadMessages();
+
+}
+
+
+// ======================================================
+// NEW CHAT
+// ======================================================
+
+$("newChatBtn").addEventListener(
+  "click",
+  () => {
+
+    document.querySelector(
+      '[data-page="contactsPage"]'
+    ).click();
+
+    $("contactsSearchInput").focus();
+
+  }
+);
+
+
+// ======================================================
+// 12. LOAD MESSAGES
 // ======================================================
 
 async function loadMessages() {
+
   if (
-    !messages ||
     !currentUser ||
     !currentChatUser
   ) {
     return;
   }
 
-  messages.innerHTML = "Loading messages...";
 
-  try {
-    const myId = currentUser.id;
-    const otherId = currentChatUser.id;
-
-    const { data, error } = await supabaseClient
+  const { data, error } =
+    await supabaseClient
       .from("messages")
       .select("*")
       .or(
-        `and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatUser.id}),and(sender_id.eq.${currentChatUser.id},receiver_id.eq.${currentUser.id})`
       )
-      .order("created_at", {
-        ascending: true
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    renderMessages(data || []);
-
-  } catch (error) {
-    console.error("Messages error:", error);
-
-    messages.innerHTML =
-      "<p>Unable to load messages.</p>";
-  }
-}
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
 
 
-// ======================================================
-// 18. RENDER MESSAGES
-// ======================================================
+  if (error) {
 
-function renderMessages(messageList) {
-  if (!messages || !currentUser) return;
-
-  messages.innerHTML = "";
-
-  if (messageList.length === 0) {
-    messages.innerHTML =
-      "<p>No messages yet. Say hello! 👋</p>";
+    console.log(
+      "Messages error:",
+      error.message
+    );
 
     return;
   }
 
-  messageList.forEach(message => {
-    const bubble = document.createElement("div");
 
-    const mine =
-      message.sender_id === currentUser.id;
+  renderMessages(data || []);
 
-    bubble.className =
-      mine
-        ? "message message-sent"
-        : "message message-received";
-
-    let body = message.body || "";
-
-    if (message.deleted_at) {
-      body = "Message deleted";
-    }
-
-    bubble.innerHTML = `
-      <div class="message-body">
-        ${escapeHtml(body)}
-      </div>
-    `;
-
-    messages.appendChild(bubble);
-  });
-
-  messages.scrollTop = messages.scrollHeight;
 }
 
 
 // ======================================================
-// 19. SEND MESSAGE
+// 13. RENDER MESSAGES
+// ======================================================
+
+function renderMessages(messages) {
+
+  const container =
+    $("messages");
+
+  container.innerHTML = "";
+
+
+  messages.forEach(message => {
+
+    const sent =
+      message.sender_id === currentUser.id;
+
+
+    const wrapper =
+      document.createElement("div");
+
+
+    wrapper.className =
+      "message " +
+      (
+        sent
+          ? "sent"
+          : "received"
+      );
+
+
+    const bubble =
+      document.createElement("div");
+
+
+    bubble.className =
+      "message-bubble";
+
+
+    bubble.innerHTML = `
+      ${escapeHtml(message.body || "")}
+      <span class="message-time">
+        ${formatTime(message.created_at)}
+      </span>
+    `;
+
+
+    wrapper.appendChild(bubble);
+
+    container.appendChild(wrapper);
+
+  });
+
+
+  container.scrollTop =
+    container.scrollHeight;
+
+}
+
+
+// ======================================================
+// 14. SEND MESSAGE
 // ======================================================
 
 async function sendMessage() {
+
+  const body =
+    $("messageInput").value.trim();
+
+
   if (
+    !body ||
     !currentUser ||
-    !currentChatUser ||
-    !messageInput
+    !currentChatUser
   ) {
     return;
   }
 
-  const body = messageInput.value.trim();
 
-  if (!body) return;
+  $("messageInput").value = "";
 
-  messageInput.disabled = true;
 
-  try {
-    const { error } = await supabaseClient
+  const { error } =
+    await supabaseClient
       .from("messages")
       .insert({
-        sender_id: currentUser.id,
-        receiver_id: currentChatUser.id,
-        body: body
+        sender_id:
+          currentUser.id,
+
+        receiver_id:
+          currentChatUser.id,
+
+        body
       });
 
-    if (error) {
-      throw error;
-    }
 
-    messageInput.value = "";
+  if (error) {
 
-    await loadMessages();
-    await loadChatList();
-
-  } catch (error) {
-    console.error("Send message error:", error);
-
-    alert(
-      error.message ||
-      "Message could not be sent."
+    console.log(
+      "Send message error:",
+      error.message
     );
+
+    $("messageInput").value =
+      body;
+
   }
 
-  messageInput.disabled = false;
 }
 
 
-// ======================================================
-// 20. MESSAGE FORM
-// ======================================================
+$("messageForm").addEventListener(
+  "submit",
+  event => {
 
-if (messageForm) {
-  messageForm.addEventListener("submit", async event => {
     event.preventDefault();
 
-    await sendMessage();
-  });
-}
+    sendMessage();
+
+  }
+);
 
 
 // ======================================================
-// 21. REALTIME MESSAGES
+// 15. REALTIME CHAT
 // ======================================================
 
 function setupRealtime() {
-  if (!currentUser) return;
 
   if (realtimeChannel) {
-    try {
-      supabaseClient.removeChannel(
+
+    supabaseClient
+      .removeChannel(
         realtimeChannel
       );
-    } catch (error) {
-      console.log(error);
-    }
+
   }
+
 
   realtimeChannel =
     supabaseClient
-      .channel("qevira-messages-" + currentUser.id)
-
+      .channel(
+        "qevira-messages-" +
+        currentUser.id
+      )
       .on(
         "postgres_changes",
         {
@@ -739,316 +938,1268 @@ function setupRealtime() {
         },
         async payload => {
 
-          const message = payload.new;
+          const message =
+            payload.new;
 
-          if (!message) return;
 
-          const belongsToCurrentUser =
-            message.sender_id === currentUser.id ||
-            message.receiver_id === currentUser.id;
+          if (
+            !message ||
+            !currentUser
+          ) {
+            return;
+          }
 
-          if (!belongsToCurrentUser) return;
 
           if (
             currentChatUser &&
             (
               (
-                message.sender_id === currentUser.id &&
-                message.receiver_id === currentChatUser.id
-              )
-              ||
+                message.sender_id ===
+                currentUser.id &&
+                message.receiver_id ===
+                currentChatUser.id
+              ) ||
               (
-                message.sender_id === currentChatUser.id &&
-                message.receiver_id === currentUser.id
+                message.sender_id ===
+                currentChatUser.id &&
+                message.receiver_id ===
+                currentUser.id
               )
             )
           ) {
+
             await loadMessages();
+
           }
 
+
           await loadChatList();
+
         }
       )
+      .subscribe();
 
-      .subscribe(status => {
-        console.log(
-          "QEVIRA realtime status:",
-          status
-        );
-      });
 }
 
 
 // ======================================================
-// 22. CLOSE CHAT
+// 16. CLOSE CHAT
 // ======================================================
 
-if (closeChatModal) {
-  closeChatModal.addEventListener(
-    "click",
-    () => {
-      if (chatModal) {
-        chatModal.style.display = "none";
-      }
+$("closeChatModal").addEventListener(
+  "click",
+  () => {
 
-      currentChatUser = null;
-    }
-  );
-}
-
-
-// Close when clicking outside modal
-
-if (chatModal) {
-  chatModal.addEventListener(
-    "click",
-    event => {
-      if (event.target === chatModal) {
-        chatModal.style.display = "none";
-        currentChatUser = null;
-      }
-    }
-  );
-}
-
-
-// ======================================================
-// 23. LOGOUT
-// ======================================================
-
-async function logout() {
-  try {
-    if (realtimeChannel) {
-      await supabaseClient.removeChannel(
-        realtimeChannel
-      );
-
-      realtimeChannel = null;
-    }
-
-    await supabaseClient.auth.signOut();
-
-    currentUser = null;
-    currentProfile = null;
-    currentChatUser = null;
-
-    if (app) {
-      app.style.display = "none";
-    }
-
-    if (authScreen) {
-      authScreen.style.display = "block";
-    }
-
-    showLogin();
-
-  } catch (error) {
-    console.error("Logout error:", error);
-  }
-}
-
-
-if (logoutBtn) {
-  logoutBtn.addEventListener(
-    "click",
-    logout
-  );
-}
-
-
-// ======================================================
-// 24. SEARCH USERS
-// ======================================================
-
-if (searchInput) {
-  searchInput.addEventListener(
-    "input",
-    async () => {
-
-      const query =
-        searchInput.value
-          .trim()
-          .toLowerCase();
-
-      if (!contactsList) return;
-
-      const items =
-        contactsList.querySelectorAll(
-          ".contact-item"
-        );
-
-      items.forEach(item => {
-        const text =
-          item.textContent
-            .toLowerCase();
-
-        item.style.display =
-          text.includes(query)
-            ? ""
-            : "none";
-      });
-    }
-  );
-}
-
-
-// ======================================================
-// 25. LOGIN BUTTON
-// ======================================================
-
-if (loginForm) {
-  loginForm.addEventListener(
-    "submit",
-    async event => {
-      event.preventDefault();
-
-      await signInWithPassword();
-    }
-  );
-}
-
-if (loginBtn) {
-  loginBtn.addEventListener(
-    "click",
-    async event => {
-      event.preventDefault();
-
-      await signInWithPassword();
-    }
-  );
-}
-
-
-// ======================================================
-// 26. SIGNUP BUTTON
-// ======================================================
-
-if (signupForm) {
-  signupForm.addEventListener(
-    "submit",
-    async event => {
-      event.preventDefault();
-
-      await signUp();
-    }
-  );
-}
-
-if (signupBtn) {
-  signupBtn.addEventListener(
-    "click",
-    async event => {
-      event.preventDefault();
-
-      await signUp();
-    }
-  );
-}
-
-
-// ======================================================
-// 27. ESCAPE HTML
-// ======================================================
-
-function escapeHtml(value) {
-  const div = document.createElement("div");
-
-  div.textContent =
-    value == null
-      ? ""
-      : String(value);
-
-  return div.innerHTML;
-}
-
-
-// ======================================================
-// 28. AUTH STATE
-// ======================================================
-
-supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
-
-    console.log(
-      "Auth event:",
-      event
+    $("chatModal").classList.add(
+      "hidden"
     );
 
-    if (session && session.user) {
-      currentUser = session.user;
+    currentChatUser = null;
 
-      await showApp();
-
-    } else {
-      currentUser = null;
-
-      if (app) {
-        app.style.display = "none";
-      }
-
-      if (authScreen) {
-        authScreen.style.display = "block";
-      }
-    }
   }
 );
 
 
 // ======================================================
-// 29. CHECK EXISTING SESSION
+// 17. LOGOUT
 // ======================================================
 
-async function checkSession() {
-  try {
-    const {
-      data: {
-        session
+$("logoutBtn").addEventListener(
+  "click",
+  async () => {
+
+    await endCall(false);
+
+    await supabaseClient.auth.signOut();
+
+    currentUser = null;
+
+    location.reload();
+
+  }
+);
+
+
+// ======================================================
+// ======================================================
+// REAL VOICE + VIDEO CALLING
+// ======================================================
+// ======================================================
+
+
+// ======================================================
+// 18. WEBRTC CONFIG
+// ======================================================
+
+const rtcConfiguration = {
+
+  iceServers: [
+
+    {
+      urls:
+        "stun:stun.l.google.com:19302"
+    },
+
+    {
+      urls:
+        "stun:stun1.l.google.com:19302"
+    }
+
+  ]
+
+};
+
+
+// ======================================================
+// 19. CALL CHANNEL
+// ======================================================
+
+function getCallChannelName(
+  userA,
+  userB
+) {
+
+  const ids = [
+    userA,
+    userB
+  ].sort();
+
+
+  return (
+    "qevira-call-" +
+    ids[0] +
+    "-" +
+    ids[1]
+  );
+
+}
+
+
+function setupCallChannel() {
+
+  if (!currentUser) return;
+
+
+  if (callChannel) {
+
+    supabaseClient
+      .removeChannel(
+        callChannel
+      );
+
+  }
+
+
+  callChannel =
+    supabaseClient
+      .channel(
+        getCallChannelName(
+          currentUser.id,
+          currentUser.id
+        )
+      );
+
+}
+
+
+// ======================================================
+// 20. CREATE CALL CHANNEL FOR USER
+// ======================================================
+
+function subscribeToCallChannel(
+  otherUserId,
+  callback
+) {
+
+  if (callChannel) {
+
+    supabaseClient
+      .removeChannel(
+        callChannel
+      );
+
+  }
+
+
+  callChannel =
+    supabaseClient
+      .channel(
+        getCallChannelName(
+          currentUser.id,
+          otherUserId
+        )
+      );
+
+
+  callChannel
+    .on(
+      "broadcast",
+      {
+        event: "call-offer"
+      },
+      payload => {
+
+        callback(
+          "offer",
+          payload.payload
+        );
+
       }
-    } =
-      await supabaseClient.auth.getSession();
+    )
+    .on(
+      "broadcast",
+      {
+        event: "call-answer"
+      },
+      payload => {
 
-    if (session && session.user) {
+        callback(
+          "answer",
+          payload.payload
+        );
 
-      currentUser = session.user;
+      }
+    )
+    .on(
+      "broadcast",
+      {
+        event: "ice-candidate"
+      },
+      payload => {
+
+        callback(
+          "ice",
+          payload.payload
+        );
+
+      }
+    )
+    .on(
+      "broadcast",
+      {
+        event: "incoming-call"
+      },
+      payload => {
+
+        callback(
+          "incoming",
+          payload.payload
+        );
+
+      }
+    )
+    .on(
+      "broadcast",
+      {
+        event: "call-hangup"
+      },
+      payload => {
+
+        callback(
+          "hangup",
+          payload.payload
+        );
+
+      }
+    )
+    .on(
+      "broadcast",
+      {
+        event: "call-decline"
+      },
+      payload => {
+
+        callback(
+          "decline",
+          payload.payload
+        );
+
+      }
+    );
+
+
+  return new Promise(resolve => {
+
+    callChannel.subscribe(
+      status => {
+
+        if (status === "SUBSCRIBED") {
+
+          resolve(callChannel);
+
+        }
+
+      }
+    );
+
+  });
+
+}
+
+
+// ======================================================
+// 21. START VOICE CALL
+// ======================================================
+
+$("voiceCallBtn").addEventListener(
+  "click",
+  () => startCall(false)
+);
+
+
+// ======================================================
+// 22. START VIDEO CALL
+// ======================================================
+
+$("videoCallBtn").addEventListener(
+  "click",
+  () => startCall(true)
+);
+
+
+// ======================================================
+// 23. START CALL
+// ======================================================
+
+async function startCall(video) {
+
+  if (
+    !currentUser ||
+    !currentChatUser
+  ) {
+    return;
+  }
+
+
+  if (peerConnection) {
+
+    alert(
+      "A call is already active."
+    );
+
+    return;
+
+  }
+
+
+  isVideoCall =
+    video;
+
+
+  try {
+
+    localStream =
+      await navigator.mediaDevices.getUserMedia({
+
+        audio: true,
+
+        video: video
+
+      });
+
+
+  } catch (error) {
+
+    alert(
+      "Microphone/camera permission was not granted."
+    );
+
+    console.log(error);
+
+    return;
+
+  }
+
+
+  await subscribeToCallChannel(
+    currentChatUser.id,
+    handleCallSignal
+  );
+
+
+  createPeerConnection();
+
+
+  localStream
+    .getTracks()
+    .forEach(track => {
+
+      peerConnection.addTrack(
+        track,
+        localStream
+      );
+
+    });
+
+
+  const offer =
+    await peerConnection.createOffer();
+
+
+  await peerConnection.setLocalDescription(
+    offer
+  );
+
+
+  await callChannel.send({
+
+    type: "broadcast",
+
+    event: "incoming-call",
+
+    payload: {
+
+      callerId:
+        currentUser.id,
+
+      callerName:
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        currentUser.email,
+
+      callType:
+        video
+          ? "video"
+          : "voice"
+
+    }
+
+  });
+
+
+  await callChannel.send({
+
+    type: "broadcast",
+
+    event: "call-offer",
+
+    payload: {
+
+      callerId:
+        currentUser.id,
+
+      offer,
+
+      callType:
+        video
+          ? "video"
+          : "voice"
+
+    }
+
+  });
+
+
+  showActiveCall(
+    currentChatUser,
+    video
+  );
+
+}
+
+
+// ======================================================
+// 24. CREATE PEER CONNECTION
+// ======================================================
+
+function createPeerConnection() {
+
+  peerConnection =
+    new RTCPeerConnection(
+      rtcConfiguration
+    );
+
+
+  remoteStream =
+    new MediaStream();
+
+
+  $("remoteVideo").srcObject =
+    remoteStream;
+
+
+  peerConnection.ontrack =
+    event => {
+
+      event.streams[0]
+        .getTracks()
+        .forEach(track => {
+
+          remoteStream.addTrack(
+            track
+          );
+
+        });
+
+      $("remoteVideo").play()
+        .catch(() => {});
+
+    };
+
+
+  peerConnection.onicecandidate =
+    async event => {
+
+      if (
+        !event.candidate ||
+        !callChannel
+      ) {
+        return;
+      }
+
+
+      await callChannel.send({
+
+        type: "broadcast",
+
+        event: "ice-candidate",
+
+        payload: {
+
+          candidate:
+            event.candidate
+
+        }
+
+      });
+
+    };
+
+
+  peerConnection.onconnectionstatechange =
+    () => {
+
+      const state =
+        peerConnection.connectionState;
+
+
+      if (
+        state === "failed" ||
+        state === "disconnected" ||
+        state === "closed"
+      ) {
+
+        endCall(false);
+
+      }
+
+    };
+
+}
+
+
+// ======================================================
+// 25. CALL SIGNAL HANDLER
+// ======================================================
+
+async function handleCallSignal(
+  type,
+  data
+) {
+
+  if (type === "incoming") {
+
+    incomingCaller =
+      data;
+
+
+    showIncomingCall(
+      data
+    );
+
+
+    return;
+  }
+
+
+  if (type === "offer") {
+
+    incomingOffer =
+      data;
+
+
+    return;
+  }
+
+
+  if (type === "answer") {
+
+    if (!peerConnection) {
+      return;
+    }
+
+
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(
+        data.answer
+      )
+    );
+
+
+    return;
+  }
+
+
+  if (type === "ice") {
+
+    if (
+      peerConnection &&
+      data.candidate
+    ) {
+
+      try {
+
+        await peerConnection.addIceCandidate(
+          new RTCIceCandidate(
+            data.candidate
+          )
+        );
+
+      } catch (error) {
+
+        console.log(
+          "ICE error:",
+          error
+        );
+
+      }
+
+    }
+
+    return;
+  }
+
+
+  if (type === "hangup") {
+
+    await endCall(false);
+
+    return;
+  }
+
+
+  if (type === "decline") {
+
+    await endCall(false);
+
+    alert(
+      "The call was declined."
+    );
+
+  }
+
+}
+
+
+// ======================================================
+// 26. INCOMING CALL UI
+// ======================================================
+
+function showIncomingCall(data) {
+
+  const name =
+    data.callerName ||
+    "QEVIRA User";
+
+
+  $("incomingCallName").textContent =
+    name;
+
+
+  $("incomingCallType").textContent =
+    data.callType === "video"
+      ? "Incoming video call"
+      : "Incoming voice call";
+
+
+  $("incomingCallAvatar").textContent =
+    name.charAt(0).toUpperCase();
+
+
+  $("incomingCallOverlay")
+    .classList.remove("hidden");
+
+}
+
+
+// ======================================================
+// 27. ACCEPT CALL
+// ======================================================
+
+$("acceptCallBtn").addEventListener(
+  "click",
+  acceptIncomingCall
+);
+
+
+async function acceptIncomingCall() {
+
+  $("incomingCallOverlay")
+    .classList.add("hidden");
+
+
+  if (
+    !incomingOffer ||
+    !incomingCaller
+  ) {
+    return;
+  }
+
+
+  isVideoCall =
+    incomingOffer.callType ===
+    "video";
+
+
+  const callerProfile =
+    allContacts.find(
+      user =>
+        user.id ===
+        incomingCaller.callerId
+    );
+
+
+  currentChatUser =
+    callerProfile || {
+
+      id:
+        incomingCaller.callerId,
+
+      display_name:
+        incomingCaller.callerName
+
+    };
+
+
+  try {
+
+    localStream =
+      await navigator.mediaDevices.getUserMedia({
+
+        audio: true,
+
+        video: isVideoCall
+
+      });
+
+  } catch (error) {
+
+    alert(
+      "Microphone/camera permission was not granted."
+    );
+
+    incomingOffer = null;
+    incomingCaller = null;
+
+    return;
+
+  }
+
+
+  await subscribeToCallChannel(
+    incomingCaller.callerId,
+    handleCallSignal
+  );
+
+
+  createPeerConnection();
+
+
+  localStream
+    .getTracks()
+    .forEach(track => {
+
+      peerConnection.addTrack(
+        track,
+        localStream
+      );
+
+    });
+
+
+  await peerConnection.setRemoteDescription(
+
+    new RTCSessionDescription(
+      incomingOffer.offer
+    )
+
+  );
+
+
+  const answer =
+    await peerConnection.createAnswer();
+
+
+  await peerConnection.setLocalDescription(
+    answer
+  );
+
+
+  await callChannel.send({
+
+    type: "broadcast",
+
+    event: "call-answer",
+
+    payload: {
+
+      answer
+
+    }
+
+  });
+
+
+  showActiveCall(
+    currentChatUser,
+    isVideoCall
+  );
+
+
+  incomingOffer = null;
+  incomingCaller = null;
+
+}
+
+
+// ======================================================
+// 28. DECLINE CALL
+// ======================================================
+
+$("declineCallBtn").addEventListener(
+  "click",
+  async () => {
+
+    $("incomingCallOverlay")
+      .classList.add("hidden");
+
+
+    if (
+      incomingCaller
+    ) {
+
+      await subscribeToCallChannel(
+        incomingCaller.callerId,
+        handleCallSignal
+      );
+
+
+      await callChannel.send({
+
+        type: "broadcast",
+
+        event: "call-decline",
+
+        payload: {
+
+          userId:
+            currentUser.id
+
+        }
+
+      });
+
+    }
+
+
+    incomingOffer = null;
+    incomingCaller = null;
+
+  }
+);
+
+
+// ======================================================
+// 29. ACTIVE CALL SCREEN
+// ======================================================
+
+function showActiveCall(
+  user,
+  video
+) {
+
+  const name =
+    user.display_name ||
+    user.username ||
+    "QEVIRA User";
+
+
+  $("activeCallName").textContent =
+    name;
+
+
+  $("activeCallAvatar").textContent =
+    name.charAt(0).toUpperCase();
+
+
+  $("activeCallType").textContent =
+    video
+      ? "Video call"
+      : "Voice call";
+
+
+  $("activeCallOverlay")
+    .classList.remove("hidden");
+
+
+  $("localVideo").srcObject =
+    localStream;
+
+
+  if (video) {
+
+    $("remoteVideo")
+      .classList.remove("hidden");
+
+    $("localVideo")
+      .classList.remove("hidden");
+
+    $("voiceCallDisplay")
+      .classList.add("hidden");
+
+  } else {
+
+    $("remoteVideo")
+      .classList.add("hidden");
+
+    $("localVideo")
+      .classList.add("hidden");
+
+    $("voiceCallDisplay")
+      .classList.remove("hidden");
+
+  }
+
+}
+
+
+// ======================================================
+// 30. MUTE
+// ======================================================
+
+$("muteCallBtn").addEventListener(
+  "click",
+  () => {
+
+    if (!localStream) return;
+
+
+    const audioTracks =
+      localStream.getAudioTracks();
+
+
+    audioTracks.forEach(track => {
+
+      track.enabled =
+        !track.enabled;
+
+    });
+
+
+    isCallMuted =
+      !isCallMuted;
+
+
+    $("muteCallBtn").textContent =
+      isCallMuted
+        ? "🔇"
+        : "🎤";
+
+  }
+);
+
+
+// ======================================================
+// 31. CAMERA
+// ======================================================
+
+$("cameraCallBtn").addEventListener(
+  "click",
+  () => {
+
+    if (!localStream) return;
+
+
+    const videoTracks =
+      localStream.getVideoTracks();
+
+
+    if (!videoTracks.length) {
+      return;
+    }
+
+
+    videoTracks.forEach(track => {
+
+      track.enabled =
+        !track.enabled;
+
+    });
+
+
+    isCameraOff =
+      !isCameraOff;
+
+
+    $("cameraCallBtn").textContent =
+      isCameraOff
+        ? "🚫"
+        : "📹";
+
+  }
+);
+
+
+// ======================================================
+// 32. END CALL
+// ======================================================
+
+$("endCallBtn").addEventListener(
+  "click",
+  () => endCall(true)
+);
+
+
+async function endCall(sendSignal = true) {
+
+  if (
+    sendSignal &&
+    callChannel
+  ) {
+
+    try {
+
+      await callChannel.send({
+
+        type: "broadcast",
+
+        event: "call-hangup",
+
+        payload: {
+
+          userId:
+            currentUser?.id
+
+        }
+
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  }
+
+
+  if (peerConnection) {
+
+    peerConnection.close();
+
+    peerConnection = null;
+
+  }
+
+
+  if (localStream) {
+
+    localStream
+      .getTracks()
+      .forEach(track => {
+
+        track.stop();
+
+      });
+
+    localStream = null;
+
+  }
+
+
+  if (remoteStream) {
+
+    remoteStream
+      .getTracks()
+      .forEach(track => {
+
+        track.stop();
+
+      });
+
+    remoteStream = null;
+
+  }
+
+
+  $("localVideo").srcObject =
+    null;
+
+  $("remoteVideo").srcObject =
+    null;
+
+
+  $("activeCallOverlay")
+    .classList.add("hidden");
+
+
+  $("incomingCallOverlay")
+    .classList.add("hidden");
+
+
+  incomingOffer = null;
+  incomingCaller = null;
+
+  isVideoCall = false;
+  isCallMuted = false;
+  isCameraOff = false;
+
+
+  $("muteCallBtn").textContent =
+    "🎤";
+
+  $("cameraCallBtn").textContent =
+    "📹";
+
+
+  if (callChannel) {
+
+    await supabaseClient
+      .removeChannel(
+        callChannel
+      );
+
+    callChannel = null;
+
+  }
+
+}
+
+
+// ======================================================
+// 33. ESCAPE HTML
+// ======================================================
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+// ======================================================
+// 34. FORMAT TIME
+// ======================================================
+
+function formatTime(date) {
+
+  if (!date) return "";
+
+
+  try {
+
+    return new Date(date)
+      .toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+  } catch {
+
+    return "";
+
+  }
+
+}
+
+
+// ======================================================
+// 35. AUTH STATE
+// ======================================================
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+
+    if (session?.user) {
+
+      currentUser =
+        session.user;
+
+
+      if (
+        document
+          .getElementById("authScreen")
+          .classList
+          .contains("hidden")
+      ) {
+
+        return;
+
+      }
+
 
       await showApp();
 
     } else {
 
-      if (app) {
-        app.style.display = "none";
-      }
+      currentUser = null;
 
-      if (authScreen) {
-        authScreen.style.display = "block";
-      }
+      $("authScreen")
+        .classList
+        .remove("hidden");
 
-      showLogin();
+      $("app")
+        .classList
+        .add("hidden");
+
     }
 
-  } catch (error) {
-
-    console.error(
-      "Session error:",
-      error
-    );
-
-    showLogin();
   }
+);
+
+
+// ======================================================
+// 36. CHECK SESSION
+// ======================================================
+
+async function checkSession() {
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (session?.user) {
+
+    currentUser =
+      session.user;
+
+    await showApp();
+
+  } else {
+
+    showSignup();
+
+  }
+
 }
 
 
 // ======================================================
-// 30. START QEVIRA
+// 37. START QEVIRA
 // ======================================================
 
 document.addEventListener(
   "DOMContentLoaded",
   () => {
-
-    console.log(
-      "QEVIRA started successfully."
-    );
 
     checkSession();
 
