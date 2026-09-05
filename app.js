@@ -1,7 +1,6 @@
 // ======================================================
 // QEVIRA — REAL SUPABASE AUTH + REAL 1-TO-1 MESSAGING
 // ======================================================
-
 // ======================================================
 // 1. SUPABASE CONFIGURATION
 // ======================================================
@@ -9,15 +8,15 @@
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
 
-// 🔴 PASTE YOUR SUPABASE PUBLISHABLE KEY BETWEEN THE QUOTES
-const SUPABASE_URL =
-  "https://wcdywnkxtuexjbjgerzd.supabase.co";
+// Paste your Supabase PUBLISHABLE key between the quotes
 const SUPABASE_PUBLISHABLE_KEY =
- sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw 
+  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
+
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
+
 
 
 // ======================================================
