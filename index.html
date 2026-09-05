@@ -1,470 +1,480 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>QEVIRA</title>  <meta name="theme-color" content="#6C5CE7">
-  <meta name="description" content="QEVIRA - Connect and chat">  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6c5ce7">
+  <title>QEVIRA</title>
+
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-</head><body>  <!-- ==================================================
-       AUTH SCREEN
-  ================================================== -->  <section id="authScreen"><div class="auth-box">
+</head>
 
-  <div class="auth-logo">QEVIRA</div>
+<body>
 
-  <div class="auth-subtitle" id="authSubtitle">
-    Create your account
-  </div>
+  <!-- ================= AUTH ================= -->
 
-  <!-- SIGN UP -->
+  <section id="authScreen" class="auth-screen">
 
-  <form id="signupForm">
+    <div class="auth-card">
 
-    <input
-      id="signupEmail"
-      type="email"
-      placeholder="Email address"
-      autocomplete="email"
-      required
-    >
+      <div class="auth-logo">Q</div>
 
-    <input
-      id="signupPassword"
-      type="password"
-      placeholder="Password"
-      autocomplete="new-password"
-      minlength="6"
-      required
-    >
+      <h1>QEVIRA</h1>
+      <p id="authSubtitle">Create your account</p>
 
-    <button
-      class="auth-btn"
-      type="submit"
-      id="signupBtn"
-    >
-      Create account
-    </button>
+      <!-- SIGN UP -->
+      <form id="signupForm">
 
-  </form>
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+          required
+        >
 
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="new-password"
+          minlength="6"
+          required
+        >
 
-  <!-- LOGIN -->
+        <button id="signupBtn" type="submit">
+          Create account
+        </button>
 
-  <form
-    id="loginForm"
-    style="display:none;"
-  >
+      </form>
 
-    <input
-      id="loginEmail"
-      type="email"
-      placeholder="Email address"
-      autocomplete="email"
-      required
-    >
+      <!-- LOGIN -->
+      <form id="loginForm" class="hidden">
 
-    <input
-      id="loginPassword"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-      required
-    >
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+          required
+        >
 
-    <button
-      class="auth-btn"
-      type="submit"
-      id="loginBtn"
-    >
-      Log in
-    </button>
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        >
 
-  </form>
+        <button id="loginBtn" type="submit">
+          Login
+        </button>
 
+      </form>
 
-  <div id="authMessage"></div>
+      <p id="authMessage"></p>
 
-
-  <div class="auth-switch">
-
-    <span id="switchText">
-      Already have an account?
-    </span>
-
-    <button
-      type="button"
-      id="switchAuthBtn"
-    >
-      Log in
-    </button>
-
-  </div>
-
-</div>
-
-  </section>  <!-- ==================================================
-       QEVIRA APP
-  ================================================== -->  <main id="app"><!-- TOP BAR -->
-
-<header class="topbar">
-
-  <div class="brand">
-    <span class="brand-dot"></span>
-    QEVIRA
-  </div>
-
-  <button
-    id="darkModeBtn"
-    class="icon-btn"
-    type="button"
-    aria-label="Toggle theme"
-  >
-    🌙
-  </button>
-
-</header>
-
-
-<!-- ==================================================
-     CHATS PAGE
-================================================== -->
-
-<section
-  id="chatsPage"
-  class="page"
->
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="page-label">
-        MESSAGES
-      </p>
-
-      <h2>
-        Chats
-      </h2>
-
-      <div
-        id="currentUserEmail"
-        class="user-email"
-      ></div>
+      <div class="auth-switch">
+        <span id="switchText">Already have an account?</span>
+        <button id="switchAuthBtn" type="button">
+          Login
+        </button>
+      </div>
 
     </div>
 
-    <button
-      id="newChatBtn"
-      class="new-chat-btn"
-      type="button"
-    >
-      +
-    </button>
+  </section>
 
-  </div>
 
+  <!-- ================= MAIN APP ================= -->
 
-  <!-- SEARCH -->
+  <main id="app" class="app hidden">
 
-  <div class="search-container">
+    <!-- TOP BAR -->
 
-    <span class="search-icon">
-      🔎
-    </span>
+    <header class="topbar">
 
-    <input
-      id="searchInput"
-      type="search"
-      placeholder="Search chats..."
-    >
+      <div class="brand">
+        <div class="brand-dot">Q</div>
 
-  </div>
+        <div>
+          <strong>QEVIRA</strong>
+          <small id="currentUserEmail"></small>
+        </div>
+      </div>
 
-
-  <!-- CHAT LIST -->
-
-  <div id="chatList">
-    <div class="empty-state">
-      <div class="empty-icon">💬</div>
-      <h3>No chats yet</h3>
-      <p>Start a conversation with someone from Contacts.</p>
-    </div>
-  </div>
-
-</section>
-
-
-<!-- ==================================================
-     CONTACTS PAGE
-================================================== -->
-
-<section
-  id="contactsPage"
-  class="page"
-  style="display:none;"
->
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="page-label">
-        PEOPLE
-      </p>
-
-      <h2>
-        Contacts
-      </h2>
-
-    </div>
-
-  </div>
-
-  <div id="contactsList">
-
-    <div class="empty-state">
-      <div class="empty-icon">👥</div>
-      <h3>Loading contacts...</h3>
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- ==================================================
-     PROFILE PAGE
-================================================== -->
-
-<section
-  id="profilePage"
-  class="page"
-  style="display:none;"
->
-
-  <div class="page-header">
-
-    <div>
-
-      <p class="page-label">
-        ACCOUNT
-      </p>
-
-      <h2>
-        Profile
-      </h2>
-
-    </div>
-
-  </div>
-
-
-  <div class="profile-card">
-
-    <div
-      class="profile-avatar"
-      id="profileAvatar"
-    >
-      Q
-    </div>
-
-    <h2 id="profileName">
-      QEVIRA User
-    </h2>
-
-    <p id="profileUsername">
-      @user
-    </p>
-
-    <div
-      id="profileEmail"
-      class="user-email"
-    ></div>
-
-
-    <div class="profile-divider"></div>
-
-
-    <button
-      id="logoutBtn"
-      class="logout-button"
-      type="button"
-    >
-      Log out
-    </button>
-
-  </div>
-
-</section>
-
-
-<!-- ==================================================
-     BOTTOM NAVIGATION
-================================================== -->
-
-<nav class="bottom-nav">
-
-  <button
-    class="nav-btn active"
-    data-page="chatsPage"
-    type="button"
-  >
-    <span class="nav-icon">💬</span>
-    <span>Chats</span>
-  </button>
-
-
-  <button
-    class="nav-btn"
-    data-page="contactsPage"
-    type="button"
-  >
-    <span class="nav-icon">👥</span>
-    <span>Contacts</span>
-  </button>
-
-
-  <button
-    class="nav-btn"
-    data-page="profilePage"
-    type="button"
-  >
-    <span class="nav-icon">👤</span>
-    <span>Profile</span>
-  </button>
-
-</nav>
-
-  </main>  <!-- ==================================================
-       CHAT MODAL
-  ================================================== -->  <div
-    id="chatModal"
-    class="modal"
-    style="display:none;"
-  ><div class="modal-content">
-
-  <div class="chat-header">
-
-    <button
-      id="closeChatModal"
-      class="icon-btn"
-      type="button"
-    >
-      ←
-    </button>
-
-    <div>
-
-      <p class="chat-header-label">
-        CONVERSATION
-      </p>
-
-      <h2 id="chatTitle">
-        Chat
-      </h2>
-
-    </div>
-
-  </div>
-
-
-  <div id="messages">
-
-    <div class="empty-state">
-      <div class="empty-icon">👋</div>
-      <h3>Say hello!</h3>
-    </div>
-
-  </div>
-
-
-  <form id="messageForm">
-
-    <div class="message-input-container">
-
-      <input
-        id="messageInput"
-        type="text"
-        placeholder="Write a message..."
-        autocomplete="off"
-      >
-
-      <button
-        type="submit"
-        class="send-button"
-      >
-        ➤
+      <button id="darkModeBtn" class="icon-btn" type="button">
+        🌙
       </button>
 
+    </header>
+
+
+    <!-- ================= CHATS ================= -->
+
+    <section id="chatsPage" class="page active-page">
+
+      <div class="page-header">
+
+        <div>
+          <span class="page-label">MESSAGES</span>
+          <h2>Chats</h2>
+        </div>
+
+        <button id="newChatBtn" class="round-btn" type="button">
+          +
+        </button>
+
+      </div>
+
+      <div class="search-box">
+        🔎
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search people..."
+        >
+      </div>
+
+      <div id="chatList" class="list"></div>
+
+      <div id="chatEmpty" class="empty-state">
+        <div class="empty-icon">💬</div>
+        <h3>No chats yet</h3>
+        <p>Find someone in Contacts and start chatting.</p>
+      </div>
+
+    </section>
+
+
+    <!-- ================= CONTACTS ================= -->
+
+    <section id="contactsPage" class="page hidden">
+
+      <div class="page-header">
+
+        <div>
+          <span class="page-label">PEOPLE</span>
+          <h2>Contacts</h2>
+        </div>
+
+      </div>
+
+      <div class="search-box">
+        🔎
+        <input
+          id="contactsSearchInput"
+          type="search"
+          placeholder="Search contacts..."
+        >
+      </div>
+
+      <div id="contactsList" class="list"></div>
+
+    </section>
+
+
+    <!-- ================= PROFILE ================= -->
+
+    <section id="profilePage" class="page hidden">
+
+      <div class="page-header">
+
+        <div>
+          <span class="page-label">ACCOUNT</span>
+          <h2>Profile</h2>
+        </div>
+
+      </div>
+
+      <div class="profile-card">
+
+        <div id="profileAvatar" class="profile-avatar">
+          Q
+        </div>
+
+        <h2 id="profileName">QEVIRA User</h2>
+
+        <p id="profileUsername">@user</p>
+
+        <p id="profileEmail"></p>
+
+      </div>
+
+      <button id="logoutBtn" class="logout-btn" type="button">
+        Log out
+      </button>
+
+    </section>
+
+
+    <!-- ================= BOTTOM NAV ================= -->
+
+    <nav class="bottom-nav">
+
+      <button class="nav-btn active" data-page="chatsPage">
+        <span>💬</span>
+        <small>Chats</small>
+      </button>
+
+      <button class="nav-btn" data-page="contactsPage">
+        <span>👥</span>
+        <small>Contacts</small>
+      </button>
+
+      <button class="nav-btn" data-page="profilePage">
+        <span>👤</span>
+        <small>Profile</small>
+      </button>
+
+    </nav>
+
+  </main>
+
+
+  <!-- ================= CHAT MODAL ================= -->
+
+  <div id="chatModal" class="chat-modal hidden">
+
+    <div class="chat-window">
+
+      <header class="chat-header">
+
+        <button id="closeChatModal" class="chat-back" type="button">
+          ←
+        </button>
+
+        <div class="chat-user-info">
+
+          <div id="chatAvatar" class="mini-avatar">
+            Q
+          </div>
+
+          <div>
+            <strong id="chatTitle">Chat</strong>
+            <small id="chatStatus">Online</small>
+          </div>
+
+        </div>
+
+        <!-- CALL BUTTONS -->
+
+        <div class="call-buttons">
+
+          <button
+            id="voiceCallBtn"
+            class="call-btn"
+            type="button"
+            title="Voice call"
+          >
+            📞
+          </button>
+
+          <button
+            id="videoCallBtn"
+            class="call-btn"
+            type="button"
+            title="Video call"
+          >
+            🎥
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <div id="messages" class="messages"></div>
+
+
+      <form id="messageForm" class="message-form">
+
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Write a message..."
+          autocomplete="off"
+          required
+        >
+
+        <button type="submit">
+          ➤
+        </button>
+
+      </form>
+
     </div>
 
-  </form>
+  </div>
 
-</div>
 
-  </div>  <!-- ==================================================
-       SUPABASE
-  ================================================== -->  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <!-- QEVIRA APP -->  <script src="app.js"></script>  <!-- ==================================================
-       QEVIRA NAVIGATION
-  ================================================== -->  <script>
+  <!-- ================= INCOMING CALL ================= -->
 
-    document.addEventListener("DOMContentLoaded", () => {
+  <div id="incomingCallOverlay" class="call-overlay hidden">
 
-      const navButtons =
-        document.querySelectorAll(".nav-btn");
+    <div class="call-card">
 
-      const pages =
-        document.querySelectorAll(".page");
+      <div id="incomingCallAvatar" class="large-call-avatar">
+        Q
+      </div>
 
-      navButtons.forEach(button => {
+      <h2 id="incomingCallName">
+        Incoming call
+      </h2>
 
-        button.addEventListener("click", () => {
+      <p id="incomingCallType">
+        Someone is calling you
+      </p>
 
-          const pageId =
-            button.dataset.page;
+      <div class="incoming-actions">
 
-          pages.forEach(page => {
-            page.style.display = "none";
-          });
+        <button id="declineCallBtn" class="decline-btn" type="button">
+          ❌
+          <span>Decline</span>
+        </button>
 
-          const selectedPage =
-            document.getElementById(pageId);
+        <button id="acceptCallBtn" class="accept-btn" type="button">
+          ✅
+          <span>Accept</span>
+        </button>
 
-          if (selectedPage) {
-            selectedPage.style.display = "block";
-          }
+      </div>
 
-          navButtons.forEach(btn => {
-            btn.classList.remove("active");
-          });
+    </div>
 
-          button.classList.add("active");
+  </div>
 
+
+  <!-- ================= ACTIVE CALL ================= -->
+
+  <div id="activeCallOverlay" class="call-overlay hidden">
+
+    <div class="active-call-screen">
+
+      <video
+        id="remoteVideo"
+        class="remote-video"
+        autoplay
+        playsinline
+      ></video>
+
+      <video
+        id="localVideo"
+        class="local-video"
+        autoplay
+        muted
+        playsinline
+      ></video>
+
+      <div id="voiceCallDisplay" class="voice-call-display hidden">
+
+        <div id="activeCallAvatar" class="large-call-avatar">
+          Q
+        </div>
+
+        <h2 id="activeCallName">
+          Calling...
+        </h2>
+
+        <p id="activeCallType">
+          Voice call
+        </p>
+
+      </div>
+
+      <div class="call-control-bar">
+
+        <button id="muteCallBtn" type="button">
+          🎤
+        </button>
+
+        <button id="cameraCallBtn" type="button">
+          📹
+        </button>
+
+        <button id="endCallBtn" class="end-call-btn" type="button">
+          ☎️
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SUPABASE -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- QEVIRA -->
+
+  <script src="app.js"></script>
+
+
+  <!-- PAGE NAVIGATION + DARK MODE -->
+
+  <script>
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const pageId = button.dataset.page;
+
+        document.querySelectorAll(".page").forEach(page => {
+          page.classList.add("hidden");
+          page.classList.remove("active-page");
         });
+
+        const page = document.getElementById(pageId);
+
+        if (page) {
+          page.classList.remove("hidden");
+          page.classList.add("active-page");
+        }
+
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+          btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
 
       });
 
+    });
 
-      /* DARK MODE */
 
-      const darkModeBtn =
-        document.getElementById("darkModeBtn");
+    const darkModeBtn = document.getElementById("darkModeBtn");
 
-      if (darkModeBtn) {
+    darkModeBtn.addEventListener("click", () => {
 
-        darkModeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
 
-          document.body.classList.toggle("dark-mode");
+      const dark =
+        document.body.classList.contains("dark-mode");
 
-          const dark =
-            document.body.classList.contains("dark-mode");
+      darkModeBtn.textContent = dark ? "☀️" : "🌙";
 
-          darkModeBtn.textContent =
-            dark ? "☀️" : "🌙";
-
-        });
-
-      }
+      localStorage.setItem(
+        "qevira-dark-mode",
+        dark ? "1" : "0"
+      );
 
     });
 
-  </script></body>
-    </html>
+
+    if (localStorage.getItem("qevira-dark-mode") === "1") {
+
+      document.body.classList.add("dark-mode");
+
+      darkModeBtn.textContent = "☀️";
+
+    }
+
+  </script>
+
+</body>
+  </html>
