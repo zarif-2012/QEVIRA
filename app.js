@@ -15,7 +15,6 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
 
-
 // ======================================================
 
 const supabaseClient =
