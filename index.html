@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6c5ce7">
+  <title>QEVIRA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">Q</div>
+    <div>
+      <strong>QEVIRA</strong>
+      <small>Connect simply.</small>
+    </div>
+  </div>
+  <button id="theme">🌙</button>
+</header>
+
+<main>
+
+<section id="chats" class="screen active">
+  <div class="title">
+    <h1>Chats</h1>
+    <button id="newChat">＋</button>
+  </div>
+
+  <input id="search" class="search" placeholder="Search chats">
+
+  <div id="chatList"></div>
+</section>
+
+
+<section id="contacts" class="screen">
+  <div class="title">
+    <h1>Contacts</h1>
+  </div>
+
+  <input id="contactSearch" class="search" placeholder="Search people">
+
+  <div id="contactsList"></div>
+</section>
+
+
+<section id="profile" class="screen">
+  <div class="title">
+    <h1>Profile</h1>
+  </div>
+
+  <div class="profile">
+    <div class="bigAvatar">Z</div>
+    <h2>Zarif</h2>
+    <p>@zarif</p>
+    <button>Edit profile</button>
+  </div>
+
+  <div class="settings">
+    <div>🔒 Privacy <span>›</span></div>
+    <div>🔔 Notifications <span>›</span></div>
+    <div>🛡️ Safety <span>›</span></div>
+    <div>⭐ Premium <span>›</span></div>
+    <div>⚙️ Settings <span>›</span></div>
+  </div>
+</section>
+
+</main>
+
+
+<nav>
+  <button class="nav active" data-screen="chats">💬<small>Chats</small></button>
+  <button class="nav" data-screen="contacts">👥<small>Contacts</small></button>
+  <button class="nav" data-screen="profile">👤<small>Profile</small></button>
+</nav>
+
+
+<div id="chatBox" class="chatBox">
+
+  <div class="chatHeader">
+    <button id="close">←</button>
+    <div id="chatAvatar" class="avatar">A</div>
+
+    <div class="chatUser">
+      <strong id="chatName">Alex</strong>
+      <small id="chatStatus">online</small>
+    </div>
+  </div>
+
+  <div id="messages" class="messages"></div>
+
+  <form id="messageForm">
+    <input id="message" placeholder="Write a message..." autocomplete="off">
+    <button>➤</button>
+  </form>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+  </html>
