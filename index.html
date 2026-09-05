@@ -3,103 +3,392 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#6c5ce7">
+
   <title>QEVIRA</title>
+
+  <meta name="theme-color" content="#111111">
+  <meta name="description" content="QEVIRA - Connect and chat">
+
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* REAL AUTH SCREEN */
+    #authScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 390px;
+      text-align: center;
+    }
+
+    .auth-logo {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      color: #aaa;
+      margin-bottom: 30px;
+      font-size: 15px;
+    }
+
+    .auth-box input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 15px;
+      margin: 7px 0;
+      border: 1px solid #333;
+      border-radius: 12px;
+      background: #1d1d1d;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .auth-box input:focus {
+      border-color: #777;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      color: black;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-btn:disabled {
+      opacity: 0.6;
+    }
+
+    .auth-switch {
+      margin-top: 22px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .auth-switch button {
+      border: 0;
+      background: none;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #authMessage {
+      min-height: 22px;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    #app {
+      display: none;
+    }
+
+    .user-email {
+      font-size: 13px;
+      color: #888;
+      margin-top: 5px;
+      word-break: break-word;
+    }
+
+    .logout-button {
+      margin-top: 20px;
+      padding: 12px 18px;
+      border: 1px solid #444;
+      border-radius: 10px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>
-  <div class="brand">
-    <div class="logo">Q</div>
-    <div>
-      <strong>QEVIRA</strong>
-      <small>Connect simply.</small>
+  <!-- =========================
+       REAL SUPABASE AUTH
+  ========================== -->
+
+  <section id="authScreen">
+
+    <div class="auth-box">
+
+      <div class="auth-logo">QEVIRA</div>
+
+      <div class="auth-subtitle" id="authSubtitle">
+        Create your account
+      </div>
+
+      <!-- SIGN UP -->
+      <form id="signupForm">
+
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+        >
+
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="new-password"
+          minlength="6"
+          required
+        >
+
+        <button class="auth-btn" type="submit" id="signupBtn">
+          Create account
+        </button>
+
+      </form>
+
+      <!-- LOGIN -->
+      <form id="loginForm" style="display:none;">
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+        >
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button class="auth-btn" type="submit" id="loginBtn">
+          Log in
+        </button>
+
+      </form>
+
+      <div id="authMessage"></div>
+
+      <div class="auth-switch">
+
+        <span id="switchText">
+          Already have an account?
+        </span>
+
+        <button type="button" id="switchAuthBtn">
+          Log in
+        </button>
+
+      </div>
+
     </div>
-  </div>
-  <button id="theme">🌙</button>
-</header>
 
-<main>
-
-<section id="chats" class="screen active">
-  <div class="title">
-    <h1>Chats</h1>
-    <button id="newChat">＋</button>
-  </div>
-
-  <input id="search" class="search" placeholder="Search chats">
-
-  <div id="chatList"></div>
-</section>
+  </section>
 
 
-<section id="contacts" class="screen">
-  <div class="title">
-    <h1>Contacts</h1>
-  </div>
+  <!-- =========================
+       QEVIRA APP
+  ========================== -->
 
-  <input id="contactSearch" class="search" placeholder="Search people">
+  <main id="app">
 
-  <div id="contactsList"></div>
-</section>
+    <header class="topbar">
 
+      <div class="brand">
+        QEVIRA
+      </div>
 
-<section id="profile" class="screen">
-  <div class="title">
-    <h1>Profile</h1>
-  </div>
+      <button id="darkModeBtn" class="icon-btn" type="button">
+        🌙
+      </button>
 
-  <div class="profile">
-    <div class="bigAvatar">Z</div>
-    <h2>Zarif</h2>
-    <p>@zarif</p>
-    <button>Edit profile</button>
-  </div>
-
-  <div class="settings">
-    <div>🔒 Privacy <span>›</span></div>
-    <div>🔔 Notifications <span>›</span></div>
-    <div>🛡️ Safety <span>›</span></div>
-    <div>⭐ Premium <span>›</span></div>
-    <div>⚙️ Settings <span>›</span></div>
-  </div>
-</section>
-
-</main>
+    </header>
 
 
-<nav>
-  <button class="nav active" data-screen="chats">💬<small>Chats</small></button>
-  <button class="nav" data-screen="contacts">👥<small>Contacts</small></button>
-  <button class="nav" data-screen="profile">👤<small>Profile</small></button>
-</nav>
+    <!-- CHATS -->
+
+    <section id="chatsPage" class="page">
+
+      <div class="page-header">
+
+        <div>
+          <h2>Chats</h2>
+          <div id="currentUserEmail" class="user-email"></div>
+        </div>
+
+        <button id="newChatBtn" type="button">
+          +
+        </button>
+
+      </div>
+
+      <div class="search-container">
+
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search chats..."
+        >
+
+      </div>
+
+      <div id="chatList"></div>
+
+    </section>
 
 
-<div id="chatBox" class="chatBox">
+    <!-- CONTACTS -->
 
-  <div class="chatHeader">
-    <button id="close">←</button>
-    <div id="chatAvatar" class="avatar">A</div>
+    <section id="contactsPage" class="page" style="display:none;">
 
-    <div class="chatUser">
-      <strong id="chatName">Alex</strong>
-      <small id="chatStatus">online</small>
+      <div class="page-header">
+        <h2>Contacts</h2>
+      </div>
+
+      <div id="contactsList"></div>
+
+    </section>
+
+
+    <!-- PROFILE -->
+
+    <section id="profilePage" class="page" style="display:none;">
+
+      <div class="page-header">
+        <h2>Profile</h2>
+      </div>
+
+      <div class="profile-card">
+
+        <div class="profile-avatar">
+          Z
+        </div>
+
+        <h2 id="profileName">
+          Zarif
+        </h2>
+
+        <p id="profileUsername">
+          @zarif
+        </p>
+
+        <div id="profileEmail" class="user-email"></div>
+
+        <button
+          id="logoutBtn"
+          class="logout-button"
+          type="button"
+        >
+          Log out
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- BOTTOM NAVIGATION -->
+
+    <nav class="bottom-nav">
+
+      <button
+        class="nav-btn active"
+        data-page="chatsPage"
+        type="button"
+      >
+        💬
+        <span>Chats</span>
+      </button>
+
+      <button
+        class="nav-btn"
+        data-page="contactsPage"
+        type="button"
+      >
+        👥
+        <span>Contacts</span>
+      </button>
+
+      <button
+        class="nav-btn"
+        data-page="profilePage"
+        type="button"
+      >
+        👤
+        <span>Profile</span>
+      </button>
+
+    </nav>
+
+  </main>
+
+
+  <!-- CHAT MODAL -->
+
+  <div id="chatModal" class="modal" style="display:none;">
+
+    <div class="modal-content">
+
+      <button id="closeChatModal" type="button">
+        ✕
+      </button>
+
+      <h2 id="chatTitle">
+        Chat
+      </h2>
+
+      <div id="messages"></div>
+
+      <form id="messageForm">
+
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Message..."
+          autocomplete="off"
+        >
+
+        <button type="submit">
+          Send
+        </button>
+
+      </form>
+
     </div>
+
   </div>
 
-  <div id="messages" class="messages"></div>
 
-  <form id="messageForm">
-    <input id="message" placeholder="Write a message..." autocomplete="off">
-    <button>➤</button>
-  </form>
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-</div>
-
-
-<script src="app.js"></script>
+  <!-- QEVIRA APP -->
+  <script src="app.js"></script>
 
 </body>
   </html>
