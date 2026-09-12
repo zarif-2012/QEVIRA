@@ -5,55 +5,48 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   >
 
-  <meta
-    name="theme-color"
-    content="#6c5ce7"
-  >
-
+  <meta name="theme-color" content="#6c5ce7">
   <meta
     name="description"
     content="QEVIRA real-time messaging app"
   >
 
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
+
   <title>QEVIRA</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- ==================================================
+  <!-- =====================================================
        AUTH SCREEN
-  ================================================== -->
+  ====================================================== -->
 
   <section id="authScreen" class="auth-screen">
 
     <div class="auth-card">
 
-      <div class="auth-logo">Q</div>
+      <div class="auth-logo">
+        Q
+      </div>
 
       <h1>QEVIRA</h1>
+      <p class="auth-subtitle">Connect. Chat. Call.</p>
 
-      <p id="authSubtitle">
-        Create your account
-      </p>
+      <!-- SIGN UP -->
 
+      <form id="signupForm" class="auth-form">
 
-      <!-- ================= SIGN UP ================= -->
-
-      <form id="signupForm">
+        <h2>Create account</h2>
 
         <input
           id="signupEmail"
           type="email"
-          placeholder="Email"
+          placeholder="Email address"
           autocomplete="email"
           required
         >
@@ -63,31 +56,25 @@
           type="password"
           placeholder="Password"
           autocomplete="new-password"
-          minlength="6"
           required
         >
 
-        <button
-          id="signupBtn"
-          type="submit"
-        >
-          Create account
+        <button id="signupBtn" type="submit" class="primary-btn">
+          Create Account
         </button>
 
       </form>
 
+      <!-- LOGIN -->
 
-      <!-- ================= LOGIN ================= -->
+      <form id="loginForm" class="auth-form hidden">
 
-      <form
-        id="loginForm"
-        class="hidden"
-      >
+        <h2>Welcome back</h2>
 
         <input
           id="loginEmail"
           type="email"
-          placeholder="Email"
+          placeholder="Email address"
           autocomplete="email"
           required
         >
@@ -100,151 +87,101 @@
           required
         >
 
-        <button
-          id="loginBtn"
-          type="submit"
-        >
+        <button id="loginBtn" type="submit" class="primary-btn">
           Login
         </button>
 
       </form>
 
+      <p id="authMessage" class="auth-message"></p>
 
-      <p id="authMessage"></p>
-
-
-      <div class="auth-switch">
-
-        <span id="switchText">
-          Already have an account?
-        </span>
-
-        <button
-          id="switchAuthBtn"
-          type="button"
-        >
-          Login
-        </button>
-
-      </div>
+      <button id="switchAuthBtn" class="text-btn">
+        Already have an account? Login
+      </button>
 
     </div>
 
   </section>
 
 
-  <!-- ==================================================
+  <!-- =====================================================
        MAIN APP
-  ================================================== -->
+  ====================================================== -->
 
-  <main
-    id="app"
-    class="app hidden"
-  >
+  <main id="app" class="app hidden">
 
-    <!-- ================= TOP BAR ================= -->
+    <!-- TOP BAR -->
 
     <header class="topbar">
 
       <div class="brand">
-
-        <div class="brand-dot">
-          Q
-        </div>
+        <div class="brand-logo">Q</div>
 
         <div>
-
-          <strong>
-            QEVIRA
-          </strong>
-
-          <small id="currentUserEmail"></small>
-
+          <strong>QEVIRA</strong>
+          <span id="currentUserEmail"></span>
         </div>
-
       </div>
-
 
       <button
         id="darkModeBtn"
         class="icon-btn"
         type="button"
+        aria-label="Toggle dark mode"
+        title="Dark mode"
       >
-        🌙
+        <span class="icon">☾</span>
       </button>
 
     </header>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          CHATS PAGE
     ================================================== -->
 
-    <section
-      id="chatsPage"
-      class="page active-page"
-    >
+    <section id="chatsPage" class="page">
 
       <div class="page-header">
 
         <div>
-
-          <span class="page-label">
-            MESSAGES
-          </span>
-
-          <h2>
-            Chats
-          </h2>
-
+          <h2>Chats</h2>
+          <p>Your conversations</p>
         </div>
-
 
         <button
           id="newChatBtn"
           class="round-btn"
           type="button"
+          title="New chat"
         >
           +
         </button>
 
       </div>
 
-
       <div class="search-box">
 
-        🔎
+        <span>⌕</span>
 
         <input
           id="searchInput"
           type="search"
-          placeholder="Search people..."
+          placeholder="Search chats..."
         >
 
       </div>
 
+      <div id="chatList" class="list"></div>
 
-      <div
-        id="chatList"
-        class="list"
-      ></div>
+      <div id="chatEmpty" class="empty-state">
 
+        <div class="empty-icon">💬</div>
 
-      <div
-        id="chatEmpty"
-        class="empty-state"
-      >
-
-        <div class="empty-icon">
-          💬
-        </div>
-
-        <h3>
-          No chats yet
-        </h3>
+        <h3>No chats yet</h3>
 
         <p>
-          Find someone in Contacts and start chatting.
+          Start a conversation from Contacts.
         </p>
 
       </div>
@@ -252,169 +189,105 @@
     </section>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          CONTACTS PAGE
     ================================================== -->
 
-    <section
-      id="contactsPage"
-      class="page hidden"
-    >
+    <section id="contactsPage" class="page hidden">
 
       <div class="page-header">
 
         <div>
-
-          <span class="page-label">
-            PEOPLE
-          </span>
-
-          <h2>
-            Contacts
-          </h2>
-
+          <h2>Contacts</h2>
+          <p>Find people on QEVIRA</p>
         </div>
 
       </div>
 
-
       <div class="search-box">
 
-        🔎
+        <span>⌕</span>
 
         <input
           id="contactsSearchInput"
           type="search"
-          placeholder="Search contacts..."
+          placeholder="Search users..."
         >
 
       </div>
 
-
-      <div
-        id="contactsList"
-        class="list"
-      ></div>
+      <div id="contactsList" class="list"></div>
 
     </section>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          PROFILE PAGE
     ================================================== -->
 
-    <section
-      id="profilePage"
-      class="page hidden"
-    >
+    <section id="profilePage" class="page hidden">
 
       <div class="page-header">
 
         <div>
-
-          <span class="page-label">
-            ACCOUNT
-          </span>
-
-          <h2>
-            Profile
-          </h2>
-
+          <h2>Profile</h2>
+          <p>Your QEVIRA account</p>
         </div>
 
       </div>
 
-
       <div class="profile-card">
 
-        <div
-          id="profileAvatar"
-          class="profile-avatar"
-        >
+        <div id="profileAvatar" class="profile-avatar">
           Q
         </div>
 
+        <h2 id="profileName">QEVIRA User</h2>
 
-        <h2 id="profileName">
-          QEVIRA User
-        </h2>
-
-
-        <p id="profileUsername">
-          @user
-        </p>
-
+        <p id="profileUsername">@user</p>
 
         <p id="profileEmail"></p>
 
       </div>
 
-
-      <button
-        id="logoutBtn"
-        class="logout-btn"
-        type="button"
-      >
-        Log out
+      <button id="logoutBtn" class="danger-btn" type="button">
+        Logout
       </button>
 
     </section>
 
 
-    <!-- ==================================================
+    <!-- =================================================
          BOTTOM NAVIGATION
     ================================================== -->
 
     <nav class="bottom-nav">
 
       <button
-        class="nav-btn active"
+        class="nav-item active"
         data-page="chatsPage"
         type="button"
       >
-
-        <span>
-          💬
-        </span>
-
-        <small>
-          Chats
-        </small>
-
+        <span class="nav-icon">▱</span>
+        <span>Chats</span>
       </button>
 
-
       <button
-        class="nav-btn"
+        class="nav-item"
         data-page="contactsPage"
         type="button"
       >
-
-        <span>
-          👥
-        </span>
-
-        <small>
-          Contacts
-        </small>
-
+        <span class="nav-icon">♙</span>
+        <span>Contacts</span>
       </button>
 
-
       <button
-        class="nav-btn"
+        class="nav-item"
         data-page="profilePage"
         type="button"
       >
-
-        <span>
-          👤
-        </span>
-
-        <small>
-          Profile
-        </small>
-
+        <span class="nav-icon">○</span>
+        <span>Profile</span>
       </button>
 
     </nav>
@@ -422,14 +295,11 @@
   </main>
 
 
-  <!-- ==================================================
+  <!-- =====================================================
        CHAT MODAL
-  ================================================== -->
+  ====================================================== -->
 
-  <div
-    id="chatModal"
-    class="chat-modal hidden"
-  >
+  <div id="chatModal" class="modal hidden">
 
     <div class="chat-window">
 
@@ -437,61 +307,58 @@
 
         <button
           id="closeChatModal"
-          class="chat-back"
+          class="icon-btn"
           type="button"
+          aria-label="Close chat"
         >
-          ←
+          ‹
         </button>
-
 
         <div class="chat-user-info">
 
-          <div
-            id="chatAvatar"
-            class="mini-avatar"
-          >
+          <div id="chatAvatar" class="mini-avatar">
             Q
           </div>
-
 
           <div>
 
             <strong id="chatTitle">
-              Chat
+              User
             </strong>
 
-            <small id="chatStatus">
-              Online
-            </small>
+            <span id="chatStatus">
+              Offline
+            </span>
 
           </div>
 
         </div>
 
-
-        <!-- ================= CALL BUTTONS ================= -->
-
-        <div class="call-buttons">
+        <div class="chat-call-actions">
 
           <button
             id="voiceCallBtn"
-            class="call-btn"
+            class="call-icon-btn"
             type="button"
             title="Voice call"
             aria-label="Voice call"
           >
-            📞
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.2 1 .3 2 .5 3 .5.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.9 21 3 12.1 3 1.4c0-.6.4-1 1-1H8c.6 0 1 .4 1 1 0 1 .2 2 .5 3 .1.4 0 .9-.2 1.2l-2.7 2.2z"/>
+            </svg>
           </button>
-
 
           <button
             id="videoCallBtn"
-            class="call-btn"
+            class="call-icon-btn"
             type="button"
             title="Video call"
             aria-label="Video call"
           >
-            🎥
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="6" width="13" height="12" rx="2"></rect>
+              <path d="M16 10l5-3v10l-5-3z"></path>
+            </svg>
           </button>
 
         </div>
@@ -499,32 +366,22 @@
       </header>
 
 
-      <!-- ================= MESSAGES ================= -->
-
-      <div
-        id="messages"
-        class="messages"
-      ></div>
+      <div id="messages" class="messages"></div>
 
 
-      <!-- ================= MESSAGE FORM ================= -->
-
-      <form
-        id="messageForm"
-        class="message-form"
-      >
+      <form id="messageForm" class="message-form">
 
         <input
           id="messageInput"
           type="text"
           placeholder="Write a message..."
           autocomplete="off"
-          required
         >
 
-
-        <button type="submit">
-          ➤
+        <button type="submit" class="send-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 20.5L21 12 3 3.5v6.7l11 1.8-11 1.8z"/>
+          </svg>
         </button>
 
       </form>
@@ -534,60 +391,61 @@
   </div>
 
 
-  <!-- ==================================================
+  <!-- =====================================================
        INCOMING CALL
-  ================================================== -->
+  ====================================================== -->
 
-  <div
-    id="incomingCallOverlay"
-    class="call-overlay hidden"
-  >
+  <div id="incomingCallOverlay" class="call-overlay hidden">
 
-    <div class="call-card">
+    <div class="incoming-call-card">
 
-      <div
-        id="incomingCallAvatar"
-        class="large-call-avatar"
-      >
+      <div class="incoming-glow"></div>
+
+      <div id="incomingCallAvatar" class="large-call-avatar">
         Q
       </div>
 
-
-      <h2 id="incomingCallName">
+      <p class="call-small-label">
         Incoming call
-      </h2>
-
-
-      <p id="incomingCallType">
-        Someone is calling you
       </p>
 
+      <h2 id="incomingCallName">
+        QEVIRA User
+      </h2>
 
-      <div class="incoming-actions">
+      <p id="incomingCallType">
+        Voice call
+      </p>
+
+      <div class="incoming-call-actions">
 
         <button
           id="declineCallBtn"
-          class="decline-btn"
+          class="call-action decline"
           type="button"
+          aria-label="Decline call"
         >
-          ❌
-          <span>
-            Decline
-          </span>
+          <svg viewBox="0 0 24 24">
+            <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.2 1 .3 2 .5 3 .5.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.9 21 3 12.1 3 1.4c0-.6.4-1 1-1H8c.6 0 1 .4 1 1 0 1 .2 2 .5 3 .1.4 0 .9-.2 1.2l-2.7 2.2z"/>
+          </svg>
         </button>
-
 
         <button
           id="acceptCallBtn"
-          class="accept-btn"
+          class="call-action accept"
           type="button"
+          aria-label="Accept call"
         >
-          ✅
-          <span>
-            Accept
-          </span>
+          <svg viewBox="0 0 24 24">
+            <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.2 1 .3 2 .5 3 .5.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.9 21 3 12.1 3 1.4c0-.6.4-1 1-1H8c.6 0 1 .4 1 1 0 1 .2 2 .5 3 .1.4 0 .9-.2 1.2l-2.7 2.2z"/>
+          </svg>
         </button>
 
+      </div>
+
+      <div class="call-action-labels">
+        <span>Decline</span>
+        <span>Accept</span>
       </div>
 
     </div>
@@ -595,268 +453,177 @@
   </div>
 
 
-  <!-- ==================================================
+  <!-- =====================================================
        ACTIVE CALL
-  ================================================== -->
+  ====================================================== -->
 
-  <div
-    id="activeCallOverlay"
-    class="call-overlay hidden"
-  >
+  <div id="activeCallOverlay" class="call-overlay active-call hidden">
 
-    <div class="active-call-screen">
+    <!-- VIDEO -->
 
+    <video
+      id="remoteVideo"
+      class="remote-video"
+      autoplay
+      playsinline
+    ></video>
 
-      <!-- REMOTE VIDEO -->
-
-      <video
-        id="remoteVideo"
-        class="remote-video"
-        autoplay
-        playsinline
-      ></video>
-
-
-      <!-- LOCAL VIDEO -->
-
-      <video
-        id="localVideo"
-        class="local-video"
-        autoplay
-        muted
-        playsinline
-      ></video>
+    <video
+      id="localVideo"
+      class="local-video"
+      autoplay
+      muted
+      playsinline
+    ></video>
 
 
-      <!-- VOICE CALL DISPLAY -->
+    <!-- VOICE CALL BACKGROUND -->
 
-      <div
-        id="voiceCallDisplay"
-        class="voice-call-display hidden"
-      >
+    <div id="voiceCallDisplay" class="voice-call-display">
 
-        <div
-          id="activeCallAvatar"
-          class="large-call-avatar"
-        >
-          Q
-        </div>
+      <div class="voice-bg-circle"></div>
+
+      <div id="activeCallAvatar" class="active-call-avatar">
+        Q
+      </div>
+
+    </div>
 
 
+    <!-- CALL TOP -->
+
+    <div class="active-call-top">
+
+      <div>
         <h2 id="activeCallName">
-          Calling...
+          QEVIRA User
         </h2>
 
-
         <p id="activeCallType">
-          Voice call
+          Connecting...
         </p>
-
       </div>
 
+      <div class="call-status-dot"></div>
 
-      <!-- CALL CONTROLS -->
-
-      <div class="call-control-bar">
-
-        <button
-          id="muteCallBtn"
-          type="button"
-        >
-          🎤
-        </button>
+    </div>
 
 
-        <button
-          id="cameraCallBtn"
-          type="button"
-        >
-          📹
-        </button>
+    <!-- CALL CONTROLS -->
+
+    <div class="call-controls">
+
+      <button
+        id="muteCallBtn"
+        class="control-btn"
+        type="button"
+        aria-label="Mute microphone"
+        title="Mute microphone"
+      >
+        <svg class="control-icon mic-on" viewBox="0 0 24 24">
+          <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+          <path d="M5 11a7 7 0 0 0 14 0"></path>
+          <path d="M12 18v4"></path>
+          <path d="M8 22h8"></path>
+        </svg>
+
+        <svg class="control-icon mic-off hidden" viewBox="0 0 24 24">
+          <path d="M5 5l14 14"></path>
+          <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+          <path d="M5 11a7 7 0 0 0 7 7c1.9 0 3.7-.8 5-2"></path>
+          <path d="M12 18v4"></path>
+          <path d="M8 22h8"></path>
+        </svg>
+      </button>
 
 
-        <button
-          id="endCallBtn"
-          class="end-call-btn"
-          type="button"
-        >
-          ☎️
-        </button>
+      <button
+        id="cameraCallBtn"
+        class="control-btn"
+        type="button"
+        aria-label="Turn camera on"
+        title="Camera"
+      >
+        <svg class="control-icon camera-on" viewBox="0 0 24 24">
+          <rect x="3" y="6" width="13" height="12" rx="2"></rect>
+          <path d="M16 10l5-3v10l-5-3z"></path>
+        </svg>
 
-      </div>
+        <svg class="control-icon camera-off hidden" viewBox="0 0 24 24">
+          <path d="M3 3l18 18"></path>
+          <rect x="3" y="6" width="13" height="12" rx="2"></rect>
+          <path d="M16 10l5-3v10l-5-3z"></path>
+        </svg>
+      </button>
+
+
+      <button
+        id="speakerCallBtn"
+        class="control-btn"
+        type="button"
+        aria-label="Speaker"
+        title="Speaker"
+      >
+        <svg class="control-icon" viewBox="0 0 24 24">
+          <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+          <path d="M16 8a6 6 0 0 1 0 8"></path>
+          <path d="M18.5 5.5a10 10 0 0 1 0 13"></path>
+        </svg>
+      </button>
+
+
+      <button
+        id="switchCameraBtn"
+        class="control-btn"
+        type="button"
+        aria-label="Switch camera"
+        title="Switch camera"
+      >
+        <svg class="control-icon" viewBox="0 0 24 24">
+          <path d="M20 7v5h-5"></path>
+          <path d="M4 17v-5h5"></path>
+          <path d="M6.2 9A7 7 0 0 1 18 7l2 2"></path>
+          <path d="M17.8 15A7 7 0 0 1 6 17l-2-2"></path>
+        </svg>
+      </button>
+
+
+      <button
+        id="endCallBtn"
+        class="end-call-btn"
+        type="button"
+        aria-label="End call"
+        title="End call"
+      >
+        <svg viewBox="0 0 24 24">
+          <path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.2 1 .3 2 .5 3 .5.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.9 21 3 12.1 3 1.4c0-.6.4-1 1-1H8c.6 0 1 .4 1 1 0 1 .2 2 .5 3 .1.4 0 .9-.2 1.2.1-.1.1-.1.1-.2l-2.7 2.2z"/>
+        </svg>
+      </button>
 
     </div>
 
   </div>
 
 
-  <!-- ==================================================
-       SUPABASE
-  ================================================== -->
+  <!-- SUPABASE -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-  <!-- ==================================================
-       QEVIRA APP
-  ================================================== -->
-
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 
 
-  <!-- ==================================================
-       PAGE NAVIGATION + DARK MODE
-  ================================================== -->
+  <!-- SERVICE WORKER -->
 
   <script>
-
-    /* ================= PAGE NAVIGATION ================= */
-
-    document
-      .querySelectorAll(".nav-btn")
-      .forEach(button => {
-
-        button.addEventListener("click", () => {
-
-          const pageId =
-            button.dataset.page;
-
-
-          document
-            .querySelectorAll(".page")
-            .forEach(page => {
-
-              page.classList.add("hidden");
-
-              page.classList.remove(
-                "active-page"
-              );
-
-            });
-
-
-          const page =
-            document.getElementById(pageId);
-
-
-          if (page) {
-
-            page.classList.remove(
-              "hidden"
-            );
-
-            page.classList.add(
-              "active-page"
-            );
-
-          }
-
-
-          document
-            .querySelectorAll(".nav-btn")
-            .forEach(btn => {
-
-              btn.classList.remove(
-                "active"
-              );
-
-            });
-
-
-          button.classList.add("active");
-
-        });
-
-      });
-
-
-    /* ================= DARK MODE ================= */
-
-    const darkModeBtn =
-      document.getElementById(
-        "darkModeBtn"
-      );
-
-
-    darkModeBtn.addEventListener(
-      "click",
-      () => {
-
-        document.body.classList.toggle(
-          "dark-mode"
-        );
-
-
-        const dark =
-          document.body.classList.contains(
-            "dark-mode"
-          );
-
-
-        darkModeBtn.textContent =
-          dark ? "☀️" : "🌙";
-
-
-        localStorage.setItem(
-          "qevira-dark-mode",
-          dark ? "1" : "0"
-        );
-
-      }
-    );
-
-
-    /* ================= RESTORE DARK MODE ================= */
-
-    if (
-      localStorage.getItem(
-        "qevira-dark-mode"
-      ) === "1"
-    ) {
-
-      document.body.classList.add(
-        "dark-mode"
-      );
-
-      darkModeBtn.textContent = "☀️";
-
-    }
-
-
-    /* ==================================================
-       PWA SERVICE WORKER
-    ================================================== */
-
     if ("serviceWorker" in navigator) {
-
-      window.addEventListener(
-        "load",
-        () => {
-
-          navigator.serviceWorker
-            .register("./sw.js")
-            .then(() => {
-
-              console.log(
-                "QEVIRA PWA service worker registered"
-              );
-
-            })
-            .catch(error => {
-
-              console.error(
-                "QEVIRA PWA registration failed:",
-                error
-              );
-
-            });
-
-        }
-      );
-
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .catch(error => {
+            console.error("Service worker registration failed:", error);
+          });
+      });
     }
-
   </script>
 
 </body>
-  </html>
+        </html>
