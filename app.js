@@ -1,7 +1,7 @@
 // ======================================================
 // QEVIRA
-// REAL SUPABASE AUTH + REAL 1-TO-1 MESSAGING
-// REAL WEBRTC VOICE + VIDEO CALLING
+// AUTH + PROFILES + CONTACTS + MESSAGING
+// REALTIME WEBRTC VOICE + VIDEO CALLING
 // ======================================================
 
 
@@ -12,114 +12,438 @@
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
 
-const SUPABASE_PUBLISHABLE_KEY =
-  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
+// PASTE YOUR EXISTING SUPABASE ANON/PUBLISHABLE KEY HERE
+const SUPABASE_ANON_KEY =
+  "PASTE_YOUR_EXISTING_SUPABASE_ANON_KEY_HERE";
 
 const supabaseClient =
   window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
+    SUPABASE_ANON_KEY
   );
 
 
 // ======================================================
-// 2. STATE
+// 2. GLOBAL STATE
 // ======================================================
 
 let currentUser = null;
-let currentProfile = null;
+
 let currentChatUser = null;
 
-let realtimeChannel = null;
+let authSubscription = null;
 
-
-// ======================================================
-// CALL STATE
-// ======================================================
+let chatChannel = null;
 
 let callInboxChannel = null;
+
 let callPairChannel = null;
 
 let peerConnection = null;
 
 let localStream = null;
+
 let remoteStream = null;
-
-let isVideoCall = false;
-let isCallMuted = false;
-let isCameraOff = false;
-
-let incomingOffer = null;
-let incomingCaller = null;
 
 let pendingIceCandidates = [];
 
 let activeCallPeerId = null;
+
 let activeCallRole = null;
 
+let activeCallType = null;
+
+let activeCallAccepted = false;
+
+let isMuted = false;
+
+let isCameraOff = false;
+
+let isSpeakerOn = false;
+
 
 // ======================================================
-// 3. DOM HELPER
+// 3. DOM
 // ======================================================
 
-const $ = id => document.getElementById(id);
+const authScreen =
+  document.getElementById("authScreen");
+
+const app =
+  document.getElementById("app");
+
+const signupForm =
+  document.getElementById("signupForm");
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const signupEmail =
+  document.getElementById("signupEmail");
+
+const signupPassword =
+  document.getElementById("signupPassword");
+
+const loginEmail =
+  document.getElementById("loginEmail");
+
+const loginPassword =
+  document.getElementById("loginPassword");
+
+const signupBtn =
+  document.getElementById("signupBtn");
+
+const loginBtn =
+  document.getElementById("loginBtn");
+
+const switchAuthBtn =
+  document.getElementById("switchAuthBtn");
+
+const authMessage =
+  document.getElementById("authMessage");
+
+const currentUserEmail =
+  document.getElementById("currentUserEmail");
+
+const darkModeBtn =
+  document.getElementById("darkModeBtn");
+
+const chatsPage =
+  document.getElementById("chatsPage");
+
+const contactsPage =
+  document.getElementById("contactsPage");
+
+const profilePage =
+  document.getElementById("profilePage");
+
+const chatList =
+  document.getElementById("chatList");
+
+const chatEmpty =
+  document.getElementById("chatEmpty");
+
+const contactsList =
+  document.getElementById("contactsList");
+
+const searchInput =
+  document.getElementById("searchInput");
+
+const contactsSearchInput =
+  document.getElementById("contactsSearchInput");
+
+const newChatBtn =
+  document.getElementById("newChatBtn");
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+const profileAvatar =
+  document.getElementById("profileAvatar");
+
+const profileName =
+  document.getElementById("profileName");
+
+const profileUsername =
+  document.getElementById("profileUsername");
+
+const profileEmail =
+  document.getElementById("profileEmail");
+
+const chatModal =
+  document.getElementById("chatModal");
+
+const closeChatModal =
+  document.getElementById("closeChatModal");
+
+const chatAvatar =
+  document.getElementById("chatAvatar");
+
+const chatTitle =
+  document.getElementById("chatTitle");
+
+const chatStatus =
+  document.getElementById("chatStatus");
+
+const messages =
+  document.getElementById("messages");
+
+const messageForm =
+  document.getElementById("messageForm");
+
+const messageInput =
+  document.getElementById("messageInput");
+
+const voiceCallBtn =
+  document.getElementById("voiceCallBtn");
+
+const videoCallBtn =
+  document.getElementById("videoCallBtn");
 
 
 // ======================================================
-// 4. AUTH UI
+// CALL DOM
 // ======================================================
 
-let authMode = "signup";
+const incomingCallOverlay =
+  document.getElementById("incomingCallOverlay");
+
+const incomingCallAvatar =
+  document.getElementById("incomingCallAvatar");
+
+const incomingCallName =
+  document.getElementById("incomingCallName");
+
+const incomingCallType =
+  document.getElementById("incomingCallType");
+
+const declineCallBtn =
+  document.getElementById("declineCallBtn");
+
+const acceptCallBtn =
+  document.getElementById("acceptCallBtn");
+
+const activeCallOverlay =
+  document.getElementById("activeCallOverlay");
+
+const remoteVideo =
+  document.getElementById("remoteVideo");
+
+const localVideo =
+  document.getElementById("localVideo");
+
+const voiceCallDisplay =
+  document.getElementById("voiceCallDisplay");
+
+const activeCallAvatar =
+  document.getElementById("activeCallAvatar");
+
+const activeCallName =
+  document.getElementById("activeCallName");
+
+const activeCallType =
+  document.getElementById("activeCallType");
+
+const muteCallBtn =
+  document.getElementById("muteCallBtn");
+
+const cameraCallBtn =
+  document.getElementById("cameraCallBtn");
+
+const speakerCallBtn =
+  document.getElementById("speakerCallBtn");
+
+const switchCameraBtn =
+  document.getElementById("switchCameraBtn");
+
+const endCallBtn =
+  document.getElementById("endCallBtn");
 
 
-function showLogin() {
+// ======================================================
+// 4. WEBRTC CONFIG
+// ======================================================
 
-  authMode = "login";
+const rtcConfig = {
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302"
+    },
+    {
+      urls: "stun:stun1.l.google.com:19302"
+    }
+  ]
+};
 
-  $("signupForm").classList.add("hidden");
-  $("loginForm").classList.remove("hidden");
 
-  $("authSubtitle").textContent =
-    "Welcome back";
+// ======================================================
+// 5. HELPERS
+// ======================================================
 
-  $("switchText").textContent =
-    "Don't have an account?";
+function escapeHtml(value) {
 
-  $("switchAuthBtn").textContent =
-    "Sign up";
+  if (value === null || value === undefined) {
+    return "";
+  }
 
-  $("authMessage").textContent = "";
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
-function showSignup() {
+function getInitial(value) {
 
-  authMode = "signup";
+  if (!value) {
+    return "Q";
+  }
 
-  $("loginForm").classList.add("hidden");
-  $("signupForm").classList.remove("hidden");
-
-  $("authSubtitle").textContent =
-    "Create your account";
-
-  $("switchText").textContent =
-    "Already have an account?";
-
-  $("switchAuthBtn").textContent =
-    "Login";
-
-  $("authMessage").textContent = "";
+  return String(value)
+    .trim()
+    .charAt(0)
+    .toUpperCase() || "Q";
 }
 
 
-$("switchAuthBtn").addEventListener(
+function setAuthMessage(message, error = true) {
+
+  authMessage.textContent = message;
+
+  authMessage.style.color =
+    error
+      ? "var(--danger)"
+      : "var(--green)";
+}
+
+
+function showApp() {
+
+  authScreen.classList.add("hidden");
+
+  app.classList.remove("hidden");
+}
+
+
+function showAuth() {
+
+  app.classList.add("hidden");
+
+  authScreen.classList.remove("hidden");
+}
+
+
+function getPairId(userA, userB) {
+
+  return [
+    String(userA),
+    String(userB)
+  ].sort().join("-");
+}
+
+
+function getCallInboxName(userId) {
+
+  return `qevira-call-inbox-${userId}`;
+}
+
+
+function getCallPairName(userA, userB) {
+
+  return `qevira-call-${getPairId(userA, userB)}`;
+}
+
+
+function isForCurrentUser(payload) {
+
+  if (!payload) {
+    return false;
+  }
+
+  return (
+    !payload.to ||
+    String(payload.to) === String(currentUser.id)
+  );
+}
+
+
+// ======================================================
+// 6. AUTH MODE
+// ======================================================
+
+switchAuthBtn.addEventListener(
   "click",
   () => {
 
-    if (authMode === "signup") {
-      showLogin();
+    const signupVisible =
+      !signupForm.classList.contains("hidden");
+
+    if (signupVisible) {
+
+      signupForm.classList.add("hidden");
+
+      loginForm.classList.remove("hidden");
+
+      switchAuthBtn.textContent =
+        "Don't have an account? Sign up";
+
     } else {
-      showSignup();
+
+      loginForm.classList.add("hidden");
+
+      signupForm.classList.remove("hidden");
+
+      switchAuthBtn.textContent =
+        "Already have an account? Login";
+    }
+
+    setAuthMessage("");
+  }
+);
+
+
+// ======================================================
+// 7. SIGN UP
+// ======================================================
+
+signupForm.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const email =
+      signupEmail.value.trim();
+
+    const password =
+      signupPassword.value;
+
+    if (!email || !password) {
+      setAuthMessage(
+        "Please enter email and password."
+      );
+
+      return;
+    }
+
+    signupBtn.disabled = true;
+
+    signupBtn.textContent =
+      "Creating...";
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+    signupBtn.disabled = false;
+
+    signupBtn.textContent =
+      "Create Account";
+
+    if (error) {
+
+      setAuthMessage(
+        error.message
+      );
+
+      return;
+    }
+
+    if (data.user) {
+
+      setAuthMessage(
+        "Account created. Check your email if confirmation is required.",
+        false
+      );
+
+      signupPassword.value = "";
     }
 
   }
@@ -127,647 +451,463 @@ $("switchAuthBtn").addEventListener(
 
 
 // ======================================================
-// 5. SIGN UP
+// 8. LOGIN
 // ======================================================
 
-async function signUp() {
-
-  const email =
-    $("signupEmail").value.trim();
-
-  const password =
-    $("signupPassword").value;
-
-  $("authMessage").textContent =
-    "Creating account...";
-
-  if (!email) {
-
-    $("authMessage").textContent =
-      "Please enter your email.";
-
-    return;
-  }
-
-  if (password.length < 6) {
-
-    $("authMessage").textContent =
-      "Password must be at least 6 characters.";
-
-    return;
-  }
-
-
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-      email,
-      password
-    });
-
-
-  if (error) {
-
-    $("authMessage").textContent =
-      error.message;
-
-    return;
-  }
-
-
-  if (data.user) {
-
-    $("authMessage").textContent =
-      "Account created. Check your email if confirmation is required.";
-
-  }
-
-}
-
-
-$("signupForm").addEventListener(
+loginForm.addEventListener(
   "submit",
-  event => {
+  async event => {
 
     event.preventDefault();
 
-    signUp();
+    const email =
+      loginEmail.value.trim();
+
+    const password =
+      loginPassword.value;
+
+    if (!email || !password) {
+
+      setAuthMessage(
+        "Please enter email and password."
+      );
+
+      return;
+    }
+
+    loginBtn.disabled = true;
+
+    loginBtn.textContent =
+      "Logging in...";
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    loginBtn.disabled = false;
+
+    loginBtn.textContent =
+      "Login";
+
+    if (error) {
+
+      setAuthMessage(
+        error.message
+      );
+
+      return;
+    }
+
+    if (data.user) {
+
+      await startApp(data.user);
+
+    }
 
   }
 );
 
 
 // ======================================================
-// 6. LOGIN
+// 9. AUTH STATE
 // ======================================================
 
-async function signInWithPassword() {
+async function initAuth() {
 
-  const email =
-    $("loginEmail").value.trim();
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
 
-  const password =
-    $("loginPassword").value;
+  if (session?.user) {
 
-  $("authMessage").textContent =
-    "Logging in...";
+    await startApp(session.user);
 
+  } else {
 
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
+    showAuth();
 
-
-  if (error) {
-
-    $("authMessage").textContent =
-      error.message;
-
-    return;
   }
 
 
-  currentUser =
-    data.user;
+  authSubscription =
+    supabaseClient.auth.onAuthStateChange(
+      async (_event, sessionData) => {
 
-  await showApp();
+        if (sessionData?.user) {
+
+          if (!currentUser) {
+            await startApp(sessionData.user);
+          }
+
+        } else {
+
+          await stopApp();
+
+        }
+
+      }
+    );
 
 }
 
 
-$("loginForm").addEventListener(
-  "submit",
-  event => {
+async function startApp(user) {
 
-    event.preventDefault();
+  currentUser = user;
 
-    signInWithPassword();
+  currentUserEmail.textContent =
+    user.email || "";
 
-  }
-);
+  showApp();
 
+  await ensureProfile();
 
-// ======================================================
-// 7. SHOW APP
-// ======================================================
-
-async function showApp() {
-
-  if (!currentUser) return;
-
-  $("authScreen").classList.add("hidden");
-  $("app").classList.remove("hidden");
-
-  $("currentUserEmail").textContent =
-    currentUser.email || "";
-
-  $("profileEmail").textContent =
-    currentUser.email || "";
-
-
-  await loadCurrentProfile();
+  await loadProfile();
 
   await loadContacts();
 
-  await loadChatList();
+  await loadChats();
 
-  setupRealtime();
+  setupCallChannel();
 
-  await setupCallChannel();
+}
+
+
+async function stopApp() {
+
+  currentUser = null;
+
+  await cleanupCall(false);
+
+  if (callInboxChannel) {
+
+    await supabaseClient.removeChannel(
+      callInboxChannel
+    );
+
+    callInboxChannel = null;
+  }
+
+  if (callPairChannel) {
+
+    await supabaseClient.removeChannel(
+      callPairChannel
+    );
+
+    callPairChannel = null;
+  }
+
+  showAuth();
 
 }
 
 
 // ======================================================
-// 8. PROFILE
+// 10. PROFILE
 // ======================================================
 
-async function loadCurrentProfile() {
+async function ensureProfile() {
 
-  if (!currentUser) return;
+  if (!currentUser) {
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+  if (error) {
+
+    console.warn(
+      "Profile check:",
+      error.message
+    );
+
+    return;
+  }
+
+  if (!data) {
+
+    const emailName =
+      currentUser.email
+        ? currentUser.email.split("@")[0]
+        : "user";
+
+    await supabaseClient
+      .from("profiles")
+      .insert({
+        id: currentUser.id,
+        username: emailName,
+        full_name: emailName
+      });
+
+  }
+
+}
 
 
-  const { data, error } =
+async function loadProfile() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("profiles")
       .select("*")
       .eq("id", currentUser.id)
       .maybeSingle();
 
-
   if (error) {
 
-    console.log(
-      "Profile loading error:",
+    console.warn(
+      "Profile load:",
       error.message
     );
+
+    profileEmail.textContent =
+      currentUser.email || "";
 
     return;
   }
 
-
-  currentProfile = data;
-
-
-  if (!data) return;
-
+  const profile =
+    data || {};
 
   const name =
-    data.display_name ||
+    profile.full_name ||
+    profile.username ||
     "QEVIRA User";
 
-
   const username =
-    data.username ||
-    "user";
+    profile.username
+      ? `@${profile.username}`
+      : "@user";
 
+  const initial =
+    getInitial(name);
 
-  $("profileName").textContent =
+  profileName.textContent =
     name;
 
-  $("profileUsername").textContent =
-    "@" + username;
+  profileUsername.textContent =
+    username;
 
+  profileEmail.textContent =
+    currentUser.email || "";
 
-  $("profileAvatar").textContent =
-    name.charAt(0).toUpperCase();
+  profileAvatar.textContent =
+    initial;
 
 }
 
 
 // ======================================================
-// 9. CONTACTS
+// 11. CONTACTS
 // ======================================================
 
-let allContacts = [];
+async function loadContacts(search = "") {
 
+  if (!currentUser) {
+    return;
+  }
 
-async function loadContacts() {
-
-  if (!currentUser) return;
-
-
-  const { data, error } =
-    await supabaseClient
+  let query =
+    supabaseClient
       .from("profiles")
       .select("*")
       .neq("id", currentUser.id)
-      .order("display_name", {
+      .order("username", {
         ascending: true
-      });
+      })
+      .limit(100);
 
+  if (search.trim()) {
+
+    const term =
+      search.trim();
+
+    query =
+      query.or(
+        `username.ilike.%${term}%,full_name.ilike.%${term}%`
+      );
+
+  }
+
+  const {
+    data,
+    error
+  } = await query;
 
   if (error) {
 
-    console.log(
+    console.error(
       "Contacts error:",
       error.message
     );
 
+    contactsList.innerHTML =
+      `<div class="empty-state">
+        Unable to load contacts.
+      </div>`;
+
     return;
   }
 
+  contactsList.innerHTML = "";
 
-  allContacts =
-    data || [];
+  if (!data || data.length === 0) {
 
-  renderContacts(
-    allContacts
-  );
+    contactsList.innerHTML =
+      `<div class="empty-state">
+        <div class="empty-icon">♙</div>
+        <h3>No users found</h3>
+        <p>Try another search.</p>
+      </div>`;
 
-}
+    return;
+  }
 
+  data.forEach(profile => {
 
-function renderContacts(users) {
+    const card =
+      document.createElement("div");
 
-  const list =
-    $("contactsList");
+    card.className =
+      "user-card";
 
-  list.innerHTML = "";
+    const name =
+      profile.full_name ||
+      profile.username ||
+      "QEVIRA User";
 
-
-  if (!users.length) {
-
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">👥</div>
-        <h3>No contacts yet</h3>
-        <p>Other QEVIRA users will appear here.</p>
+    card.innerHTML = `
+      <div class="user-avatar">
+        ${escapeHtml(getInitial(name))}
       </div>
+
+      <div class="user-info">
+        <strong>
+          ${escapeHtml(name)}
+        </strong>
+
+        <span>
+          ${profile.username
+            ? "@" + escapeHtml(profile.username)
+            : "QEVIRA user"}
+        </span>
+      </div>
+
+      <span class="online-dot"></span>
     `;
 
-    return;
-  }
+    card.addEventListener(
+      "click",
+      () => openChat(profile)
+    );
 
-
-  users.forEach(user => {
-
-    const element =
-      createUserElement(user);
-
-    list.appendChild(element);
+    contactsList.appendChild(card);
 
   });
 
 }
 
 
-function createUserElement(user) {
+// ======================================================
+// 12. CHATS
+// ======================================================
 
-  const div =
-    document.createElement("div");
+async function loadChats() {
 
-  div.className =
-    "user-card";
+  chatList.innerHTML = "";
 
+  chatEmpty.classList.remove("hidden");
 
-  const name =
-    user.display_name ||
-    user.username ||
-    "QEVIRA User";
-
-
-  const username =
-    user.username ||
-    "user";
-
-
-  const firstLetter =
-    name.charAt(0).toUpperCase();
-
-
-  div.innerHTML = `
-    <div class="avatar">
-      ${escapeHtml(firstLetter)}
-    </div>
-
-    <div class="user-info">
-      <strong>
-        ${escapeHtml(name)}
-      </strong>
-
-      <small>
-        @${escapeHtml(username)}
-      </small>
-    </div>
-
-    <button
-      class="chat-open-btn"
-      type="button"
-    >
-      Chat
-    </button>
-  `;
-
-
-  div
-    .querySelector(".chat-open-btn")
-    .addEventListener(
-      "click",
-      () => openChat(user)
-    );
-
-
-  return div;
+  // This section can later be expanded with
+  // a dedicated conversations table.
+  //
+  // For now QEVIRA keeps the chat list simple
+  // and contacts can open conversations directly.
 
 }
 
 
-// ======================================================
-// CONTACT SEARCH
-// ======================================================
-
-$("contactsSearchInput").addEventListener(
-  "input",
-  () => {
-
-    const query =
-      $("contactsSearchInput")
-        .value
-        .trim()
-        .toLowerCase();
-
-
-    const filtered =
-      allContacts.filter(user => {
-
-        const name =
-          (
-            user.display_name ||
-            ""
-          ).toLowerCase();
-
-        const username =
-          (
-            user.username ||
-            ""
-          ).toLowerCase();
-
-
-        return (
-          name.includes(query) ||
-          username.includes(query)
-        );
-
-      });
-
-
-    renderContacts(
-      filtered
-    );
-
-  }
-);
-
-
-// ======================================================
-// 10. CHAT LIST
-// ======================================================
-
-let chatUsers = [];
-
-
-async function loadChatList() {
-
-  if (!currentUser) return;
-
-
-  const { data, error } =
-    await supabaseClient
-      .from("messages")
-      .select(
-        "sender_id,receiver_id,created_at"
-      )
-      .or(
-        `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
-
-
-  if (error) {
-
-    console.log(
-      "Chat list error:",
-      error.message
-    );
-
-    return;
-  }
-
-
-  const ids = [];
-
-
-  (data || []).forEach(
-    message => {
-
-      const otherId =
-        message.sender_id === currentUser.id
-          ? message.receiver_id
-          : message.sender_id;
-
-
-      if (
-        otherId &&
-        !ids.includes(otherId)
-      ) {
-
-        ids.push(otherId);
-
-      }
-
-    }
-  );
-
-
-  if (!ids.length) {
-
-    chatUsers = [];
-
-    renderChatList();
-
-    return;
-  }
-
-
-  const { data: profiles } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .in("id", ids);
-
-
-  chatUsers =
-    profiles || [];
-
-
-  renderChatList();
-
-}
-
-
-function renderChatList() {
-
-  const list =
-    $("chatList");
-
-  list.innerHTML = "";
-
-
-  const empty =
-    $("chatEmpty");
-
-
-  if (!chatUsers.length) {
-
-    empty.classList.remove(
-      "hidden"
-    );
-
-    return;
-  }
-
-
-  empty.classList.add(
-    "hidden"
-  );
-
-
-  chatUsers.forEach(
-    user => {
-
-      list.appendChild(
-        createUserElement(user)
-      );
-
-    }
-  );
-
-}
-
-
-// ======================================================
-// CHAT SEARCH
-// ======================================================
-
-$("searchInput").addEventListener(
-  "input",
-  () => {
-
-    const query =
-      $("searchInput")
-        .value
-        .trim()
-        .toLowerCase();
-
-
-    const filtered =
-      chatUsers.filter(user => {
-
-        const name =
-          (
-            user.display_name ||
-            ""
-          ).toLowerCase();
-
-        const username =
-          (
-            user.username ||
-            ""
-          ).toLowerCase();
-
-
-        return (
-          name.includes(query) ||
-          username.includes(query)
-        );
-
-      });
-
-
-    const list =
-      $("chatList");
-
-    list.innerHTML = "";
-
-
-    filtered.forEach(
-      user => {
-
-        list.appendChild(
-          createUserElement(user)
-        );
-
-      }
-    );
-
-  }
-);
-
-
-// ======================================================
-// 11. OPEN CHAT
-// ======================================================
-
-async function openChat(user) {
+async function openChat(profile) {
 
   currentChatUser =
-    user;
+    profile;
 
+  chatModal.classList.remove("hidden");
 
   const name =
-    user.display_name ||
-    user.username ||
+    profile.full_name ||
+    profile.username ||
     "QEVIRA User";
 
-
-  $("chatTitle").textContent =
+  chatTitle.textContent =
     name;
 
+  chatAvatar.textContent =
+    getInitial(name);
 
-  $("chatAvatar").textContent =
-    name.charAt(0).toUpperCase();
+  chatStatus.textContent =
+    "QEVIRA";
 
-
-  $("chatModal")
-    .classList
-    .remove("hidden");
-
+  messages.innerHTML = "";
 
   await loadMessages();
 
+  setupChatRealtime();
+
+  messageInput.focus();
+
 }
 
 
-// ======================================================
-// NEW CHAT
-// ======================================================
+function closeChat() {
 
-$("newChatBtn").addEventListener(
-  "click",
-  () => {
+  chatModal.classList.add("hidden");
 
-    document
-      .querySelector(
-        '[data-page="contactsPage"]'
-      )
-      .click();
+  if (chatChannel) {
 
-    $("contactsSearchInput")
-      .focus();
+    supabaseClient.removeChannel(
+      chatChannel
+    );
 
+    chatChannel = null;
   }
+
+  currentChatUser = null;
+
+}
+
+
+closeChatModal.addEventListener(
+  "click",
+  closeChat
 );
 
 
 // ======================================================
-// 12. LOAD MESSAGES
+// 13. MESSAGES
 // ======================================================
 
 async function loadMessages() {
@@ -779,202 +919,174 @@ async function loadMessages() {
     return;
   }
 
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient
       .from("messages")
       .select("*")
       .or(
         `and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatUser.id}),and(sender_id.eq.${currentChatUser.id},receiver_id.eq.${currentUser.id})`
       )
-      .order(
-        "created_at",
-        {
-          ascending: true
-        }
-      );
-
+      .order("created_at", {
+        ascending: true
+      })
+      .limit(300);
 
   if (error) {
 
-    console.log(
-      "Messages error:",
+    console.warn(
+      "Messages load:",
       error.message
     );
+
+    messages.innerHTML =
+      `<div class="empty-state">
+        <p>No messages yet.</p>
+      </div>`;
 
     return;
   }
 
+  messages.innerHTML = "";
 
-  renderMessages(
-    data || []
-  );
+  if (!data || data.length === 0) {
 
-}
+    messages.innerHTML =
+      `<div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <h3>Start chatting</h3>
+        <p>Send your first message.</p>
+      </div>`;
 
-
-// ======================================================
-// 13. RENDER MESSAGES
-// ======================================================
-
-function renderMessages(messages) {
-
-  const container =
-    $("messages");
-
-  container.innerHTML = "";
-
-
-  messages.forEach(
-    message => {
-
-      const sent =
-        message.sender_id ===
-        currentUser.id;
-
-
-      const wrapper =
-        document.createElement("div");
-
-
-      wrapper.className =
-        "message " +
-        (
-          sent
-            ? "sent"
-            : "received"
-        );
-
-
-      const bubble =
-        document.createElement("div");
-
-
-      bubble.className =
-        "message-bubble";
-
-
-      bubble.innerHTML = `
-        ${escapeHtml(
-          message.body || ""
-        )}
-
-        <span class="message-time">
-          ${formatTime(
-            message.created_at
-          )}
-        </span>
-      `;
-
-
-      wrapper.appendChild(
-        bubble
-      );
-
-      container.appendChild(
-        wrapper
-      );
-
-    }
-  );
-
-
-  container.scrollTop =
-    container.scrollHeight;
-
-}
-
-
-// ======================================================
-// 14. SEND MESSAGE
-// ======================================================
-
-async function sendMessage() {
-
-  const body =
-    $("messageInput")
-      .value
-      .trim();
-
-
-  if (
-    !body ||
-    !currentUser ||
-    !currentChatUser
-  ) {
     return;
   }
 
+  data.forEach(
+    renderMessage
+  );
 
-  $("messageInput").value =
-    "";
-
-
-  const { error } =
-    await supabaseClient
-      .from("messages")
-      .insert({
-        sender_id:
-          currentUser.id,
-
-        receiver_id:
-          currentChatUser.id,
-
-        body
-      });
-
-
-  if (error) {
-
-    console.log(
-      "Send message error:",
-      error.message
-    );
-
-    $("messageInput").value =
-      body;
-
-  }
+  scrollMessages();
 
 }
 
 
-$("messageForm").addEventListener(
+function renderMessage(message) {
+
+  const sent =
+    message.sender_id === currentUser.id;
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    `message ${sent ? "sent" : "received"}`;
+
+  const date =
+    message.created_at
+      ? new Date(message.created_at)
+      : new Date();
+
+  div.innerHTML = `
+    <div>
+      ${escapeHtml(message.content || "")}
+    </div>
+
+    <span class="message-time">
+      ${date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}
+    </span>
+  `;
+
+  messages.appendChild(div);
+
+}
+
+
+function scrollMessages() {
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+}
+
+
+messageForm.addEventListener(
   "submit",
-  event => {
+  async event => {
 
     event.preventDefault();
 
-    sendMessage();
+    const content =
+      messageInput.value.trim();
+
+    if (
+      !content ||
+      !currentUser ||
+      !currentChatUser
+    ) {
+      return;
+    }
+
+    messageInput.value = "";
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("messages")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: currentChatUser.id,
+          content
+        });
+
+    if (error) {
+
+      console.error(
+        "Send message:",
+        error.message
+      );
+
+      messageInput.value =
+        content;
+
+      return;
+    }
 
   }
 );
 
 
 // ======================================================
-// 15. REALTIME CHAT
+// 14. CHAT REALTIME
 // ======================================================
 
-function setupRealtime() {
+function setupChatRealtime() {
 
-  if (
-    realtimeChannel &&
-    currentUser
-  ) {
-
-    supabaseClient
-      .removeChannel(
-        realtimeChannel
-      );
-
+  if (!currentChatUser || !currentUser) {
+    return;
   }
 
+  if (chatChannel) {
 
-  realtimeChannel =
+    supabaseClient.removeChannel(
+      chatChannel
+    );
+
+    chatChannel = null;
+  }
+
+  chatChannel =
     supabaseClient
       .channel(
-        "qevira-messages-" +
-        currentUser.id
+        `qevira-chat-${getPairId(
+          currentUser.id,
+          currentChatUser.id
+        )}`
       )
       .on(
         "postgres_changes",
@@ -983,44 +1095,78 @@ function setupRealtime() {
           schema: "public",
           table: "messages"
         },
-        async payload => {
+        payload => {
 
           const message =
             payload.new;
 
+          const related =
+            (
+              message.sender_id === currentUser.id &&
+              message.receiver_id === currentChatUser.id
+            ) ||
+            (
+              message.sender_id === currentChatUser.id &&
+              message.receiver_id === currentUser.id
+            );
 
-          if (
-            !message ||
-            !currentUser
-          ) {
+          if (!related) {
             return;
           }
 
+          const existing =
+            [...messages.children].some(
+              element => {
 
-          if (
-            currentChatUser &&
-            (
-              (
-                message.sender_id ===
-                currentUser.id &&
-                message.receiver_id ===
-                currentChatUser.id
-              ) ||
-              (
-                message.sender_id ===
-                currentChatUser.id &&
-                message.receiver_id ===
-                currentUser.id
-              )
-            )
-          ) {
+                return (
+                  element.dataset &&
+                  element.dataset.messageId ===
+                  String(message.id)
+                );
 
-            await loadMessages();
+              }
+            );
+
+          if (!existing) {
+
+            const element =
+              document.createElement("div");
+
+            element.dataset.messageId =
+              String(message.id);
+
+            const sent =
+              message.sender_id ===
+              currentUser.id;
+
+            element.className =
+              `message ${sent ? "sent" : "received"}`;
+
+            const date =
+              message.created_at
+                ? new Date(message.created_at)
+                : new Date();
+
+            element.innerHTML = `
+              <div>
+                ${escapeHtml(message.content || "")}
+              </div>
+
+              <span class="message-time">
+                ${date.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
+              </span>
+            `;
+
+            messages.appendChild(
+              element
+            );
+
+            scrollMessages();
 
           }
-
-
-          await loadChatList();
 
         }
       )
@@ -1030,144 +1176,22 @@ function setupRealtime() {
 
 
 // ======================================================
-// 16. CLOSE CHAT
+// 15. CALL INBOX
 // ======================================================
 
-$("closeChatModal").addEventListener(
-  "click",
-  () => {
-
-    $("chatModal")
-      .classList
-      .add("hidden");
-
-    currentChatUser =
-      null;
-
-  }
-);
-
-
-// ======================================================
-// 17. LOGOUT
-// ======================================================
-
-$("logoutBtn").addEventListener(
-  "click",
-  async () => {
-
-    await endCall(
-      false
-    );
-
-    if (callInboxChannel) {
-
-      await supabaseClient
-        .removeChannel(
-          callInboxChannel
-        );
-
-      callInboxChannel =
-        null;
-
-    }
-
-    await supabaseClient
-      .auth
-      .signOut();
-
-    currentUser =
-      null;
-
-    location.reload();
-
-  }
-);
-
-
-// ======================================================
-// 18. WEBRTC CONFIG
-// ======================================================
-
-const rtcConfiguration = {
-
-  iceServers: [
-
-    {
-      urls:
-        "stun:stun.l.google.com:19302"
-    },
-
-    {
-      urls:
-        "stun:stun1.l.google.com:19302"
-    }
-
-  ]
-
-};
-
-
-// ======================================================
-// 19. CALL CHANNEL NAMES
-// ======================================================
-
-function getCallInboxName(
-  userId
-) {
-
-  return (
-    "qevira-call-inbox-" +
-    userId
-  );
-
-}
-
-
-function getCallPairName(
-  userA,
-  userB
-) {
-
-  const ids = [
-    userA,
-    userB
-  ].sort();
-
-
-  return (
-    "qevira-call-" +
-    ids[0] +
-    "-" +
-    ids[1]
-  );
-
-}
-
-
-// ======================================================
-// 20. CALL INBOX
-// ======================================================
-
-async function setupCallChannel() {
+function setupCallChannel() {
 
   if (!currentUser) {
     return;
   }
 
-
   if (callInboxChannel) {
 
-    await supabaseClient
-      .removeChannel(
-        callInboxChannel
-      );
-
-    callInboxChannel =
-      null;
+    supabaseClient.removeChannel(
+      callInboxChannel
+    );
 
   }
-
 
   callInboxChannel =
     supabaseClient
@@ -1175,417 +1199,144 @@ async function setupCallChannel() {
         getCallInboxName(
           currentUser.id
         )
-      );
+      )
+      .on(
+        "broadcast",
+        {
+          event: "incoming-call"
+        },
+        async payload => {
 
+          const data =
+            payload.payload;
 
-  callInboxChannel
-    .on(
-      "broadcast",
-      {
-        event:
-          "incoming-call"
-      },
-      async event => {
+          if (!data) {
+            return;
+          }
 
-        const data =
-          event.payload;
+          if (
+            data.to &&
+            String(data.to) !==
+            String(currentUser.id)
+          ) {
+            return;
+          }
 
+          if (
+            activeCallPeerId ||
+            activeCallAccepted
+          ) {
+            return;
+          }
 
-        if (!data) {
-          return;
-        }
-
-
-        if (
-          data.receiverId !==
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        if (
-          data.callerId ===
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        incomingCaller =
-          data;
-
-
-        showIncomingCall(
-          data
-        );
-
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-offer"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (!data) {
-          return;
-        }
-
-
-        if (
-          data.receiverId !==
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        if (
-          data.callerId ===
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        incomingOffer =
-          data;
-
-
-        if (!incomingCaller) {
-
-          incomingCaller =
-            data;
-
-          showIncomingCall(
+          await handleIncomingCall(
             data
           );
 
         }
+      )
+      .on(
+        "broadcast",
+        {
+          event: "call-offer"
+        },
+        async payload => {
 
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-hangup"
-      },
-      async event => {
+          const data =
+            payload.payload;
 
-        const data =
-          event.payload;
-
-
-        if (
-          data?.receiverId !==
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        await endCall(
-          false
-        );
-
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-decline"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (
-          data?.receiverId !==
-          currentUser.id
-        ) {
-          return;
-        }
-
-
-        await endCall(
-          false
-        );
-
-        alert(
-          "The call was declined."
-        );
-
-      }
-    );
-
-
-  return new Promise(
-    resolve => {
-
-      callInboxChannel.subscribe(
-        status => {
+          if (!data) {
+            return;
+          }
 
           if (
-            status ===
-            "SUBSCRIBED"
+            data.to &&
+            String(data.to) !==
+            String(currentUser.id)
+          ) {
+            return;
+          }
+
+          await handleIncomingOffer(
+            data
+          );
+
+        }
+      )
+      .on(
+        "broadcast",
+        {
+          event: "call-hangup"
+        },
+        async payload => {
+
+          const data =
+            payload.payload;
+
+          if (
+            !data ||
+            !isForCurrentUser(data)
+          ) {
+            return;
+          }
+
+          if (
+            data.from &&
+            String(data.from) ===
+            String(activeCallPeerId)
           ) {
 
-            console.log(
-              "QEVIRA call inbox connected."
-            );
-
-            resolve(
-              callInboxChannel
-            );
+            await cleanupCall(true);
 
           }
 
         }
-      );
+      )
+      .on(
+        "broadcast",
+        {
+          event: "call-decline"
+        },
+        async payload => {
 
-    }
-  );
-
-}
-
-
-// ======================================================
-// 21. ACTIVE PAIR CHANNEL
-// ======================================================
-
-async function subscribeToPairChannel(
-  otherUserId
-) {
-
-  if (
-    !currentUser ||
-    !otherUserId
-  ) {
-    return null;
-  }
-
-
-  if (callPairChannel) {
-
-    await supabaseClient
-      .removeChannel(
-        callPairChannel
-      );
-
-    callPairChannel =
-      null;
-
-  }
-
-
-  const channelName =
-    getCallPairName(
-      currentUser.id,
-      otherUserId
-    );
-
-
-  callPairChannel =
-    supabaseClient
-      .channel(
-        channelName
-      );
-
-
-  callPairChannel
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-answer"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (
-          !isForCurrentUser(
-            data
-          )
-        ) {
-          return;
-        }
-
-
-        await handleCallAnswer(
-          data
-        );
-
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "ice-candidate"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (
-          !isForCurrentUser(
-            data
-          )
-        ) {
-          return;
-        }
-
-
-        await handleIceCandidate(
-          data
-        );
-
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-hangup"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (
-          !isForCurrentUser(
-            data
-          )
-        ) {
-          return;
-        }
-
-
-        await endCall(
-          false
-        );
-
-      }
-    )
-    .on(
-      "broadcast",
-      {
-        event:
-          "call-decline"
-      },
-      async event => {
-
-        const data =
-          event.payload;
-
-
-        if (
-          !isForCurrentUser(
-            data
-          )
-        ) {
-          return;
-        }
-
-
-        await endCall(
-          false
-        );
-
-        alert(
-          "The call was declined."
-        );
-
-      }
-    );
-
-
-  return new Promise(
-    resolve => {
-
-      callPairChannel.subscribe(
-        status => {
+          const data =
+            payload.payload;
 
           if (
-            status ===
-            "SUBSCRIBED"
+            !data ||
+            !isForCurrentUser(data)
+          ) {
+            return;
+          }
+
+          if (
+            data.from &&
+            String(data.from) ===
+            String(activeCallPeerId)
           ) {
 
-            console.log(
-              "QEVIRA call pair connected."
-            );
-
-            resolve(
-              callPairChannel
-            );
+            await cleanupCall(true);
 
           }
 
         }
+      )
+      .subscribe(
+        status => {
+
+          console.log(
+            "Call inbox:",
+            status
+          );
+
+        }
       );
 
-    }
-  );
-
 }
 
 
 // ======================================================
-// 22. PAYLOAD CHECK
-// ======================================================
-
-function isForCurrentUser(
-  data
-) {
-
-  if (!data) {
-    return false;
-  }
-
-
-  if (
-    data.receiverId &&
-    data.receiverId !==
-    currentUser.id
-  ) {
-    return false;
-  }
-
-
-  if (
-    data.senderId &&
-    data.senderId ===
-    currentUser.id
-  ) {
-    return false;
-  }
-
-
-  return true;
-
-}
-
-
-// ======================================================
-// 23. SEND TO USER INBOX
+// 16. SEND TO USER INBOX
 // ======================================================
 
 async function sendToUserInbox(
@@ -1594,66 +1345,78 @@ async function sendToUserInbox(
   payload
 ) {
 
-  const temporaryChannel =
-    supabaseClient.channel(
-      getCallInboxName(
-        userId
-      )
-    );
+  if (!userId) {
+    return false;
+  }
 
+  const channel =
+    supabaseClient.channel(
+      getCallInboxName(userId)
+    );
 
   return new Promise(
     resolve => {
 
-      temporaryChannel.subscribe(
-        async status => {
+      let finished = false;
 
-          if (
-            status !==
-            "SUBSCRIBED"
-          ) {
+      const finish =
+        result => {
+
+          if (finished) {
             return;
           }
 
+          finished = true;
+
+          try {
+            supabaseClient.removeChannel(
+              channel
+            );
+          } catch (_) {}
+
+          resolve(result);
+
+        };
+
+
+      channel.subscribe(
+        async status => {
+
+          if (status !== "SUBSCRIBED") {
+            return;
+          }
 
           try {
 
-            await temporaryChannel.send({
-
-              type:
-                "broadcast",
-
+            await channel.send({
+              type: "broadcast",
               event,
-
               payload
-
             });
+
+            setTimeout(
+              () => finish(true),
+              150
+            );
 
           } catch (error) {
 
-            console.log(
-              "Call inbox send error:",
+            console.error(
+              "Call inbox send:",
               error
             );
 
+            finish(false);
+
           }
 
-
-          setTimeout(
-            async () => {
-
-              await supabaseClient
-                .removeChannel(
-                  temporaryChannel
-                );
-
-              resolve();
-
-            },
-            200
-          );
-
         }
+      );
+
+
+      setTimeout(
+        () => finish(false),
+        5000
       );
 
     }
@@ -1663,223 +1426,236 @@ async function sendToUserInbox(
 
 
 // ======================================================
-// 24. VOICE CALL BUTTON
+// 17. PAIR CHANNEL
 // ======================================================
 
-$("voiceCallBtn").addEventListener(
-  "click",
-  () => startCall(false)
-);
-
-
-// ======================================================
-// 25. VIDEO CALL BUTTON
-// ======================================================
-
-$("videoCallBtn").addEventListener(
-  "click",
-  () => startCall(true)
-);
-
-
-// ======================================================
-// 26. START CALL
-// ======================================================
-
-async function startCall(
-  video
+async function subscribeToPairChannel(
+  peerId
 ) {
 
-  if (
-    !currentUser ||
-    !currentChatUser
-  ) {
+  if (!currentUser || !peerId) {
     return;
   }
 
+  if (callPairChannel) {
 
-  if (
-    peerConnection ||
-    activeCallPeerId
-  ) {
-
-    alert(
-      "A call is already active."
+    await supabaseClient.removeChannel(
+      callPairChannel
     );
 
-    return;
-  }
-
-
-  isVideoCall =
-    video;
-
-  activeCallPeerId =
-    currentChatUser.id;
-
-  activeCallRole =
-    "caller";
-
-  pendingIceCandidates =
-    [];
-
-
-  try {
-
-    localStream =
-      await navigator.mediaDevices
-        .getUserMedia({
-
-          audio: true,
-
-          video: video
-
-        });
-
-  } catch (error) {
-
-    activeCallPeerId =
-      null;
-
-    activeCallRole =
-      null;
-
-    alert(
-      "Microphone/camera permission was not granted."
-    );
-
-    console.log(
-      "Media permission error:",
-      error
-    );
-
-    return;
+    callPairChannel = null;
 
   }
 
-
-  await subscribeToPairChannel(
-    currentChatUser.id
-  );
-
-
-  createPeerConnection();
-
-
-  localStream
-    .getTracks()
-    .forEach(
-      track => {
-
-        peerConnection.addTrack(
-          track,
-          localStream
-        );
-
-      }
-    );
-
-
-  const offer =
-    await peerConnection
-      .createOffer();
-
-
-  await peerConnection
-    .setLocalDescription(
-      offer
-    );
-
-
-  const callData = {
-
-    callerId:
+  const channelName =
+    getCallPairName(
       currentUser.id,
+      peerId
+    );
 
-    senderId:
-      currentUser.id,
+  callPairChannel =
+    supabaseClient
+      .channel(channelName)
 
-    receiverId:
-      currentChatUser.id,
+      .on(
+        "broadcast",
+        {
+          event: "call-answer"
+        },
+        async payload => {
 
-    callerName:
-      currentProfile?.display_name ||
-      currentProfile?.username ||
-      currentUser.email,
+          const data =
+            payload.payload;
 
-    callType:
-      video
-        ? "video"
-        : "voice"
+          if (
+            !data ||
+            !isForCurrentUser(data)
+          ) {
+            return;
+          }
 
-  };
+          if (
+            !peerConnection ||
+            !data.answer
+          ) {
+            return;
+          }
 
+          try {
 
-  await sendToUserInbox(
-    currentChatUser.id,
-    "incoming-call",
-    callData
-  );
+            await peerConnection.setRemoteDescription(
+              new RTCSessionDescription(
+                data.answer
+              )
+            );
 
+            await flushPendingIceCandidates();
 
-  await sendToUserInbox(
-    currentChatUser.id,
-    "call-offer",
-    {
+            setCallStatus(
+              "Connected"
+            );
 
-      ...callData,
+          } catch (error) {
 
-      offer
+            console.error(
+              "Answer error:",
+              error
+            );
 
-    }
-  );
+          }
 
+        }
+      )
 
-  showActiveCall(
-    currentChatUser,
-    video
-  );
+      .on(
+        "broadcast",
+        {
+          event: "ice-candidate"
+        },
+        async payload => {
+
+          const data =
+            payload.payload;
+
+          if (
+            !data ||
+            !isForCurrentUser(data) ||
+            !data.candidate
+          ) {
+            return;
+          }
+
+          await handleRemoteIce(
+            data.candidate
+          );
+
+        }
+      )
+
+      .on(
+        "broadcast",
+        {
+          event: "call-hangup"
+        },
+        async payload => {
+
+          const data =
+            payload.payload;
+
+          if (
+            !data ||
+            !isForCurrentUser(data)
+          ) {
+            return;
+          }
+
+          await cleanupCall(true);
+
+        }
+      )
+
+      .on(
+        "broadcast",
+        {
+          event: "call-decline"
+        },
+        async payload => {
+
+          const data =
+            payload.payload;
+
+          if (
+            !data ||
+            !isForCurrentUser(data)
+          ) {
+            return;
+          }
+
+          await cleanupCall(true);
+
+        }
+      )
+
+      .subscribe(
+        status => {
+
+          console.log(
+            "Call pair:",
+            status
+          );
+
+        }
+      );
 
 }
 
 
 // ======================================================
-// 27. CREATE PEER CONNECTION
+// 18. CREATE PEER CONNECTION
 // ======================================================
 
-function createPeerConnection() {
+function createPeerConnection(
+  peerId
+) {
 
   if (peerConnection) {
 
-    peerConnection.close();
+    try {
+      peerConnection.close();
+    } catch (_) {}
 
   }
 
+  pendingIceCandidates = [];
 
   peerConnection =
     new RTCPeerConnection(
-      rtcConfiguration
+      rtcConfig
     );
 
 
-  remoteStream =
-    new MediaStream();
+  peerConnection.onicecandidate =
+    async event => {
 
+      if (
+        !event.candidate ||
+        !currentUser ||
+        !peerId
+      ) {
+        return;
+      }
 
-  $("remoteVideo").srcObject =
-    remoteStream;
+      if (callPairChannel) {
+
+        await callPairChannel.send({
+          type: "broadcast",
+          event: "ice-candidate",
+          payload: {
+            from: currentUser.id,
+            to: peerId,
+            candidate:
+              event.candidate.toJSON()
+          }
+        });
+
+      }
+
+    };
 
 
   peerConnection.ontrack =
     event => {
 
-      const tracks =
-        event.streams?.[0]
-          ?.getTracks() || [];
+      if (!remoteStream) {
 
+        remoteStream =
+          new MediaStream();
 
-      tracks.forEach(
-        track => {
+      }
+
+      event.streams[0]
+        ?.getTracks()
+        .forEach(track => {
 
           if (
             !remoteStream
@@ -1893,70 +1669,13 @@ function createPeerConnection() {
 
           }
 
-        }
-      );
+        });
 
+      remoteVideo.srcObject =
+        remoteStream;
 
-      $("remoteVideo")
-        .play()
-        .catch(
-          () => {}
-        );
-
-    };
-
-
-  peerConnection.onicecandidate =
-    async event => {
-
-      if (
-        !event.candidate ||
-        !activeCallPeerId
-      ) {
-        return;
-      }
-
-
-      const payload = {
-
-        senderId:
-          currentUser.id,
-
-        receiverId:
-          activeCallPeerId,
-
-        candidate:
-          event.candidate
-
-      };
-
-
-      if (callPairChannel) {
-
-        try {
-
-          await callPairChannel.send({
-
-            type:
-              "broadcast",
-
-            event:
-              "ice-candidate",
-
-            payload
-
-          });
-
-        } catch (error) {
-
-          console.log(
-            "ICE send error:",
-            error
-          );
-
-        }
-
-      }
+      remoteVideo.play()
+        .catch(() => {});
 
     };
 
@@ -1968,66 +1687,356 @@ function createPeerConnection() {
         return;
       }
 
-
       const state =
         peerConnection.connectionState;
 
-
       console.log(
-        "WebRTC connection state:",
+        "WebRTC connection:",
         state
       );
 
+      if (state === "connected") {
+
+        setCallStatus(
+          "Connected"
+        );
+
+      }
 
       if (
+        state === "disconnected" ||
         state === "failed" ||
         state === "closed"
       ) {
 
-        endCall(
-          false
-        );
+        if (activeCallAccepted) {
+
+          setCallStatus(
+            "Connection lost"
+          );
+
+        }
 
       }
 
     };
 
+
+  peerConnection.oniceconnectionstatechange =
+    () => {
+
+      if (!peerConnection) {
+        return;
+      }
+
+      console.log(
+        "ICE:",
+        peerConnection.iceConnectionState
+      );
+
+    };
+
+
+  if (localStream) {
+
+    localStream
+      .getTracks()
+      .forEach(track => {
+
+        peerConnection.addTrack(
+          track,
+          localStream
+        );
+
+      });
+
+  }
+
+  return peerConnection;
+
 }
 
 
 // ======================================================
-// 28. HANDLE ANSWER
+// 19. MEDIA
 // ======================================================
 
-async function handleCallAnswer(
+async function getCallMedia(
+  type
+) {
+
+  const constraints =
+    type === "video"
+      ? {
+          audio: true,
+          video: {
+            facingMode: "user"
+          }
+        }
+      : {
+          audio: true,
+          video: false
+        };
+
+  localStream =
+    await navigator.mediaDevices.getUserMedia(
+      constraints
+    );
+
+  remoteStream =
+    new MediaStream();
+
+  localVideo.srcObject =
+    localStream;
+
+  localVideo.play()
+    .catch(() => {});
+
+}
+
+
+// ======================================================
+// 20. CALL UI
+// ======================================================
+
+function setCallStatus(
+  text
+) {
+
+  activeCallType.textContent =
+    text;
+}
+
+
+function showActiveCall(
+  profile,
+  type
+) {
+
+  const name =
+    profile?.full_name ||
+    profile?.username ||
+    "QEVIRA User";
+
+  activeCallName.textContent =
+    name;
+
+  activeCallAvatar.textContent =
+    getInitial(name);
+
+  activeCallType.textContent =
+    "Connecting...";
+
+  activeCallOverlay.classList.remove(
+    "hidden"
+  );
+
+  if (type === "video") {
+
+    voiceCallDisplay.classList.add(
+      "hidden"
+    );
+
+    remoteVideo.classList.remove(
+      "hidden"
+    );
+
+    localVideo.classList.remove(
+      "hidden"
+    );
+
+  } else {
+
+    voiceCallDisplay.classList.remove(
+      "hidden"
+    );
+
+    remoteVideo.classList.add(
+      "hidden"
+    );
+
+    localVideo.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+function hideActiveCall() {
+
+  activeCallOverlay.classList.add(
+    "hidden"
+  );
+
+  remoteVideo.srcObject =
+    null;
+
+  localVideo.srcObject =
+    null;
+
+}
+
+
+function showIncomingCall(
   data
 ) {
 
+  incomingCallName.textContent =
+    data.name ||
+    "QEVIRA User";
+
+  incomingCallAvatar.textContent =
+    getInitial(
+      data.name
+    );
+
+  incomingCallType.textContent =
+    data.type === "video"
+      ? "Incoming video call"
+      : "Incoming voice call";
+
+  incomingCallOverlay.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function hideIncomingCall() {
+
+  incomingCallOverlay.classList.add(
+    "hidden"
+  );
+
+}
+
+
+// ======================================================
+// 21. START VOICE / VIDEO CALL
+// ======================================================
+
+async function startCall(
+  type
+) {
+
   if (
-    !peerConnection ||
-    !data?.answer
+    !currentUser ||
+    !currentChatUser
   ) {
     return;
   }
 
+  if (activeCallPeerId) {
+
+    alert(
+      "You are already in a call."
+    );
+
+    return;
+  }
+
+  const peer =
+    currentChatUser;
+
+  activeCallPeerId =
+    peer.id;
+
+  activeCallRole =
+    "caller";
+
+  activeCallType =
+    type;
+
+  activeCallAccepted =
+    false;
+
+  isMuted = false;
+
+  isCameraOff = false;
 
   try {
 
-    await peerConnection
-      .setRemoteDescription(
-        new RTCSessionDescription(
-          data.answer
-        )
-      );
+    await getCallMedia(
+      type
+    );
+
+    await subscribeToPairChannel(
+      peer.id
+    );
+
+    createPeerConnection(
+      peer.id
+    );
+
+    showActiveCall(
+      peer,
+      type
+    );
+
+    const offer =
+      await peerConnection.createOffer();
+
+    await peerConnection.setLocalDescription(
+      offer
+    );
+
+    const callData = {
+
+      from: currentUser.id,
+
+      to: peer.id,
+
+      type,
+
+      name:
+        profileName.textContent ||
+        currentUser.email ||
+        "QEVIRA User",
+
+      offer:
+        peerConnection.localDescription
+
+    };
 
 
-    await flushPendingIceCandidates();
+    await sendToUserInbox(
+      peer.id,
+      "incoming-call",
+      {
+        from: currentUser.id,
+        to: peer.id,
+        type,
+        name: callData.name
+      }
+    );
+
+
+    await sendToUserInbox(
+      peer.id,
+      "call-offer",
+      callData
+    );
+
+
+    setCallStatus(
+      "Calling..."
+    );
 
   } catch (error) {
 
-    console.log(
-      "Answer error:",
+    console.error(
+      "Start call:",
       error
+    );
+
+    alert(
+      "Could not start the call. Please check microphone/camera permission."
+    );
+
+    await cleanupCall(
+      false
     );
 
   }
@@ -2036,60 +2045,251 @@ async function handleCallAnswer(
 
 
 // ======================================================
-// 29. HANDLE ICE
+// 22. INCOMING CALL
 // ======================================================
 
-async function handleIceCandidate(
+async function handleIncomingCall(
   data
 ) {
 
   if (
-    !data?.candidate
+    activeCallPeerId ||
+    activeCallAccepted
   ) {
     return;
   }
 
+  activeCallPeerId =
+    data.from;
 
-  const candidate =
-    new RTCIceCandidate(
-      data.candidate
-    );
+  activeCallRole =
+    "receiver";
 
+  activeCallType =
+    data.type;
+
+  activeCallAccepted =
+    false;
+
+  showIncomingCall(
+    data
+  );
+
+}
+
+
+async function handleIncomingOffer(
+  data
+) {
+
+  if (!data.offer) {
+    return;
+  }
 
   if (
-    peerConnection &&
-    peerConnection.remoteDescription
+    activeCallPeerId &&
+    String(activeCallPeerId) !==
+    String(data.from)
   ) {
+    return;
+  }
+
+  activeCallPeerId =
+    data.from;
+
+  activeCallRole =
+    "receiver";
+
+  activeCallType =
+    data.type;
+
+  window.pendingIncomingOffer =
+    data.offer;
+
+}
+
+
+// ======================================================
+// 23. ACCEPT CALL
+// ======================================================
+
+acceptCallBtn.addEventListener(
+  "click",
+  async () => {
+
+    hideIncomingCall();
+
+    if (!activeCallPeerId) {
+      return;
+    }
 
     try {
 
-      await peerConnection
-        .addIceCandidate(
-          candidate
+      const {
+        data: profile
+      } =
+        await supabaseClient
+          .from("profiles")
+          .select("*")
+          .eq(
+            "id",
+            activeCallPeerId
+          )
+          .maybeSingle();
+
+      const peerProfile =
+        profile || {
+          id: activeCallPeerId,
+          full_name: "QEVIRA User"
+        };
+
+      await getCallMedia(
+        activeCallType
+      );
+
+      await subscribeToPairChannel(
+        activeCallPeerId
+      );
+
+      createPeerConnection(
+        activeCallPeerId
+      );
+
+      showActiveCall(
+        peerProfile,
+        activeCallType
+      );
+
+      activeCallAccepted =
+        true;
+
+      setCallStatus(
+        "Connecting..."
+      );
+
+
+      const offer =
+        window.pendingIncomingOffer;
+
+      if (!offer) {
+
+        setCallStatus(
+          "Waiting for caller..."
         );
+
+        return;
+      }
+
+
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(
+          offer
+        )
+      );
+
+      await flushPendingIceCandidates();
+
+
+      const answer =
+        await peerConnection.createAnswer();
+
+      await peerConnection.setLocalDescription(
+        answer
+      );
+
+
+      if (callPairChannel) {
+
+        await callPairChannel.send({
+          type: "broadcast",
+          event: "call-answer",
+          payload: {
+            from: currentUser.id,
+            to: activeCallPeerId,
+            answer:
+              peerConnection.localDescription
+          }
+        });
+
+      }
+
+      setCallStatus(
+        "Connecting..."
+      );
+
+      window.pendingIncomingOffer =
+        null;
 
     } catch (error) {
 
-      console.log(
-        "ICE candidate error:",
+      console.error(
+        "Accept call:",
         error
+      );
+
+      alert(
+        "Could not accept the call. Please check your permissions."
+      );
+
+      await cleanupCall(
+        true
       );
 
     }
 
-  } else {
-
-    pendingIceCandidates.push(
-      candidate
-    );
-
   }
-
-}
+);
 
 
 // ======================================================
-// 30. FLUSH ICE
+// 24. DECLINE CALL
+// ======================================================
+
+declineCallBtn.addEventListener(
+  "click",
+  async () => {
+
+    const peerId =
+      activeCallPeerId;
+
+    hideIncomingCall();
+
+    if (peerId) {
+
+      if (callPairChannel) {
+
+        await callPairChannel.send({
+          type: "broadcast",
+          event: "call-decline",
+          payload: {
+            from: currentUser.id,
+            to: peerId
+          }
+        });
+
+      }
+
+      await sendToUserInbox(
+        peerId,
+        "call-decline",
+        {
+          from: currentUser.id,
+          to: peerId
+        }
+      );
+
+    }
+
+    await cleanupCall(
+      false
+    );
+
+  }
+);
+
+
+// ======================================================
+// 25. FLUSH ICE
 // ======================================================
 
 async function flushPendingIceCandidates() {
@@ -2101,14 +2301,10 @@ async function flushPendingIceCandidates() {
     return;
   }
 
-
   const candidates =
-    pendingIceCandidates;
+    [...pendingIceCandidates];
 
-
-  pendingIceCandidates =
-    [];
-
+  pendingIceCandidates = [];
 
   for (
     const candidate of candidates
@@ -2116,15 +2312,16 @@ async function flushPendingIceCandidates() {
 
     try {
 
-      await peerConnection
-        .addIceCandidate(
+      await peerConnection.addIceCandidate(
+        new RTCIceCandidate(
           candidate
-        );
+        )
+      );
 
     } catch (error) {
 
-      console.log(
-        "Queued ICE error:",
+      console.warn(
+        "ICE candidate error:",
         error
       );
 
@@ -2136,499 +2333,108 @@ async function flushPendingIceCandidates() {
 
 
 // ======================================================
-// 31. INCOMING CALL UI
+// 26. REMOTE ICE
 // ======================================================
 
-function showIncomingCall(
-  data
+async function handleRemoteIce(
+  candidate
 ) {
 
   if (
-    peerConnection ||
-    activeCallPeerId
-  ) {
-    return;
-  }
-
-
-  const name =
-    data.callerName ||
-    "QEVIRA User";
-
-
-  $("incomingCallName")
-    .textContent =
-    name;
-
-
-  $("incomingCallType")
-    .textContent =
-    data.callType ===
-    "video"
-      ? "Incoming video call"
-      : "Incoming voice call";
-
-
-  $("incomingCallAvatar")
-    .textContent =
-    name
-      .charAt(0)
-      .toUpperCase();
-
-
-  $("incomingCallOverlay")
-    .classList
-    .remove("hidden");
-
-}
-
-
-// ======================================================
-// 32. ACCEPT CALL
-// ======================================================
-
-$("acceptCallBtn").addEventListener(
-  "click",
-  acceptIncomingCall
-);
-
-
-async function acceptIncomingCall() {
-
-  if (
-    !incomingCaller ||
-    !incomingOffer
+    !peerConnection ||
+    !peerConnection.remoteDescription
   ) {
 
-    $("incomingCallOverlay")
-      .classList
-      .add("hidden");
-
-    return;
-  }
-
-
-  $("incomingCallOverlay")
-    .classList
-    .add("hidden");
-
-
-  const callerId =
-    incomingCaller.callerId;
-
-
-  if (!callerId) {
-    return;
-  }
-
-
-  isVideoCall =
-    incomingOffer.callType ===
-    "video";
-
-
-  activeCallPeerId =
-    callerId;
-
-  activeCallRole =
-    "callee";
-
-  pendingIceCandidates =
-    [];
-
-
-  const callerProfile =
-    allContacts.find(
-      user =>
-        user.id ===
-        callerId
+    pendingIceCandidates.push(
+      candidate
     );
 
-
-  currentChatUser =
-    callerProfile || {
-
-      id:
-        callerId,
-
-      display_name:
-        incomingCaller.callerName ||
-        "QEVIRA User"
-
-    };
-
+    return;
+  }
 
   try {
 
-    localStream =
-      await navigator.mediaDevices
-        .getUserMedia({
-
-          audio: true,
-
-          video: isVideoCall
-
-        });
+    await peerConnection.addIceCandidate(
+      new RTCIceCandidate(
+        candidate
+      )
+    );
 
   } catch (error) {
 
-    alert(
-      "Microphone/camera permission was not granted."
-    );
-
-    activeCallPeerId =
-      null;
-
-    activeCallRole =
-      null;
-
-    incomingOffer =
-      null;
-
-    incomingCaller =
-      null;
-
-    return;
-
-  }
-
-
-  await subscribeToPairChannel(
-    callerId
-  );
-
-
-  createPeerConnection();
-
-
-  localStream
-    .getTracks()
-    .forEach(
-      track => {
-
-        peerConnection.addTrack(
-          track,
-          localStream
-        );
-
-      }
-    );
-
-
-  try {
-
-    await peerConnection
-      .setRemoteDescription(
-
-        new RTCSessionDescription(
-          incomingOffer.offer
-        )
-
-      );
-
-
-    await flushPendingIceCandidates();
-
-
-    const answer =
-      await peerConnection
-        .createAnswer();
-
-
-    await peerConnection
-      .setLocalDescription(
-        answer
-      );
-
-
-    if (callPairChannel) {
-
-      await callPairChannel.send({
-
-        type:
-          "broadcast",
-
-        event:
-          "call-answer",
-
-        payload: {
-
-          senderId:
-            currentUser.id,
-
-          receiverId:
-            callerId,
-
-          answer
-
-        }
-
-      });
-
-    }
-
-
-    showActiveCall(
-      currentChatUser,
-      isVideoCall
-    );
-
-
-    incomingOffer =
-      null;
-
-    incomingCaller =
-      null;
-
-  } catch (error) {
-
-    console.log(
-      "Accept call error:",
+    console.warn(
+      "Remote ICE:",
       error
     );
 
-    await endCall(
-      false
-    );
-
   }
 
 }
 
 
 // ======================================================
-// 33. DECLINE CALL
+// 27. MUTE
 // ======================================================
 
-$("declineCallBtn").addEventListener(
-  "click",
-  async () => {
-
-    $("incomingCallOverlay")
-      .classList
-      .add("hidden");
-
-
-    if (
-      incomingCaller?.callerId
-    ) {
-
-      const callerId =
-        incomingCaller.callerId;
-
-
-      const payload = {
-
-        senderId:
-          currentUser.id,
-
-        receiverId:
-          callerId
-
-      };
-
-
-      try {
-
-        const channel =
-          supabaseClient.channel(
-            getCallPairName(
-              currentUser.id,
-              callerId
-            )
-          );
-
-
-        channel.subscribe(
-          async status => {
-
-            if (
-              status !==
-              "SUBSCRIBED"
-            ) {
-              return;
-            }
-
-
-            await channel.send({
-
-              type:
-                "broadcast",
-
-              event:
-                "call-decline",
-
-              payload
-
-            });
-
-
-            setTimeout(
-              async () => {
-
-                await supabaseClient
-                  .removeChannel(
-                    channel
-                  );
-
-              },
-              200
-            );
-
-          }
-        );
-
-      } catch (error) {
-
-        console.log(
-          "Decline error:",
-          error
-        );
-
-      }
-
-
-      await sendToUserInbox(
-        callerId,
-        "call-decline",
-        payload
-      );
-
-    }
-
-
-    incomingOffer =
-      null;
-
-    incomingCaller =
-      null;
-
-  }
-);
-
-
-// ======================================================
-// 34. ACTIVE CALL SCREEN
-// ======================================================
-
-function showActiveCall(
-  user,
-  video
-) {
-
-  const name =
-    user.display_name ||
-    user.username ||
-    "QEVIRA User";
-
-
-  $("activeCallName")
-    .textContent =
-    name;
-
-
-  $("activeCallAvatar")
-    .textContent =
-    name
-      .charAt(0)
-      .toUpperCase();
-
-
-  $("activeCallType")
-    .textContent =
-    video
-      ? "Video call"
-      : "Voice call";
-
-
-  $("activeCallOverlay")
-    .classList
-    .remove("hidden");
-
-
-  $("localVideo").srcObject =
-    localStream;
-
-
-  if (video) {
-
-    $("remoteVideo")
-      .classList
-      .remove("hidden");
-
-    $("localVideo")
-      .classList
-      .remove("hidden");
-
-    $("voiceCallDisplay")
-      .classList
-      .add("hidden");
-
-  } else {
-
-    $("remoteVideo")
-      .classList
-      .add("hidden");
-
-    $("localVideo")
-      .classList
-      .add("hidden");
-
-    $("voiceCallDisplay")
-      .classList
-      .remove("hidden");
-
-  }
-
-}
-
-
-// ======================================================
-// 35. MUTE
-// ======================================================
-
-$("muteCallBtn").addEventListener(
+muteCallBtn.addEventListener(
   "click",
   () => {
 
     if (!localStream) {
       return;
     }
-
 
     const audioTracks =
       localStream.getAudioTracks();
 
+    if (!audioTracks.length) {
+      return;
+    }
+
+    isMuted =
+      !isMuted;
 
     audioTracks.forEach(
       track => {
-
         track.enabled =
-          !track.enabled;
-
+          !isMuted;
       }
     );
 
+    const micOn =
+      muteCallBtn.querySelector(
+        ".mic-on"
+      );
 
-    isCallMuted =
-      !isCallMuted;
+    const micOff =
+      muteCallBtn.querySelector(
+        ".mic-off"
+      );
 
+    micOn.classList.toggle(
+      "hidden",
+      isMuted
+    );
 
-    $("muteCallBtn")
-      .textContent =
-      isCallMuted
-        ? "🔇"
-        : "🎤";
+    micOff.classList.toggle(
+      "hidden",
+      !isMuted
+    );
+
+    muteCallBtn.classList.toggle(
+      "active",
+      isMuted
+    );
 
   }
 );
 
 
 // ======================================================
-// 36. CAMERA
+// 28. CAMERA
 // ======================================================
 
-$("cameraCallBtn").addEventListener(
+cameraCallBtn.addEventListener(
   "click",
   () => {
 
@@ -2636,95 +2442,214 @@ $("cameraCallBtn").addEventListener(
       return;
     }
 
-
     const videoTracks =
       localStream.getVideoTracks();
-
 
     if (!videoTracks.length) {
       return;
     }
 
-
-    videoTracks.forEach(
-      track => {
-
-        track.enabled =
-          !track.enabled;
-
-      }
-    );
-
-
     isCameraOff =
       !isCameraOff;
 
+    videoTracks.forEach(
+      track => {
+        track.enabled =
+          !isCameraOff;
+      }
+    );
 
-    $("cameraCallBtn")
-      .textContent =
+    const cameraOn =
+      cameraCallBtn.querySelector(
+        ".camera-on"
+      );
+
+    const cameraOff =
+      cameraCallBtn.querySelector(
+        ".camera-off"
+      );
+
+    cameraOn.classList.toggle(
+      "hidden",
       isCameraOff
-        ? "🚫"
-        : "📹";
+    );
+
+    cameraOff.classList.toggle(
+      "hidden",
+      !isCameraOff
+    );
+
+    cameraCallBtn.classList.toggle(
+      "active",
+      isCameraOff
+    );
 
   }
 );
 
 
 // ======================================================
-// 37. END CALL
+// 29. SPEAKER
 // ======================================================
 
-$("endCallBtn").addEventListener(
+speakerCallBtn.addEventListener(
   "click",
-  () => endCall(true)
+  () => {
+
+    isSpeakerOn =
+      !isSpeakerOn;
+
+    try {
+
+      remoteVideo.volume =
+        isSpeakerOn
+          ? 1
+          : 0.7;
+
+    } catch (_) {}
+
+    speakerCallBtn.classList.toggle(
+      "active",
+      isSpeakerOn
+    );
+
+  }
 );
 
 
-async function endCall(
-  sendSignal = true
-) {
+// ======================================================
+// 30. SWITCH CAMERA
+// ======================================================
 
-  const peerId =
-    activeCallPeerId;
+switchCameraBtn.addEventListener(
+  "click",
+  async () => {
+
+    if (!localStream) {
+      return;
+    }
+
+    const videoTracks =
+      localStream.getVideoTracks();
+
+    if (!videoTracks.length) {
+      return;
+    }
+
+    const currentTrack =
+      videoTracks[0];
+
+    const settings =
+      currentTrack.getSettings();
+
+    const currentFacing =
+      settings.facingMode ||
+      "user";
+
+    const nextFacing =
+      currentFacing === "user"
+        ? "environment"
+        : "user";
+
+    try {
+
+      const newStream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: {
+              exact: nextFacing
+            }
+          }
+        });
+
+      const newTrack =
+        newStream.getVideoTracks()[0];
+
+      const sender =
+        peerConnection
+          ?.getSenders()
+          .find(
+            item =>
+              item.track &&
+              item.track.kind === "video"
+          );
+
+      if (sender) {
+
+        await sender.replaceTrack(
+          newTrack
+        );
+
+      }
+
+      localStream.removeTrack(
+        currentTrack
+      );
+
+      currentTrack.stop();
+
+      localStream.addTrack(
+        newTrack
+      );
+
+      localVideo.srcObject =
+        localStream;
+
+    } catch (error) {
+
+      console.warn(
+        "Switch camera:",
+        error
+      );
+
+    }
+
+  }
+);
 
 
-  if (
-    sendSignal &&
-    peerId &&
-    currentUser
-  ) {
+// ======================================================
+// 31. END CALL
+// ======================================================
 
-    const payload = {
+endCallBtn.addEventListener(
+  "click",
+  async () => {
 
-      senderId:
-        currentUser.id,
+    const peerId =
+      activeCallPeerId;
 
-      receiverId:
-        peerId
-
-    };
-
-
-    if (callPairChannel) {
+    if (peerId) {
 
       try {
 
-        await callPairChannel.send({
+        if (callPairChannel) {
 
-          type:
-            "broadcast",
+          await callPairChannel.send({
+            type: "broadcast",
+            event: "call-hangup",
+            payload: {
+              from: currentUser.id,
+              to: peerId
+            }
+          });
 
-          event:
-            "call-hangup",
+        }
 
-          payload
-
-        });
+        await sendToUserInbox(
+          peerId,
+          "call-hangup",
+          {
+            from: currentUser.id,
+            to: peerId
+          }
+        );
 
       } catch (error) {
 
-        console.log(
-          "Hangup send error:",
+        console.warn(
+          "Hangup signal:",
           error
         );
 
@@ -2732,318 +2657,407 @@ async function endCall(
 
     }
 
-
-    try {
-
-      await sendToUserInbox(
-        peerId,
-        "call-hangup",
-        payload
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Inbox hangup error:",
-        error
-      );
-
-    }
+    await cleanupCall(
+      false
+    );
 
   }
+);
 
 
-  if (peerConnection) {
+// ======================================================
+// 32. CLEANUP CALL
+// ======================================================
 
-    peerConnection.ontrack =
-      null;
+async function cleanupCall(
+  remoteEnded = false
+) {
 
-    peerConnection.onicecandidate =
-      null;
+  hideIncomingCall();
 
-    peerConnection.onconnectionstatechange =
-      null;
-
-    peerConnection.close();
-
-    peerConnection =
-      null;
-
-  }
+  hideActiveCall();
 
 
   if (localStream) {
 
     localStream
       .getTracks()
-      .forEach(
-        track => {
-
+      .forEach(track => {
+        try {
           track.stop();
-
-        }
-      );
-
-    localStream =
-      null;
+        } catch (_) {}
+      });
 
   }
 
+  localStream = null;
 
-  if (remoteStream) {
+  remoteStream = null;
 
-    remoteStream
-      .getTracks()
-      .forEach(
-        track => {
 
-          track.stop();
+  if (peerConnection) {
 
-        }
-      );
-
-    remoteStream =
-      null;
+    try {
+      peerConnection.close();
+    } catch (_) {}
 
   }
 
-
-  $("localVideo").srcObject =
-    null;
-
-  $("remoteVideo").srcObject =
-    null;
-
-
-  $("activeCallOverlay")
-    .classList
-    .add("hidden");
-
-  $("incomingCallOverlay")
-    .classList
-    .add("hidden");
-
-
-  incomingOffer =
-    null;
-
-  incomingCaller =
-    null;
-
-  pendingIceCandidates =
-    [];
-
-
-  activeCallPeerId =
-    null;
-
-  activeCallRole =
-    null;
-
-
-  isVideoCall =
-    false;
-
-  isCallMuted =
-    false;
-
-  isCameraOff =
-    false;
-
-
-  $("muteCallBtn")
-    .textContent =
-    "🎤";
-
-  $("cameraCallBtn")
-    .textContent =
-    "📹";
+  peerConnection = null;
 
 
   if (callPairChannel) {
 
-    await supabaseClient
-      .removeChannel(
+    try {
+
+      await supabaseClient.removeChannel(
         callPairChannel
       );
 
-    callPairChannel =
-      null;
+    } catch (_) {}
+
+    callPairChannel = null;
 
   }
 
-}
+
+  pendingIceCandidates = [];
+
+  activeCallPeerId = null;
+
+  activeCallRole = null;
+
+  activeCallType = null;
+
+  activeCallAccepted = false;
+
+  isMuted = false;
+
+  isCameraOff = false;
+
+  isSpeakerOn = false;
+
+  window.pendingIncomingOffer =
+    null;
 
 
-// ======================================================
-// 38. ESCAPE HTML
-// ======================================================
-
-function escapeHtml(
-  value
-) {
-
-  return String(value)
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
+  const micOn =
+    muteCallBtn.querySelector(
+      ".mic-on"
     );
 
+  const micOff =
+    muteCallBtn.querySelector(
+      ".mic-off"
+    );
+
+  micOn.classList.remove(
+    "hidden"
+  );
+
+  micOff.classList.add(
+    "hidden"
+  );
+
+  muteCallBtn.classList.remove(
+    "active"
+  );
+
+
+  const cameraOn =
+    cameraCallBtn.querySelector(
+      ".camera-on"
+    );
+
+  const cameraOff =
+    cameraCallBtn.querySelector(
+      ".camera-off"
+    );
+
+  cameraOn.classList.remove(
+    "hidden"
+  );
+
+  cameraOff.classList.add(
+    "hidden"
+  );
+
+  cameraCallBtn.classList.remove(
+    "active"
+  );
+
+  speakerCallBtn.classList.remove(
+    "active"
+  );
+
 }
 
 
 // ======================================================
-// 39. FORMAT TIME
+// 33. VOICE / VIDEO BUTTONS
 // ======================================================
 
-function formatTime(
-  date
-) {
+voiceCallBtn.addEventListener(
+  "click",
+  () => {
 
-  if (!date) {
-    return "";
-  }
-
-
-  try {
-
-    return new Date(date)
-      .toLocaleTimeString(
-        [],
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-  } catch {
-
-    return "";
+    startCall(
+      "voice"
+    );
 
   }
-
-}
-
-
-// ======================================================
-// 40. AUTH STATE
-// ======================================================
-
-supabaseClient.auth.onAuthStateChange(
-  async (
-    event,
-    session
-  ) => {
-
-    if (session?.user) {
-
-      currentUser =
-        session.user;
+);
 
 
-      if (
-        $("authScreen")
-          .classList
-          .contains("hidden")
-      ) {
+videoCallBtn.addEventListener(
+  "click",
+  () => {
 
-        return;
-
-      }
-
-
-      await showApp();
-
-    } else {
-
-      currentUser =
-        null;
-
-
-      if (callInboxChannel) {
-
-        await supabaseClient
-          .removeChannel(
-            callInboxChannel
-          );
-
-        callInboxChannel =
-          null;
-
-      }
-
-
-      $("authScreen")
-        .classList
-        .remove("hidden");
-
-      $("app")
-        .classList
-        .add("hidden");
-
-    }
+    startCall(
+      "video"
+    );
 
   }
 );
 
 
 // ======================================================
-// 41. CHECK SESSION
+// 34. NAVIGATION
 // ======================================================
 
-async function checkSession() {
+document
+  .querySelectorAll(".nav-item")
+  .forEach(button => {
 
-  const {
-    data: {
-      session
-    }
-  } =
-    await supabaseClient
-      .auth
-      .getSession();
+    button.addEventListener(
+      "click",
+      async () => {
+
+        const pageId =
+          button.dataset.page;
+
+        document
+          .querySelectorAll(".page")
+          .forEach(page => {
+            page.classList.add(
+              "hidden"
+            );
+          });
+
+        const target =
+          document.getElementById(
+            pageId
+          );
+
+        if (target) {
+          target.classList.remove(
+            "hidden"
+          );
+        }
+
+        document
+          .querySelectorAll(".nav-item")
+          .forEach(item => {
+            item.classList.remove(
+              "active"
+            );
+          });
+
+        button.classList.add(
+          "active"
+        );
+
+        if (
+          pageId ===
+          "contactsPage"
+        ) {
+
+          await loadContacts(
+            contactsSearchInput.value
+          );
+
+        }
+
+        if (
+          pageId ===
+          "profilePage"
+        ) {
+
+          await loadProfile();
+
+        }
+
+      }
+    );
+
+  });
 
 
-  if (session?.user) {
+// ======================================================
+// 35. SEARCH
+// ======================================================
 
-    currentUser =
-      session.user;
+contactsSearchInput.addEventListener(
+  "input",
+  () => {
 
-    await showApp();
+    loadContacts(
+      contactsSearchInput.value
+    );
+
+  }
+);
+
+
+// ======================================================
+// 36. NEW CHAT
+// ======================================================
+
+newChatBtn.addEventListener(
+  "click",
+  () => {
+
+    document
+      .querySelector(
+        '[data-page="contactsPage"]'
+      )
+      ?.click();
+
+    setTimeout(
+      () => {
+        contactsSearchInput.focus();
+      },
+      100
+    );
+
+  }
+);
+
+
+// ======================================================
+// 37. CHAT SEARCH
+// ======================================================
+
+searchInput.addEventListener(
+  "input",
+  () => {
+
+    const term =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+    document
+      .querySelectorAll(
+        "#chatList .user-card"
+      )
+      .forEach(card => {
+
+        card.style.display =
+          card.textContent
+            .toLowerCase()
+            .includes(term)
+              ? ""
+              : "none";
+
+      });
+
+  }
+);
+
+
+// ======================================================
+// 38. DARK MODE
+// ======================================================
+
+function loadTheme() {
+
+  const saved =
+    localStorage.getItem(
+      "qevira-theme"
+    );
+
+  if (saved === "dark") {
+
+    document.body.classList.add(
+      "dark"
+    );
+
+    darkModeBtn
+      .querySelector(".icon")
+      .textContent =
+      "☀";
 
   } else {
 
-    showSignup();
+    document.body.classList.remove(
+      "dark"
+    );
+
+    darkModeBtn
+      .querySelector(".icon")
+      .textContent =
+      "☾";
 
   }
 
 }
 
 
-// ======================================================
-// 42. START QEVIRA
-// ======================================================
-
-document.addEventListener(
-  "DOMContentLoaded",
+darkModeBtn.addEventListener(
+  "click",
   () => {
 
-    checkSession();
+    const dark =
+      document.body.classList.toggle(
+        "dark"
+      );
+
+    localStorage.setItem(
+      "qevira-theme",
+      dark
+        ? "dark"
+        : "light"
+    );
+
+    darkModeBtn
+      .querySelector(".icon")
+      .textContent =
+      dark
+        ? "☀"
+        : "☾";
 
   }
+);
+
+
+// ======================================================
+// 39. LOGOUT
+// ======================================================
+
+logoutBtn.addEventListener(
+  "click",
+  async () => {
+
+    await supabaseClient.auth.signOut();
+
+  }
+);
+
+
+// ======================================================
+// 40. START QEVIRA
+// ======================================================
+
+loadTheme();
+
+initAuth();
+
+
+// ======================================================
+// DEBUG
+// ======================================================
+
+console.log(
+  "QEVIRA loaded successfully."
 );
