@@ -12,9 +12,8 @@
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
 
-// PASTE YOUR EXISTING SUPABASE ANON/PUBLISHABLE KEY HERE
 const SUPABASE_ANON_KEY =
-  "PASTE_YOUR_EXISTING_SUPABASE_ANON_KEY_HERE";
+  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw"
 
 const supabaseClient =
   window.supabase.createClient(
