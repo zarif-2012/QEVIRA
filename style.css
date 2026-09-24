@@ -1,35 +1,37 @@
-/* =========================================================
+/* ============================================================
    QEVIRA
-   COMPLETE MODERN UI
-========================================================= */
+   STEP 2 — COMPLETE STYLE
+   ============================================================ */
+
+
+/* ============================================================
+   1. ROOT VARIABLES
+   ============================================================ */
 
 :root {
   --primary: #6c5ce7;
-  --primary-dark: #5847d8;
+  --primary-dark: #5142c9;
   --pink: #fd79a8;
   --orange: #fdcb6e;
   --green: #00b894;
+  --red: #e74c3c;
 
-  --bg: #f6f7ff;
-  --surface: #ffffff;
-  --surface-2: #f0efff;
-
-  --text: #202034;
-  --muted: #85859a;
+  --background: #f6f7ff;
+  --card: #ffffff;
+  --text: #22223b;
+  --muted: #77788f;
   --border: #e7e7f2;
 
-  --danger: #ff4f64;
-
   --shadow:
-    0 12px 35px rgba(42, 36, 90, 0.10);
+    0 10px 30px rgba(70, 60, 120, 0.10);
 
-  --radius: 20px;
+  --radius: 18px;
 }
 
 
-/* =========================================================
-   RESET
-========================================================= */
+/* ============================================================
+   2. RESET
+   ============================================================ */
 
 * {
   box-sizing: border-box;
@@ -37,45 +39,173 @@
   padding: 0;
 }
 
-html,
-body {
+html {
   width: 100%;
   min-height: 100%;
 }
 
 body {
+  width: 100%;
+  min-height: 100vh;
+
   font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
+    Arial,
+    Helvetica,
     sans-serif;
 
-  background: var(--bg);
+  background: var(--background);
   color: var(--text);
 
-  overflow-x: hidden;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
 button {
-  border: 0;
   cursor: pointer;
 }
+
+input,
+textarea {
+  outline: none;
+}
+
+
+/* ============================================================
+   3. COMMON
+   ============================================================ */
 
 .hidden {
   display: none !important;
 }
 
+.primary-btn {
+  width: 100%;
+  border: none;
+  border-radius: 13px;
 
-/* =========================================================
-   AUTH
-========================================================= */
+  padding: 13px 18px;
+
+  background: var(--primary);
+  color: #ffffff;
+
+  font-weight: 700;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.primary-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+
+  padding: 13px 18px;
+
+  background: var(--card);
+  color: var(--text);
+
+  font-weight: 700;
+}
+
+.secondary-btn:hover {
+  background: var(--background);
+}
+
+.small-primary-btn {
+  border: none;
+  border-radius: 12px;
+
+  padding: 10px 15px;
+
+  background: var(--primary);
+  color: white;
+
+  font-weight: 700;
+}
+
+.text-btn {
+  border: none;
+  background: transparent;
+
+  color: var(--primary);
+
+  font-weight: 700;
+
+  margin-top: 16px;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+.danger-btn {
+  width: 100%;
+
+  border: none;
+  border-radius: 13px;
+
+  padding: 13px 18px;
+
+  background: var(--red);
+  color: white;
+
+  font-weight: 700;
+
+  margin-top: 16px;
+}
+
+.danger-btn:hover {
+  opacity: 0.9;
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(108, 92, 231, 0.10);
+
+  color: var(--primary);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+}
+
+.icon-btn:hover {
+  background: rgba(108, 92, 231, 0.18);
+}
+
+
+/* ============================================================
+   4. AUTH SCREEN
+   ============================================================ */
 
 .auth-screen {
   min-height: 100vh;
@@ -84,53 +214,48 @@ button {
   align-items: center;
   justify-content: center;
 
-  padding: 24px;
+  padding: 20px;
 
   background:
     radial-gradient(
-      circle at 20% 20%,
-      rgba(253, 121, 168, 0.35),
+      circle at top left,
+      rgba(253, 121, 168, 0.22),
       transparent 35%
     ),
     radial-gradient(
-      circle at 80% 80%,
-      rgba(108, 92, 231, 0.35),
+      circle at bottom right,
+      rgba(108, 92, 231, 0.25),
       transparent 40%
     ),
-    linear-gradient(
-      135deg,
-      #6c5ce7,
-      #8e7df5,
-      #fd79a8
-    );
+    var(--background);
 }
 
 .auth-card {
-  width: min(430px, 100%);
+  width: 100%;
+  max-width: 420px;
 
-  padding: 38px 30px;
+  background: var(--card);
 
-  background: rgba(255, 255, 255, 0.96);
+  border-radius: 25px;
 
-  border-radius: 28px;
+  padding: 35px 28px;
 
-  box-shadow:
-    0 30px 80px rgba(20, 12, 70, 0.25);
+  box-shadow: var(--shadow);
 
   text-align: center;
 }
 
 .auth-logo {
-  width: 72px;
-  height: 72px;
+  width: 75px;
+  height: 75px;
 
-  margin: 0 auto 16px;
+  margin: 0 auto 15px;
+
+  border-radius: 24px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border-radius: 22px;
 
   background:
     linear-gradient(
@@ -141,127 +266,81 @@ button {
 
   color: white;
 
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 900;
 
   box-shadow:
-    0 14px 30px rgba(108, 92, 231, 0.30);
+    0 10px 25px rgba(108, 92, 231, 0.25);
 }
 
 .auth-card h1 {
   font-size: 32px;
-  letter-spacing: -1px;
+  margin-bottom: 5px;
 }
 
 .auth-subtitle {
-  margin-top: 4px;
   color: var(--muted);
+  margin-bottom: 25px;
 }
 
 .auth-form {
-  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+
+  gap: 13px;
 }
 
 .auth-form h2 {
-  margin-bottom: 18px;
   font-size: 21px;
+  margin-bottom: 5px;
 }
 
 .auth-form input {
   width: 100%;
 
-  padding: 15px 16px;
-
-  margin-bottom: 12px;
-
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 13px;
 
-  outline: none;
+  padding: 13px 14px;
 
-  background: #fafaff;
+  background: var(--background);
   color: var(--text);
-
-  transition: 0.2s;
 }
 
 .auth-form input:focus {
   border-color: var(--primary);
 
   box-shadow:
-    0 0 0 4px rgba(108, 92, 231, 0.10);
-}
-
-.primary-btn {
-  width: 100%;
-
-  padding: 15px;
-
-  border-radius: 14px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      #806ef0
-    );
-
-  color: white;
-
-  font-weight: 800;
-
-  box-shadow:
-    0 10px 22px rgba(108, 92, 231, 0.25);
-}
-
-.primary-btn:active {
-  transform: scale(0.98);
-}
-
-.text-btn {
-  margin-top: 18px;
-
-  background: transparent;
-
-  color: var(--primary);
-
-  font-weight: 700;
+    0 0 0 3px rgba(108, 92, 231, 0.10);
 }
 
 .auth-message {
   min-height: 22px;
 
-  margin-top: 15px;
+  margin-top: 13px;
 
-  color: var(--danger);
+  color: var(--red);
 
   font-size: 14px;
 }
 
+.auth-message.success {
+  color: var(--green);
+}
 
-/* =========================================================
-   APP
-========================================================= */
+
+/* ============================================================
+   5. MAIN APP
+   ============================================================ */
 
 .app {
   min-height: 100vh;
 
-  max-width: 900px;
-
-  margin: auto;
-
-  background: var(--bg);
-
-  padding-bottom: 90px;
+  padding-bottom: 78px;
 }
 
-
-/* =========================================================
-   TOPBAR
-========================================================= */
-
 .topbar {
-  height: 76px;
+  height: 70px;
 
   display: flex;
   align-items: center;
@@ -269,7 +348,7 @@ button {
 
   padding: 0 20px;
 
-  background: var(--surface);
+  background: var(--card);
 
   border-bottom: 1px solid var(--border);
 
@@ -281,18 +360,19 @@ button {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+
+  gap: 10px;
 }
 
 .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 43px;
+  height: 43px;
+
+  border-radius: 14px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border-radius: 13px;
 
   background:
     linear-gradient(
@@ -303,68 +383,35 @@ button {
 
   color: white;
 
+  font-size: 23px;
   font-weight: 900;
-  font-size: 22px;
 }
 
-.brand strong {
-  display: block;
-  font-size: 17px;
+.brand h1 {
+  font-size: 19px;
 }
 
 .brand span {
-  display: block;
-
-  max-width: 250px;
-
-  margin-top: 2px;
-
   color: var(--muted);
-
   font-size: 11px;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 
-/* =========================================================
-   ICON BUTTONS
-========================================================= */
+/* ============================================================
+   6. PAGE CONTAINER
+   ============================================================ */
 
-.icon-btn {
-  width: 42px;
-  height: 42px;
+.page-container {
+  width: 100%;
+  max-width: 900px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 0 auto;
 
-  border-radius: 13px;
-
-  background: var(--surface-2);
-
-  color: var(--text);
-
-  transition: 0.2s;
+  padding: 20px;
 }
-
-.icon-btn:hover {
-  transform: translateY(-1px);
-}
-
-.icon {
-  font-size: 21px;
-}
-
-
-/* =========================================================
-   PAGES
-========================================================= */
 
 .page {
-  padding: 24px 20px;
+  width: 100%;
 }
 
 .page-header {
@@ -372,91 +419,64 @@ button {
   align-items: center;
   justify-content: space-between;
 
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .page-header h2 {
-  font-size: 28px;
-  letter-spacing: -0.5px;
+  font-size: 26px;
 }
 
 .page-header p {
-  margin-top: 3px;
-
   color: var(--muted);
+  font-size: 14px;
 
-  font-size: 13px;
-}
-
-.round-btn {
-  width: 46px;
-  height: 46px;
-
-  border-radius: 15px;
-
-  background: var(--primary);
-
-  color: white;
-
-  font-size: 28px;
-
-  box-shadow:
-    0 9px 22px rgba(108, 92, 231, 0.25);
+  margin-top: 4px;
 }
 
 
-/* =========================================================
-   SEARCH
-========================================================= */
+/* ============================================================
+   7. SEARCH
+   ============================================================ */
 
 .search-box {
-  height: 50px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 0 16px;
-
   margin-bottom: 16px;
-
-  border-radius: 16px;
-
-  background: var(--surface);
-
-  border: 1px solid var(--border);
-}
-
-.search-box span {
-  color: var(--muted);
-  font-size: 23px;
 }
 
 .search-box input {
-  flex: 1;
+  width: 100%;
 
-  border: 0;
-  outline: 0;
+  border: 1px solid var(--border);
 
-  background: transparent;
+  border-radius: 14px;
 
+  padding: 13px 15px;
+
+  background: var(--card);
   color: var(--text);
 }
 
+.search-box input:focus {
+  border-color: var(--primary);
 
-/* =========================================================
-   LISTS
-========================================================= */
+  box-shadow:
+    0 0 0 3px rgba(108, 92, 231, 0.10);
+}
 
-.list {
+
+/* ============================================================
+   8. CHAT LIST
+   ============================================================ */
+
+.chat-list,
+.contacts-list {
   display: flex;
   flex-direction: column;
 
   gap: 10px;
 }
 
-.user-card {
+.chat-item,
+.contact-item {
   display: flex;
   align-items: center;
 
@@ -464,35 +484,39 @@ button {
 
   padding: 13px;
 
-  background: var(--surface);
+  background: var(--card);
 
   border: 1px solid var(--border);
 
-  border-radius: 17px;
+  border-radius: 16px;
 
   cursor: pointer;
 
-  transition: 0.2s;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.user-card:hover {
+.chat-item:hover,
+.contact-item:hover {
   transform: translateY(-1px);
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    0 6px 18px rgba(70, 60, 120, 0.08);
 }
 
-.user-avatar,
-.mini-avatar {
-  flex-shrink: 0;
+.chat-avatar,
+.contact-avatar {
+  flex: 0 0 auto;
 
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
+
+  border-radius: 16px;
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border-radius: 50%;
 
   background:
     linear-gradient(
@@ -503,84 +527,92 @@ button {
 
   color: white;
 
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
 }
 
-.user-info {
+.chat-info,
+.contact-info {
   min-width: 0;
   flex: 1;
 }
 
-.user-info strong {
-  display: block;
-}
+.chat-name,
+.contact-name {
+  font-weight: 700;
 
-.user-info span {
-  display: block;
-
-  margin-top: 3px;
-
-  color: var(--muted);
-
-  font-size: 12px;
-
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.online-dot {
-  width: 9px;
-  height: 9px;
+.chat-status,
+.contact-status,
+.contact-username {
+  color: var(--muted);
 
-  border-radius: 50%;
+  font-size: 13px;
 
-  background: var(--green);
+  margin-top: 4px;
+}
+
+.contact-status {
+  color: var(--green);
 }
 
 
-/* =========================================================
-   EMPTY
-========================================================= */
+/* ============================================================
+   9. EMPTY / LOADING
+   ============================================================ */
 
-.empty-state {
-  padding: 60px 20px;
-
+.empty-state,
+.loading-state {
   text-align: center;
 
+  padding: 35px 20px;
+
   color: var(--muted);
+}
+
+.empty-state {
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 18px;
 }
 
 .empty-icon {
-  font-size: 44px;
+  font-size: 40px;
 
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .empty-state h3 {
   color: var(--text);
 
-  margin-bottom: 5px;
+  margin-bottom: 7px;
+}
+
+.empty-state p {
+  margin-bottom: 18px;
 }
 
 
-/* =========================================================
-   PROFILE
-========================================================= */
+/* ============================================================
+   10. PROFILE
+   ============================================================ */
 
 .profile-card {
-  padding: 35px 20px;
-
-  margin-bottom: 16px;
-
-  text-align: center;
-
-  background: var(--surface);
+  background: var(--card);
 
   border: 1px solid var(--border);
 
-  border-radius: 24px;
+  border-radius: 22px;
+
+  padding: 28px 20px;
+
+  text-align: center;
 
   box-shadow: var(--shadow);
 }
@@ -589,13 +621,13 @@ button {
   width: 100px;
   height: 100px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   margin: 0 auto 15px;
 
   border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   background:
     linear-gradient(
@@ -608,92 +640,234 @@ button {
 
   font-size: 42px;
   font-weight: 900;
+
+  box-shadow:
+    0 10px 25px rgba(108, 92, 231, 0.22);
 }
 
 .profile-card h2 {
-  font-size: 22px;
+  font-size: 23px;
 }
 
-.profile-card p {
-  margin-top: 5px;
+.profile-card > p {
+  margin-top: 6px;
+}
 
+.profile-email {
   color: var(--muted);
+  font-size: 14px;
 }
 
-.danger-btn {
+.profile-bio {
+  max-width: 500px;
+
+  margin-left: auto !important;
+  margin-right: auto !important;
+
+  color: var(--text);
+
+  line-height: 1.5;
+}
+
+.profile-online-status {
+  color: var(--green) !important;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-card .primary-btn {
+  max-width: 250px;
+
+  margin: 20px auto 0;
+}
+
+
+/* ============================================================
+   11. PROFILE EDIT
+   ============================================================ */
+
+.profile-edit {
+  margin-top: 16px;
+
+  padding: 22px;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 20px;
+
+  box-shadow: var(--shadow);
+}
+
+.profile-edit-header {
+  margin-bottom: 18px;
+}
+
+.profile-edit-header h3 {
+  font-size: 21px;
+}
+
+.profile-edit-header p {
+  color: var(--muted);
+
+  font-size: 14px;
+
+  margin-top: 4px;
+}
+
+.profile-edit label {
+  display: block;
+
+  margin-top: 15px;
+  margin-bottom: 7px;
+
+  font-weight: 700;
+
+  font-size: 14px;
+}
+
+.profile-edit input,
+.profile-edit textarea {
   width: 100%;
 
-  padding: 15px;
+  border: 1px solid var(--border);
 
-  border-radius: 15px;
+  border-radius: 13px;
 
-  background:
-    rgba(255, 79, 100, 0.10);
+  padding: 13px;
 
-  color: var(--danger);
+  background: var(--background);
+  color: var(--text);
 
-  font-weight: 800;
+  resize: vertical;
+}
+
+.profile-edit input:focus,
+.profile-edit textarea:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px rgba(108, 92, 231, 0.10);
+}
+
+.profile-edit small {
+  display: block;
+
+  color: var(--muted);
+
+  margin-top: 5px;
+
+  font-size: 12px;
+}
+
+.profile-edit-buttons {
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.profile-edit-buttons .primary-btn,
+.profile-edit-buttons .secondary-btn {
+  margin: 0;
 }
 
 
-/* =========================================================
-   BOTTOM NAV
-========================================================= */
+/* ============================================================
+   12. LOGOUT
+   ============================================================ */
+
+#logoutBtn {
+  max-width: 500px;
+
+  display: block;
+
+  margin-left: auto;
+  margin-right: auto;
+
+  margin-top: 18px;
+}
+
+
+/* ============================================================
+   13. BOTTOM NAVIGATION
+   ============================================================ */
 
 .bottom-nav {
   position: fixed;
 
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 0;
 
-  transform: translateX(-50%);
-
-  width: min(900px, 100%);
-
-  height: 72px;
+  height: 70px;
 
   display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: var(--surface);
+  gap: 10px;
+
+  padding: 7px 12px;
+
+  background: var(--card);
 
   border-top: 1px solid var(--border);
 
   z-index: 50;
-
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.nav-item {
+.nav-btn {
   flex: 1;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  max-width: 180px;
 
-  gap: 3px;
+  height: 56px;
+
+  border: none;
+
+  border-radius: 15px;
 
   background: transparent;
 
   color: var(--muted);
 
-  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  font-size: 12px;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background:
+    rgba(108, 92, 231, 0.10);
+
+  color: var(--primary);
 
   font-weight: 700;
 }
 
-.nav-icon {
-  font-size: 21px;
-}
 
-.nav-item.active {
-  color: var(--primary);
-}
-
-
-/* =========================================================
-   CHAT MODAL
-========================================================= */
+/* ============================================================
+   14. CHAT MODAL
+   ============================================================ */
 
 .modal {
   position: fixed;
@@ -703,41 +877,52 @@ button {
   z-index: 100;
 
   background:
-    rgba(12, 10, 30, 0.50);
+    rgba(20, 18, 40, 0.55);
 
-  backdrop-filter: blur(7px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 15px;
 }
 
 .chat-window {
-  width: min(700px, 100%);
-  height: 100%;
+  width: 100%;
+  max-width: 700px;
 
-  margin: auto;
+  height: min(750px, 92vh);
 
   display: flex;
   flex-direction: column;
 
-  background: var(--bg);
+  overflow: hidden;
+
+  background: var(--card);
+
+  border-radius: 22px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
+
+/* ============================================================
+   15. CHAT HEADER
+   ============================================================ */
+
 .chat-header {
-  min-height: 72px;
+  min-height: 70px;
+
+  padding: 10px 13px;
 
   display: flex;
   align-items: center;
-
-  gap: 10px;
-
-  padding: 10px 15px;
-
-  background: var(--surface);
+  justify-content: space-between;
 
   border-bottom: 1px solid var(--border);
 }
 
-.chat-user-info {
-  flex: 1;
-
+.chat-header-left {
   display: flex;
   align-items: center;
 
@@ -746,79 +931,86 @@ button {
   min-width: 0;
 }
 
-.chat-user-info strong {
-  display: block;
+.chat-header-left .chat-avatar {
+  width: 45px;
+  height: 45px;
+
+  border-radius: 14px;
 }
 
-.chat-user-info span {
-  display: block;
+.chat-header h3 {
+  white-space: nowrap;
 
-  margin-top: 2px;
+  overflow: hidden;
 
+  text-overflow: ellipsis;
+}
+
+.chat-header p {
   color: var(--green);
 
   font-size: 12px;
+
+  margin-top: 3px;
 }
 
-.chat-call-actions {
+.chat-header-actions {
   display: flex;
+
+  align-items: center;
+
   gap: 5px;
 }
 
-.call-icon-btn {
-  width: 42px;
-  height: 42px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 13px;
-
-  background: var(--surface-2);
-
-  color: var(--primary);
-}
-
-.call-icon-btn svg {
-  width: 21px;
-  height: 21px;
-
-  fill: none;
-
-  stroke: currentColor;
-
-  stroke-width: 1.8;
-
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+/* ============================================================
+   16. MESSAGES
+   ============================================================ */
 
 .messages {
   flex: 1;
 
   overflow-y: auto;
 
-  padding: 20px;
+  padding: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--background),
+      var(--card)
+    );
 }
 
-.message {
-  max-width: 78%;
+.message-row {
+  display: flex;
 
-  padding: 10px 13px;
+  margin-bottom: 10px;
+}
 
-  margin-bottom: 8px;
+.message-row.mine {
+  justify-content: flex-end;
+}
+
+.message-row.theirs {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 75%;
+
+  padding: 9px 12px;
 
   border-radius: 17px;
 
-  line-height: 1.4;
+  background: #ececf7;
+
+  color: var(--text);
 
   word-break: break-word;
 }
 
-.message.sent {
-  margin-left: auto;
-
+.message-row.mine .message-bubble {
   background: var(--primary);
 
   color: white;
@@ -826,38 +1018,43 @@ button {
   border-bottom-right-radius: 5px;
 }
 
-.message.received {
-  margin-right: auto;
-
-  background: var(--surface);
-
-  border: 1px solid var(--border);
-
+.message-row.theirs .message-bubble {
   border-bottom-left-radius: 5px;
 }
 
+.message-text {
+  line-height: 1.4;
+
+  white-space: pre-wrap;
+}
+
 .message-time {
-  display: block;
+  margin-top: 4px;
 
-  margin-top: 3px;
-
-  font-size: 9px;
+  font-size: 10px;
 
   opacity: 0.65;
 
   text-align: right;
 }
 
+
+/* ============================================================
+   17. MESSAGE FORM
+   ============================================================ */
+
 .message-form {
+  min-height: 68px;
+
+  padding: 10px;
+
   display: flex;
 
   gap: 8px;
 
-  padding: 10px;
-
-  background: var(--surface);
-
   border-top: 1px solid var(--border);
+
+  background: var(--card);
 }
 
 .message-form input {
@@ -865,644 +1062,371 @@ button {
 
   min-width: 0;
 
-  border: 0;
+  border: 1px solid var(--border);
 
-  outline: 0;
+  border-radius: 14px;
 
-  padding: 13px 15px;
+  padding: 12px 14px;
 
-  border-radius: 15px;
-
-  background: var(--surface-2);
+  background: var(--background);
 
   color: var(--text);
 }
 
+.message-form input:focus {
+  border-color: var(--primary);
+}
+
 .send-btn {
-  width: 46px;
-  height: 46px;
+  flex: 0 0 auto;
 
-  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
 
-  border-radius: 15px;
+  border: none;
+
+  border-radius: 14px;
 
   background: var(--primary);
 
   color: white;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 20px;
 }
 
-.send-btn svg {
-  width: 21px;
-  height: 21px;
-
-  fill: currentColor;
+.send-btn:hover {
+  background: var(--primary-dark);
 }
 
 
-/* =========================================================
-   CALL OVERLAY
-========================================================= */
+/* ============================================================
+   18. CALL OVERLAYS
+   ============================================================ */
 
 .call-overlay {
   position: fixed;
 
   inset: 0;
 
-  z-index: 500;
+  z-index: 200;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  background:
-    radial-gradient(
-      circle at 50% 25%,
-      rgba(108, 92, 231, 0.30),
-      transparent 35%
-    ),
-    #0d0d18;
+  padding: 20px;
 
-  color: white;
+  background:
+    rgba(20, 18, 40, 0.75);
 }
 
+.call-card,
+.active-call-card {
+  width: 100%;
+  max-width: 420px;
 
-/* =========================================================
-   INCOMING CALL
-========================================================= */
+  padding: 30px 22px;
 
-.incoming-call-card {
-  position: relative;
+  background: var(--card);
 
-  width: min(390px, calc(100% - 35px));
-
-  padding: 45px 25px 35px;
+  border-radius: 24px;
 
   text-align: center;
 
-  border-radius: 30px;
-
-  background:
-    rgba(255, 255, 255, 0.07);
-
-  border: 1px solid rgba(255, 255, 255, 0.10);
-
-  backdrop-filter: blur(25px);
-
   box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.40);
+    0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.incoming-glow {
-  position: absolute;
+.call-icon {
+  width: 75px;
+  height: 75px;
 
-  width: 170px;
-  height: 170px;
-
-  top: 35px;
-  left: 50%;
-
-  transform: translateX(-50%);
+  margin: 0 auto 15px;
 
   border-radius: 50%;
-
-  background:
-    rgba(108, 92, 231, 0.20);
-
-  filter: blur(20px);
-}
-
-.large-call-avatar {
-  position: relative;
-
-  width: 110px;
-  height: 110px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin: auto;
-
-  border-radius: 50%;
-
   background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
+    rgba(0, 184, 148, 0.12);
 
-  color: white;
-
-  font-size: 45px;
-  font-weight: 900;
-
-  border: 4px solid rgba(255,255,255,0.15);
-
-  box-shadow:
-    0 15px 50px rgba(108, 92, 231, 0.40);
+  font-size: 32px;
 }
 
-.call-small-label {
-  margin-top: 30px;
+.call-card p,
+.active-call-card p {
+  color: var(--muted);
 
-  color: rgba(255,255,255,0.55);
-
-  font-size: 13px;
+  margin-top: 7px;
 }
 
-.incoming-call-card h2 {
-  margin-top: 6px;
-
-  font-size: 26px;
-}
-
-.incoming-call-card > p:last-of-type {
-  margin-top: 5px;
-
-  color: rgba(255,255,255,0.60);
-}
-
-.incoming-call-actions {
+.call-buttons {
   display: flex;
 
-  justify-content: center;
+  gap: 10px;
 
-  gap: 55px;
-
-  margin-top: 38px;
+  margin-top: 25px;
 }
 
-.call-action {
-  width: 64px;
-  height: 64px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  color: white;
-}
-
-.call-action svg {
-  width: 27px;
-  height: 27px;
-
-  fill: currentColor;
-
-  transform: rotate(0deg);
-}
-
-.call-action.decline {
-  background: var(--danger);
-
-  transform: rotate(135deg);
-}
-
-.call-action.accept {
-  background: var(--green);
-}
-
-.call-action-labels {
-  display: flex;
-
-  justify-content: center;
-
-  gap: 63px;
-
-  margin-top: 10px;
-
-  color: rgba(255,255,255,0.65);
-
-  font-size: 11px;
+.call-buttons .primary-btn,
+.call-buttons .danger-btn {
+  margin: 0;
 }
 
 
-/* =========================================================
-   ACTIVE CALL
-========================================================= */
-
-.active-call {
-  overflow: hidden;
-
-  align-items: stretch;
-  justify-content: stretch;
-}
+/* ============================================================
+   19. VIDEO
+   ============================================================ */
 
 .remote-video {
-  position: absolute;
-
-  inset: 0;
-
   width: 100%;
-  height: 100%;
+
+  max-height: 350px;
+
+  margin-top: 20px;
+
+  border-radius: 18px;
+
+  background: #111;
 
   object-fit: cover;
-
-  background: #11111c;
-
-  z-index: 1;
 }
 
 .local-video {
   position: absolute;
 
-  right: 18px;
-  top: 92px;
+  width: 110px;
+  height: 150px;
 
-  width: 125px;
-  height: 175px;
+  right: 25px;
+  bottom: 120px;
+
+  border-radius: 15px;
+
+  background: #111;
 
   object-fit: cover;
 
-  border-radius: 17px;
-
-  border: 2px solid rgba(255,255,255,0.45);
-
-  background: #222;
-
-  z-index: 5;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.35);
+  border: 2px solid white;
 }
 
-.voice-call-display {
-  position: absolute;
-
-  inset: 0;
-
-  z-index: 2;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      circle at center,
-      #25213e,
-      #0d0d18 65%
-    );
-}
-
-.voice-bg-circle {
-  position: absolute;
-
-  width: 310px;
-  height: 310px;
-
-  border-radius: 50%;
-
-  background:
-    rgba(108, 92, 231, 0.16);
-
-  box-shadow:
-    0 0 100px rgba(108, 92, 231, 0.20);
-}
-
-.active-call-avatar {
+.active-call-card {
   position: relative;
-
-  width: 150px;
-  height: 150px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 60px;
-  font-weight: 900;
-
-  border: 5px solid rgba(255,255,255,0.13);
-
-  box-shadow:
-    0 25px 70px rgba(0,0,0,0.30);
 }
-
-.active-call-top {
-  position: absolute;
-
-  top: 0;
-  left: 0;
-  right: 0;
-
-  z-index: 10;
-
-  padding:
-    max(25px, env(safe-area-inset-top))
-    20px
-    25px;
-
-  display: flex;
-  justify-content: space-between;
-
-  background:
-    linear-gradient(
-      rgba(0,0,0,0.65),
-      transparent
-    );
-}
-
-.active-call-top h2 {
-  font-size: 21px;
-}
-
-.active-call-top p {
-  margin-top: 3px;
-
-  color: rgba(255,255,255,0.65);
-
-  font-size: 13px;
-}
-
-.call-status-dot {
-  width: 10px;
-  height: 10px;
-
-  margin-top: 8px;
-
-  border-radius: 50%;
-
-  background: var(--green);
-
-  box-shadow:
-    0 0 14px var(--green);
-}
-
-
-/* =========================================================
-   CALL CONTROLS
-========================================================= */
 
 .call-controls {
-  position: absolute;
-
-  left: 50%;
-  bottom: 35px;
-
-  transform: translateX(-50%);
-
-  z-index: 20;
-
-  width: min(520px, calc(100% - 30px));
-
   display: flex;
 
   align-items: center;
   justify-content: center;
 
-  gap: 13px;
+  gap: 10px;
 
-  padding: 15px 17px;
-
-  border-radius: 28px;
-
-  background:
-    rgba(18, 18, 30, 0.72);
-
-  border:
-    1px solid rgba(255,255,255,0.10);
-
-  backdrop-filter: blur(20px);
+  margin-top: 20px;
 }
 
-.control-btn {
-  width: 52px;
-  height: 52px;
+.call-controls .danger-btn {
+  width: auto;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 0;
 
-  border-radius: 50%;
-
-  background:
-    rgba(255,255,255,0.12);
-
-  color: white;
-
-  transition: 0.2s;
-}
-
-.control-btn:hover {
-  background:
-    rgba(255,255,255,0.20);
-}
-
-.control-btn.active {
-  background: white;
-  color: #111;
-}
-
-.control-icon {
-  width: 22px;
-  height: 22px;
-
-  fill: none;
-
-  stroke: currentColor;
-
-  stroke-width: 1.8;
-
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.end-call-btn {
-  width: 58px;
-  height: 58px;
-
-  margin-left: 5px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: var(--danger);
-
-  color: white;
-
-  box-shadow:
-    0 8px 25px rgba(255,79,100,0.35);
-
-  transform: rotate(135deg);
-
-  transition: 0.2s;
-}
-
-.end-call-btn:hover {
-  transform: rotate(135deg) scale(1.05);
-}
-
-.end-call-btn svg {
-  width: 25px;
-  height: 25px;
-
-  fill: currentColor;
+  padding: 11px 18px;
 }
 
 
-/* =========================================================
-   DARK MODE
-========================================================= */
+/* ============================================================
+   20. SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 92, 231, 0.30);
+
+  border-radius: 10px;
+}
+
+
+/* ============================================================
+   21. DARK MODE
+   ============================================================ */
 
 body.dark {
-  --bg: #0d0d18;
-  --surface: #171724;
-  --surface-2: #222235;
+  --background: #151522;
+  --card: #202031;
 
-  --text: #f4f4ff;
-  --muted: #9999b1;
-  --border: #29293c;
+  --text: #f5f5ff;
+  --muted: #aaaabd;
+
+  --border: #33334a;
 
   --shadow:
-    0 12px 35px rgba(0,0,0,0.30);
-}
-
-body.dark .auth-card {
-  background: #171724;
-
-  color: var(--text);
-}
-
-body.dark .auth-form input {
-  background: #222235;
-  color: white;
+    0 10px 30px rgba(0, 0, 0, 0.30);
 }
 
 body.dark .auth-screen {
   background:
     radial-gradient(
-      circle at 20% 20%,
-      rgba(253, 121, 168, 0.20),
+      circle at top left,
+      rgba(253, 121, 168, 0.12),
       transparent 35%
     ),
     radial-gradient(
-      circle at 80% 80%,
-      rgba(108, 92, 231, 0.25),
+      circle at bottom right,
+      rgba(108, 92, 231, 0.16),
       transparent 40%
     ),
-    #0d0d18;
+    var(--background);
+}
+
+body.dark .messages {
+  background:
+    linear-gradient(
+      180deg,
+      #171725,
+      #202031
+    );
+}
+
+body.dark .message-row.theirs .message-bubble {
+  background: #303047;
+
+  color: var(--text);
+}
+
+body.dark .search-box input,
+body.dark .auth-form input,
+body.dark .profile-edit input,
+body.dark .profile-edit textarea,
+body.dark .message-form input {
+  background: #181827;
+  color: var(--text);
 }
 
 
-/* =========================================================
-   MOBILE
-========================================================= */
+/* ============================================================
+   22. MOBILE
+   ============================================================ */
 
 @media (max-width: 600px) {
 
-  .page {
-    padding: 20px 14px;
+  .page-container {
+    padding: 16px 12px;
   }
 
   .topbar {
-    padding: 0 14px;
+    padding: 0 13px;
+  }
+
+  .brand h1 {
+    font-size: 17px;
   }
 
   .page-header h2 {
-    font-size: 25px;
+    font-size: 23px;
   }
 
-  .chat-header {
-    padding-left: 8px;
-    padding-right: 8px;
+  .auth-card {
+    padding: 30px 20px;
   }
 
-  .message {
-    max-width: 86%;
+  .profile-card {
+    padding: 25px 15px;
+  }
+
+  .chat-window {
+    height: 100vh;
+
+    max-height: 100vh;
+
+    border-radius: 0;
+  }
+
+  .modal {
+    padding: 0;
+  }
+
+  .message-bubble {
+    max-width: 82%;
+  }
+
+  .chat-header-actions .icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .bottom-nav {
+    height: 66px;
+
+    padding: 5px 8px;
+  }
+
+  .nav-btn {
+    height: 54px;
+  }
+
+  .profile-edit-buttons {
+    flex-direction: column;
+  }
+
+  .call-buttons {
+    flex-direction: column;
+  }
+
+  .call-buttons .primary-btn,
+  .call-buttons .danger-btn {
+    width: 100%;
   }
 
   .local-video {
-    width: 100px;
-    height: 145px;
+    width: 90px;
+    height: 120px;
 
-    right: 12px;
-    top: 85px;
+    right: 15px;
+    bottom: 110px;
   }
-
-  .call-controls {
-    bottom: 22px;
-
-    width: calc(100% - 18px);
-
-    gap: 8px;
-
-    padding: 12px;
-  }
-
-  .control-btn {
-    width: 47px;
-    height: 47px;
-  }
-
-  .end-call-btn {
-    width: 55px;
-    height: 55px;
-  }
-
-  .active-call-avatar {
-    width: 125px;
-    height: 125px;
-
-    font-size: 50px;
-  }
-
-  .incoming-call-card {
-    padding-top: 35px;
-  }
-
-  .large-call-avatar {
-    width: 95px;
-    height: 95px;
-
-    font-size: 38px;
-  }
-
 }
 
 
-/* =========================================================
-   SMALL PHONES
-========================================================= */
+/* ============================================================
+   23. VERY SMALL PHONES
+   ============================================================ */
 
-@media (max-width: 370px) {
+@media (max-width: 360px) {
 
-  .control-btn {
-    width: 43px;
-    height: 43px;
+  .auth-card {
+    padding: 25px 15px;
   }
 
-  .control-icon {
-    width: 19px;
-    height: 19px;
+  .brand span {
+    display: none;
   }
 
-  .end-call-btn {
-    width: 50px;
-    height: 50px;
+  .chat-header-actions {
+    gap: 2px;
   }
 
-   }
+  .chat-header-actions .icon-btn {
+    width: 34px;
+    height: 34px;
+
+    font-size: 15px;
+  }
+
+  .bottom-nav {
+    gap: 2px;
+  }
+
+  .nav-btn {
+    font-size: 11px;
+  }
+}
