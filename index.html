@@ -12,24 +12,15 @@
 
   <meta
     name="description"
-    content="QEVIRA real-time messaging app"
+    content="QEVIRA — chat, call, connect and discover."
   >
 
-  <meta
-    name="mobile-web-app-capable"
-    content="yes"
-  >
-
-  <meta
-    name="apple-mobile-web-app-capable"
-    content="yes"
-  >
-
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta
     name="apple-mobile-web-app-status-bar-style"
     content="default"
   >
-
   <meta
     name="apple-mobile-web-app-title"
     content="QEVIRA"
@@ -62,14 +53,20 @@
 <body>
 
   <!-- =====================================================
-       AUTH SCREEN
+       QEVIRA AUTHENTICATION
        ===================================================== -->
 
-  <section id="authScreen" class="auth-screen">
+  <section
+    id="authScreen"
+    class="auth-screen"
+  >
 
     <div class="auth-card">
 
-      <div class="auth-logo" aria-label="QEVIRA logo">
+      <div
+        class="auth-logo"
+        aria-label="QEVIRA logo"
+      >
         Q
       </div>
 
@@ -79,12 +76,19 @@
         Connect. Chat. Discover.
       </p>
 
-      <!-- LOGIN -->
 
-      <form id="loginForm" autocomplete="on">
+      <!-- ================= LOGIN ================= -->
+
+      <form
+        id="loginForm"
+        autocomplete="on"
+      >
 
         <div class="input-group">
-          <label for="loginEmail">Email</label>
+
+          <label for="loginEmail">
+            Email
+          </label>
 
           <input
             id="loginEmail"
@@ -93,10 +97,15 @@
             autocomplete="email"
             required
           >
+
         </div>
 
+
         <div class="input-group">
-          <label for="loginPassword">Password</label>
+
+          <label for="loginPassword">
+            Password
+          </label>
 
           <input
             id="loginPassword"
@@ -105,7 +114,9 @@
             autocomplete="current-password"
             required
           >
+
         </div>
+
 
         <button
           id="loginBtn"
@@ -118,7 +129,7 @@
       </form>
 
 
-      <!-- SIGNUP -->
+      <!-- ================= SIGN UP ================= -->
 
       <form
         id="signupForm"
@@ -127,7 +138,10 @@
       >
 
         <div class="input-group">
-          <label for="signupEmail">Email</label>
+
+          <label for="signupEmail">
+            Email
+          </label>
 
           <input
             id="signupEmail"
@@ -136,10 +150,15 @@
             autocomplete="email"
             required
           >
+
         </div>
 
+
         <div class="input-group">
-          <label for="signupPassword">Password</label>
+
+          <label for="signupPassword">
+            Password
+          </label>
 
           <input
             id="signupPassword"
@@ -149,7 +168,9 @@
             minlength="6"
             required
           >
+
         </div>
+
 
         <button
           id="signupBtn"
@@ -184,10 +205,13 @@
 
 
   <!-- =====================================================
-       MAIN APPLICATION
+       MAIN QEVIRA APPLICATION
        ===================================================== -->
 
-  <main id="app" class="app hidden">
+  <main
+    id="app"
+    class="app hidden"
+  >
 
     <!-- ===================================================
          TOP BAR
@@ -208,28 +232,43 @@
       </div>
 
 
-      <button
-        id="darkModeBtn"
-        type="button"
-        class="icon-btn"
-        aria-label="Toggle dark mode"
-        title="Dark mode"
-      >
-        🌙
-      </button>
+      <div class="topbar-actions">
+
+        <button
+          id="notificationBtn"
+          type="button"
+          class="icon-btn"
+          aria-label="Notifications"
+          title="Notifications"
+        >
+          🔔
+        </button>
+
+
+        <button
+          id="darkModeBtn"
+          type="button"
+          class="icon-btn"
+          aria-label="Toggle dark mode"
+          title="Dark mode"
+        >
+          🌙
+        </button>
+
+      </div>
 
     </header>
 
 
     <!-- ===================================================
-         PAGE CONTENT
+         MAIN PAGE CONTAINER
          =================================================== -->
 
     <div class="page-container">
 
 
       <!-- =================================================
-           CHATS PAGE
+           CHATS
            ================================================= -->
 
       <section
@@ -240,11 +279,15 @@
         <div class="page-header">
 
           <div>
-            <h2>Chats</h2>
+
+            <h2>
+              Chats
+            </h2>
 
             <p class="page-subtitle">
               Your conversations
             </p>
+
           </div>
 
 
@@ -262,7 +305,7 @@
         </div>
 
 
-        <!-- SEARCH -->
+        <!-- CHAT SEARCH -->
 
         <div class="search-box">
 
@@ -288,7 +331,7 @@
         ></div>
 
 
-        <!-- EMPTY STATE -->
+        <!-- EMPTY CHAT STATE -->
 
         <div
           id="chatEmpty"
@@ -299,7 +342,9 @@
             💬
           </div>
 
-          <h3>No chats yet</h3>
+          <h3>
+            No chats yet
+          </h3>
 
           <p>
             Start a conversation with someone on QEVIRA.
@@ -320,7 +365,7 @@
 
 
       <!-- =================================================
-           CONTACTS PAGE
+           CONTACTS
            ================================================= -->
 
       <section
@@ -331,11 +376,15 @@
         <div class="page-header">
 
           <div>
-            <h2>Contacts</h2>
+
+            <h2>
+              Contacts
+            </h2>
 
             <p class="page-subtitle">
               Find people on QEVIRA
             </p>
+
           </div>
 
         </div>
@@ -371,7 +420,229 @@
 
 
       <!-- =================================================
-           PROFILE PAGE
+           STATUS
+           ================================================= -->
+
+      <section
+        id="statusPage"
+        class="page hidden"
+      >
+
+        <div class="page-header">
+
+          <div>
+
+            <h2>
+              Status
+            </h2>
+
+            <p class="page-subtitle">
+              Share something for 24 hours
+            </p>
+
+          </div>
+
+
+          <button
+            id="createStatusBtn"
+            type="button"
+            class="round-btn"
+            aria-label="Create status"
+            title="Create status"
+          >
+            +
+          </button>
+
+        </div>
+
+
+        <div
+          id="myStatus"
+          class="status-section"
+        ></div>
+
+
+        <div
+          id="statusList"
+          class="list"
+        ></div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           QEVIRA DAILY
+           ================================================= -->
+
+      <section
+        id="dailyPage"
+        class="page hidden"
+      >
+
+        <div class="page-header">
+
+          <div>
+
+            <h2>
+              QEVIRA Daily
+            </h2>
+
+            <p class="page-subtitle">
+              News, technology, sports and more
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="dailyCategories"
+          class="category-tabs"
+        >
+
+          <button
+            type="button"
+            class="category-btn active"
+            data-category="india"
+          >
+            🇮🇳 India
+          </button>
+
+          <button
+            type="button"
+            class="category-btn"
+            data-category="world"
+          >
+            🌍 World
+          </button>
+
+          <button
+            type="button"
+            class="category-btn"
+            data-category="technology"
+          >
+            💻 Technology
+          </button>
+
+          <button
+            type="button"
+            class="category-btn"
+            data-category="sports"
+          >
+            🏏 Sports
+          </button>
+
+          <button
+            type="button"
+            class="category-btn"
+            data-category="trending"
+          >
+            🔥 Trending
+          </button>
+
+        </div>
+
+
+        <div
+          id="dailyList"
+          class="list"
+        ></div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           QUIZ
+           ================================================= -->
+
+      <section
+        id="quizPage"
+        class="page hidden"
+      >
+
+        <div class="page-header">
+
+          <div>
+
+            <h2>
+              QEVIRA Quiz
+            </h2>
+
+            <p class="page-subtitle">
+              Learn. Practice. Improve.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="quizStart"
+          class="quiz-container"
+        >
+
+          <button
+            type="button"
+            class="quiz-option"
+            data-exam="foundation"
+          >
+            <strong>
+              📚 Foundation
+            </strong>
+
+            <span>
+              School-level learning
+            </span>
+          </button>
+
+
+          <button
+            type="button"
+            class="quiz-option"
+            data-exam="jee"
+          >
+            <strong>
+              🎯 JEE
+            </strong>
+
+            <span>
+              Engineering entrance practice
+            </span>
+          </button>
+
+
+          <button
+            type="button"
+            class="quiz-option"
+            data-exam="neet"
+          >
+            <strong>
+              🧬 NEET
+            </strong>
+
+            <span>
+              Medical entrance practice
+            </span>
+          </button>
+
+        </div>
+
+
+        <div
+          id="quizContent"
+          class="hidden"
+        ></div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           PROFILE
            ================================================= -->
 
       <section
@@ -382,17 +653,21 @@
         <div class="page-header">
 
           <div>
-            <h2>Profile</h2>
+
+            <h2>
+              Profile
+            </h2>
 
             <p class="page-subtitle">
               Your QEVIRA account
             </p>
+
           </div>
 
         </div>
 
 
-        <!-- PROFILE CARD -->
+        <!-- PROFILE HEADER -->
 
         <div class="profile-card">
 
@@ -470,7 +745,30 @@
         </div>
 
 
-        <!-- EDIT BUTTON -->
+        <!-- REFERRAL -->
+
+        <div class="profile-info-card">
+
+          <div class="profile-info-icon">
+            🎁
+          </div>
+
+          <div class="profile-info-content">
+
+            <strong>
+              Referral
+            </strong>
+
+            <span id="referralCode">
+              Your invite code
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- EDIT PROFILE -->
 
         <button
           id="editProfileBtn"
@@ -480,10 +778,6 @@
           Edit Profile
         </button>
 
-
-        <!-- =============================================
-             PROFILE EDITOR
-             ============================================= -->
 
         <div
           id="profileEdit"
@@ -545,6 +839,22 @@
           </div>
 
 
+          <div class="input-group">
+
+            <label for="editAvatarUrl">
+              Profile Photo URL
+            </label>
+
+            <input
+              id="editAvatarUrl"
+              type="url"
+              placeholder="https://..."
+              autocomplete="off"
+            >
+
+          </div>
+
+
           <div class="editor-actions">
 
             <button
@@ -554,6 +864,7 @@
             >
               Save Changes
             </button>
+
 
             <button
               id="cancelProfileEditBtn"
@@ -612,6 +923,24 @@
 
 
       <button
+        id="statusNavBtn"
+        type="button"
+        class="nav-btn"
+        aria-label="Status"
+      >
+
+        <span class="nav-icon">
+          🟢
+        </span>
+
+        <span class="nav-label">
+          Status
+        </span>
+
+      </button>
+
+
+      <button
         id="contactsNavBtn"
         type="button"
         class="nav-btn"
@@ -624,6 +953,24 @@
 
         <span class="nav-label">
           Contacts
+        </span>
+
+      </button>
+
+
+      <button
+        id="dailyNavBtn"
+        type="button"
+        class="nav-btn"
+        aria-label="QEVIRA Daily"
+      >
+
+        <span class="nav-icon">
+          📰
+        </span>
+
+        <span class="nav-label">
+          Daily
         </span>
 
       </button>
@@ -714,6 +1061,7 @@
             📞
           </button>
 
+
           <button
             id="videoCallBtn"
             type="button"
@@ -729,7 +1077,6 @@
       </header>
 
 
-
       <!-- MESSAGES -->
 
       <div
@@ -737,7 +1084,6 @@
         class="messages"
         aria-live="polite"
       ></div>
-
 
 
       <!-- MESSAGE FORM -->
@@ -756,6 +1102,7 @@
           autocomplete="off"
           aria-label="Message"
         >
+
 
         <button
           id="sendMessageBtn"
@@ -776,7 +1123,7 @@
 
 
   <!-- =====================================================
-       INCOMING CALL OVERLAY
+       INCOMING CALL
        ===================================================== -->
 
   <div
@@ -806,7 +1153,7 @@
       </h2>
 
 
-      <p>
+      <p id="incomingCallType">
         Incoming QEVIRA call...
       </p>
 
@@ -821,6 +1168,7 @@
         >
           📞
         </button>
+
 
         <button
           id="declineCallBtn"
@@ -840,7 +1188,7 @@
 
 
   <!-- =====================================================
-       ACTIVE CALL OVERLAY
+       ACTIVE CALL
        ===================================================== -->
 
   <div
@@ -886,9 +1234,11 @@
           Q
         </div>
 
+
         <h2 id="activeCallName">
           Calling...
         </h2>
+
 
         <p id="activeCallStatus">
           Connecting...
@@ -942,6 +1292,49 @@
 
 
   <!-- =====================================================
+       NOTIFICATION PANEL
+       ===================================================== -->
+
+  <div
+    id="notificationPanel"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="notificationTitle"
+  >
+
+    <div class="notification-window">
+
+      <div class="modal-header">
+
+        <h3 id="notificationTitle">
+          Notifications
+        </h3>
+
+        <button
+          id="closeNotificationBtn"
+          type="button"
+          class="icon-btn"
+          aria-label="Close notifications"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div
+        id="notificationList"
+        class="list"
+      ></div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =====================================================
        SUPABASE
        ===================================================== -->
 
@@ -951,7 +1344,7 @@
 
 
   <!-- =====================================================
-       QEVIRA APP
+       QEVIRA APPLICATION
        ===================================================== -->
 
   <script
@@ -972,13 +1365,19 @@
         navigator.serviceWorker
           .register("./sw.js")
           .then(() => {
-            console.log("QEVIRA Service Worker registered");
+
+            console.log(
+              "QEVIRA Service Worker registered"
+            );
+
           })
           .catch((error) => {
+
             console.warn(
               "QEVIRA Service Worker registration failed:",
               error
             );
+
           });
 
       });
@@ -988,4 +1387,4 @@
   </script>
 
 </body>
-  </html>
+            </html>
