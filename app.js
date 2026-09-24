@@ -1,1780 +1,2219 @@
-// ============================================================
-// QEVIRA
-// STEP 2 — PROFILE + BIO + ONLINE/LAST SEEN
-// AUTH + 1-TO-1 CHAT + REALTIME MESSAGES
-// ============================================================
+/* =========================================================
+   QEVIRA
+   PROFESSIONAL REAL-TIME MESSAGING UI
+   ========================================================= */
 
 
-// ============================================================
-// 1. SUPABASE CONFIG
-// ============================================================
+/* =========================================================
+   1. ROOT VARIABLES
+   ========================================================= */
 
-const SUPABASE_URL =
-  "https://wcdywnkxtuexjbjgerzd.supabase.co";
+:root {
+  --primary: #6c5ce7;
+  --primary-dark: #5847d8;
+  --primary-light: #eeeaff;
 
-const SUPABASE_ANON_KEY =
-  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
+  --pink: #fd79a8;
+  --orange: #fdcb6e;
+  --green: #00b894;
+  --red: #e74c3c;
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+  --background: #f6f7ff;
+  --surface: #ffffff;
+  --surface-2: #f8f8ff;
 
+  --text: #202124;
+  --text-light: #777b87;
+  --text-muted: #9da1ad;
 
-// ============================================================
-// 2. GLOBAL VARIABLES
-// ============================================================
+  --border: #e7e8f0;
 
-let currentUser = null;
-let currentProfile = null;
-let currentChatUser = null;
-let messageSubscription = null;
-let presenceInterval = null;
+  --shadow-sm:
+    0 2px 8px rgba(55, 48, 100, 0.06);
 
-let authMode = "login";
+  --shadow:
+    0 8px 30px rgba(55, 48, 100, 0.10);
 
+  --shadow-lg:
+    0 18px 55px rgba(55, 48, 100, 0.18);
 
-// ============================================================
-// 3. BASIC HELPERS
-// ============================================================
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
 
-function $(id) {
-  return document.getElementById(id);
-}
-
-function show(element) {
-  if (element) element.classList.remove("hidden");
-}
-
-function hide(element) {
-  if (element) element.classList.add("hidden");
-}
-
-function escapeHTML(value) {
-  if (value === null || value === undefined) return "";
-
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function formatTime(dateString) {
-  if (!dateString) return "";
-
-  const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function formatLastSeen(dateString) {
-  if (!dateString) return "Offline";
-
-  const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Offline";
-  }
-
-  return "Last seen " + date.toLocaleString([], {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
+  --bottom-nav-height: 72px;
 }
 
 
-// ============================================================
-// 4. AUTH SCREEN
-// ============================================================
+/* =========================================================
+   2. RESET
+   ========================================================= */
 
-function showLoginMode() {
-  authMode = "login";
-
-  hide($("signupForm"));
-  show($("loginForm"));
-
-  const message = $("authMessage");
-
-  if (message) {
-    message.textContent = "";
-  }
-}
-
-function showSignupMode() {
-  authMode = "signup";
-
-  hide($("loginForm"));
-  show($("signupForm"));
-
-  const message = $("authMessage");
-
-  if (message) {
-    message.textContent = "";
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 
-// ============================================================
-// 5. AUTH MESSAGE
-// ============================================================
-
-function setAuthMessage(message, type = "") {
-  const box = $("authMessage");
-
-  if (!box) return;
-
-  box.textContent = message;
-
-  box.className = "";
-
-  if (type) {
-    box.classList.add(type);
-  }
+html {
+  width: 100%;
+  min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 
-// ============================================================
-// 6. SIGN UP
-// ============================================================
+body {
+  width: 100%;
+  min-height: 100vh;
 
-async function signup() {
-  const email = $("signupEmail")?.value.trim();
-  const password = $("signupPassword")?.value;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 
-  if (!email || !password) {
-    setAuthMessage("Please enter email and password.");
-    return;
-  }
+  background: var(--background);
+  color: var(--text);
 
-  if (password.length < 6) {
-    setAuthMessage("Password must be at least 6 characters.");
-    return;
-  }
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 
-  const button = $("signupBtn");
+  overflow-x: hidden;
+}
 
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Creating account...";
-  }
 
-  try {
-    const { data, error } =
-      await supabaseClient.auth.signUp({
-        email,
-        password
-      });
+button,
+input,
+textarea {
+  font: inherit;
+}
 
-    if (error) {
-      throw error;
-    }
 
-    if (data.session) {
-      setAuthMessage("Account created successfully.", "success");
-    } else {
-      setAuthMessage(
-        "Account created. Check your email to confirm your account.",
-        "success"
-      );
-    }
+button {
+  border: 0;
+  cursor: pointer;
+}
 
-  } catch (error) {
-    console.error("Signup error:", error);
 
-    setAuthMessage(
-      error.message || "Signup failed."
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+input,
+textarea {
+  outline: none;
+}
+
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+
+.hidden {
+  display: none !important;
+}
+
+
+/* =========================================================
+   3. AUTH SCREEN
+   ========================================================= */
+
+.auth-screen {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(108, 92, 231, 0.20),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(253, 121, 168, 0.18),
+      transparent 35%
+    ),
+    var(--background);
+}
+
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 34px 28px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  border-radius: 28px;
+
+  box-shadow: var(--shadow-lg);
+
+  backdrop-filter: blur(16px);
+}
+
+
+.auth-logo {
+  width: 76px;
+  height: 76px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 24px;
+
+  color: white;
+
+  font-size: 38px;
+  font-weight: 900;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
     );
 
-  } finally {
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Create Account";
-    }
-  }
+  box-shadow:
+    0 12px 28px rgba(108, 92, 231, 0.30);
 }
 
 
-// ============================================================
-// 7. LOGIN
-// ============================================================
+.auth-card h1 {
+  text-align: center;
 
-async function login() {
-  const email = $("loginEmail")?.value.trim();
-  const password = $("loginPassword")?.value;
+  font-size: 32px;
+  font-weight: 900;
 
-  if (!email || !password) {
-    setAuthMessage("Please enter email and password.");
-    return;
-  }
+  letter-spacing: -1px;
+}
 
-  const button = $("loginBtn");
 
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Logging in...";
-  }
+.auth-subtitle {
+  margin-top: 6px;
+  margin-bottom: 28px;
 
-  try {
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+  text-align: center;
 
-    if (error) {
-      throw error;
-    }
+  color: var(--text-light);
 
-    currentUser = data.user;
+  font-size: 14px;
+}
 
-    await startApp();
 
-  } catch (error) {
-    console.error("Login error:", error);
+.input-group {
+  margin-bottom: 16px;
+}
 
-    setAuthMessage(
-      error.message || "Login failed."
+
+.input-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.input-group input,
+.input-group textarea {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: var(--surface);
+
+  color: var(--text);
+
+  font-size: 15px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.input-group input:focus,
+.input-group textarea:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 4px rgba(108, 92, 231, 0.10);
+}
+
+
+.input-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+
+.primary-btn {
+  width: 100%;
+
+  min-height: 48px;
+
+  padding: 12px 18px;
+
+  border-radius: 13px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--primary-dark)
     );
 
-  } finally {
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Login";
-    }
-  }
+  font-weight: 800;
+
+  box-shadow:
+    0 8px 20px rgba(108, 92, 231, 0.22);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
 }
 
 
-// ============================================================
-// 8. SHOW MAIN APP
-// ============================================================
+.primary-btn:hover {
+  transform: translateY(-1px);
 
-function showApp() {
-  hide($("authScreen"));
-  show($("app"));
+  box-shadow:
+    0 12px 25px rgba(108, 92, 231, 0.28);
 }
 
 
-// ============================================================
-// 9. SHOW AUTH
-// ============================================================
-
-function showAuth() {
-  hide($("app"));
-  show($("authScreen"));
+.primary-btn:active {
+  transform: scale(0.98);
 }
 
 
-// ============================================================
-// 10. ENSURE PROFILE EXISTS
-// ============================================================
-
-async function ensureProfile() {
-  if (!currentUser) return null;
-
-  const { data: existingProfile, error: selectError } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-  if (selectError) {
-    console.error("Profile select error:", selectError);
-    return null;
-  }
-
-  if (existingProfile) {
-    currentProfile = existingProfile;
-    return existingProfile;
-  }
-
-  const defaultUsername =
-    "user" + currentUser.id.substring(0, 8);
-
-  const newProfile = {
-    id: currentUser.id,
-    email: currentUser.email,
-    display_name: "QEVIRA User",
-    username: defaultUsername,
-    bio: "",
-    last_seen: new Date().toISOString(),
-    is_online: true
-  };
-
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .insert(newProfile)
-      .select()
-      .single();
-
-  if (error) {
-    console.error("Profile creation error:", error);
-
-    // Fallback in case some optional columns don't exist yet
-    const basicProfile = {
-      id: currentUser.id,
-      email: currentUser.email,
-      display_name: "QEVIRA User",
-      username: defaultUsername
-    };
-
-    const retry =
-      await supabaseClient
-        .from("profiles")
-        .insert(basicProfile)
-        .select()
-        .single();
-
-    if (retry.error) {
-      console.error("Basic profile creation error:", retry.error);
-      return null;
-    }
-
-    currentProfile = retry.data;
-    return retry.data;
-  }
-
-  currentProfile = data;
-
-  return data;
+.small-btn {
+  width: auto;
+  min-width: 170px;
 }
 
 
-// ============================================================
-// 11. LOAD CURRENT PROFILE
-// ============================================================
+.secondary-btn {
+  min-height: 46px;
 
-async function loadCurrentProfile() {
-  if (!currentUser) return;
+  padding: 11px 18px;
 
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
+  border-radius: 12px;
 
-  if (error) {
-    console.error("Load profile error:", error);
-    return;
-  }
+  background: var(--primary-light);
+  color: var(--primary);
 
-  if (data) {
-    currentProfile = data;
-    renderCurrentProfile();
-  }
+  font-weight: 800;
 }
 
 
-// ============================================================
-// 12. RENDER PROFILE
-// ============================================================
+.text-btn {
+  display: block;
 
-function renderCurrentProfile() {
-  if (!currentProfile) return;
+  width: 100%;
 
-  const displayName =
-    currentProfile.display_name ||
-    "QEVIRA User";
+  margin-top: 16px;
 
-  const username =
-    currentProfile.username ||
-    "user";
+  padding: 10px;
 
-  const email =
-    currentProfile.email ||
-    currentUser?.email ||
-    "";
+  background: transparent;
 
-  const bio =
-    currentProfile.bio ||
-    "";
+  color: var(--primary);
 
-  const avatar =
-    $("profileAvatar");
-
-  if (avatar) {
-    const firstLetter =
-      displayName
-        .trim()
-        .charAt(0)
-        .toUpperCase() || "Q";
-
-    avatar.textContent = firstLetter;
-  }
-
-  const nameElement =
-    $("profileName");
-
-  if (nameElement) {
-    nameElement.textContent = displayName;
-  }
-
-  const usernameElement =
-    $("profileUsername");
-
-  if (usernameElement) {
-    usernameElement.textContent =
-      "@" + username.replace(/^@/, "");
-  }
-
-  const emailElement =
-    $("profileEmail");
-
-  if (emailElement) {
-    emailElement.textContent = email;
-  }
-
-  const bioElement =
-    $("profileBio");
-
-  if (bioElement) {
-    bioElement.textContent =
-      bio || "No bio yet.";
-  }
-
-  const onlineElement =
-    $("profileOnlineStatus");
-
-  if (onlineElement) {
-    if (currentProfile.is_online) {
-      onlineElement.textContent = "● Online";
-    } else {
-      onlineElement.textContent =
-        formatLastSeen(currentProfile.last_seen);
-    }
-  }
-
-  // Fill edit fields if they exist
-  const editName =
-    $("editDisplayName");
-
-  if (editName) {
-    editName.value =
-      currentProfile.display_name || "";
-  }
-
-  const editUsername =
-    $("editUsername");
-
-  if (editUsername) {
-    editUsername.value =
-      currentProfile.username || "";
-  }
-
-  const editBio =
-    $("editBio");
-
-  if (editBio) {
-    editBio.value =
-      currentProfile.bio || "";
-  }
+  font-weight: 700;
 }
 
 
-// ============================================================
-// 13. SAVE PROFILE
-// ============================================================
+.auth-message {
+  min-height: 22px;
 
-async function saveProfile() {
-  if (!currentUser) return;
+  margin-top: 12px;
 
-  const displayName =
-    $("editDisplayName")?.value.trim() ||
-    "QEVIRA User";
+  text-align: center;
 
-  let username =
-    $("editUsername")?.value.trim() ||
-    ("user" + currentUser.id.substring(0, 8));
+  color: var(--text-light);
 
-  const bio =
-    $("editBio")?.value.trim() || "";
+  font-size: 13px;
+}
 
-  username = username.replace(/^@/, "");
 
-  if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-    alert(
-      "Username can contain only letters, numbers, _ and ."
-    );
-    return;
-  }
+/* =========================================================
+   4. MAIN APP
+   ========================================================= */
 
-  const button =
-    $("saveProfileBtn");
+.app {
+  min-height: 100vh;
 
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Saving...";
-  }
+  background: var(--background);
+}
 
-  try {
-    // Check if username is already used
-    const { data: existingUser, error: usernameError } =
-      await supabaseClient
-        .from("profiles")
-        .select("id")
-        .eq("username", username)
-        .neq("id", currentUser.id)
-        .maybeSingle();
 
-    if (usernameError) {
-      console.error(
-        "Username check error:",
-        usernameError
-      );
-    }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
 
-    if (existingUser) {
-      alert("That username is already taken.");
-      return;
-    }
+  height: 64px;
 
-    const updates = {
-      display_name: displayName,
-      username,
-      bio
-    };
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    const { data, error } =
-      await supabaseClient
-        .from("profiles")
-        .update(updates)
-        .eq("id", currentUser.id)
-        .select()
-        .single();
+  padding:
+    0 max(18px, env(safe-area-inset-left))
+    0 max(18px, env(safe-area-inset-right));
 
-    if (error) {
-      throw error;
-    }
+  background: rgba(255, 255, 255, 0.90);
 
-    currentProfile = data;
+  border-bottom: 1px solid var(--border);
 
-    renderCurrentProfile();
+  backdrop-filter: blur(18px);
+}
 
-    hide($("profileEdit"));
 
-    alert("Profile updated successfully!");
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  } catch (error) {
-    console.error(
-      "Save profile error:",
-      error
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
     );
 
-    alert(
-      error.message ||
-      "Could not update profile."
+  color: white;
+
+  font-weight: 900;
+  font-size: 20px;
+
+  box-shadow:
+    0 6px 16px rgba(108, 92, 231, 0.22);
+}
+
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 900;
+
+  letter-spacing: 0.3px;
+}
+
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-size: 18px;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+.icon-btn:hover {
+  background: var(--primary-light);
+
+  transform: translateY(-1px);
+}
+
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   5. PAGE CONTAINER
+   ========================================================= */
+
+.page-container {
+  width: 100%;
+  max-width: 760px;
+
+  margin: 0 auto;
+
+  padding:
+    22px
+    22px
+    calc(var(--bottom-nav-height) + 28px);
+}
+
+
+.page {
+  width: 100%;
+}
+
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+}
+
+
+.page-header h2 {
+  font-size: 26px;
+  font-weight: 900;
+
+  letter-spacing: -0.5px;
+}
+
+
+.page-subtitle {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 13px;
+}
+
+
+.round-btn {
+  width: 46px;
+  height: 46px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
     );
 
-  } finally {
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Save Profile";
-    }
-  }
+  color: white;
+
+  font-size: 28px;
+  font-weight: 400;
+
+  box-shadow:
+    0 8px 20px rgba(108, 92, 231, 0.25);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 
-// ============================================================
-// 14. UPDATE ONLINE STATUS
-// ============================================================
+.round-btn:hover {
+  transform: translateY(-2px);
 
-async function updatePresence(isOnline = true) {
-  if (!currentUser) return;
-
-  const updateData = {
-    last_seen: new Date().toISOString(),
-    is_online: isOnline
-  };
-
-  const { error } =
-    await supabaseClient
-      .from("profiles")
-      .update(updateData)
-      .eq("id", currentUser.id);
-
-  if (error) {
-    console.warn(
-      "Presence update failed:",
-      error.message
-    );
-  }
+  box-shadow:
+    0 12px 26px rgba(108, 92, 231, 0.30);
 }
 
 
-// ============================================================
-// 15. START PRESENCE SYSTEM
-// ============================================================
+/* =========================================================
+   6. SEARCH
+   ========================================================= */
 
-function startPresence() {
-  stopPresence();
+.search-box {
+  width: 100%;
 
-  updatePresence(true);
+  height: 48px;
 
-  presenceInterval =
-    setInterval(() => {
-      updatePresence(true);
-    }, 30000);
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  margin-bottom: 16px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 14px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
 }
 
 
-// ============================================================
-// 16. STOP PRESENCE
-// ============================================================
-
-function stopPresence() {
-  if (presenceInterval) {
-    clearInterval(presenceInterval);
-    presenceInterval = null;
-  }
+.search-icon {
+  font-size: 16px;
+  opacity: 0.65;
 }
 
 
-// ============================================================
-// 17. PAGE VISIBILITY PRESENCE
-// ============================================================
+.search-box input {
+  flex: 1;
 
-document.addEventListener(
-  "visibilitychange",
-  () => {
-    if (!currentUser) return;
+  width: 100%;
 
-    if (document.visibilityState === "visible") {
-      updatePresence(true);
-    } else {
-      updatePresence(false);
-    }
-  }
-);
+  border: 0;
+  outline: 0;
 
+  background: transparent;
 
-// ============================================================
-// 18. BEFORE PAGE CLOSE
-// ============================================================
+  color: var(--text);
 
-window.addEventListener(
-  "beforeunload",
-  () => {
-    if (!currentUser) return;
-
-    // Best-effort update
-    supabaseClient
-      .from("profiles")
-      .update({
-        is_online: false,
-        last_seen: new Date().toISOString()
-      })
-      .eq("id", currentUser.id);
-  }
-);
-
-
-// ============================================================
-// 19. LOAD CONTACTS
-// ============================================================
-
-async function loadContacts() {
-  const list =
-    $("contactsList");
-
-  if (!list || !currentUser) return;
-
-  list.innerHTML =
-    '<div class="loading-state">Loading contacts...</div>';
-
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .neq("id", currentUser.id)
-      .order("display_name", {
-        ascending: true
-      });
-
-  if (error) {
-    console.error(
-      "Contacts error:",
-      error
-    );
-
-    list.innerHTML =
-      '<div class="loading-state">Could not load contacts.</div>';
-
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML =
-      '<div class="loading-state">No other users yet.</div>';
-
-    return;
-  }
-
-  renderContacts(data);
+  font-size: 14px;
 }
 
 
-// ============================================================
-// 20. RENDER CONTACTS
-// ============================================================
+.search-box:focus-within {
+  border-color: var(--primary);
 
-function renderContacts(users) {
-  const list =
-    $("contactsList");
+  box-shadow:
+    0 0 0 4px rgba(108, 92, 231, 0.08);
+}
 
-  if (!list) return;
 
-  list.innerHTML = "";
+/* =========================================================
+   7. LISTS
+   ========================================================= */
 
-  users.forEach(user => {
-    const item =
-      document.createElement("div");
+.list {
+  display: flex;
+  flex-direction: column;
 
-    item.className = "contact-item";
+  gap: 8px;
+}
 
-    const name =
-      user.display_name ||
-      "QEVIRA User";
 
-    const username =
-      user.username ||
-      "user";
+.chat-item,
+.contact-item {
+  width: 100%;
 
-    const initial =
-      name.charAt(0).toUpperCase();
+  display: flex;
+  align-items: center;
 
-    let status =
-      "Offline";
+  gap: 13px;
 
-    if (user.is_online) {
-      status = "Online";
-    } else if (user.last_seen) {
-      status = formatLastSeen(
-        user.last_seen
-      );
-    }
+  padding: 13px;
 
-    item.innerHTML = `
-      <div class="contact-avatar">
-        ${escapeHTML(initial)}
-      </div>
+  border:
+    1px solid var(--border);
 
-      <div class="contact-info">
-        <div class="contact-name">
-          ${escapeHTML(name)}
-        </div>
+  border-radius: 16px;
 
-        <div class="contact-username">
-          @${escapeHTML(username)}
-        </div>
+  background: var(--surface);
 
-        <div class="contact-status">
-          ${escapeHTML(status)}
-        </div>
-      </div>
-    `;
+  box-shadow: var(--shadow-sm);
 
-    item.addEventListener(
-      "click",
-      () => {
-        openChat(user);
-      }
+  text-align: left;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+
+.chat-item:hover,
+.contact-item:hover {
+  transform: translateY(-1px);
+
+  box-shadow: var(--shadow);
+
+  background: #fff;
+}
+
+
+.chat-item:active,
+.contact-item:active {
+  transform: scale(0.99);
+}
+
+
+.chat-avatar,
+.contact-avatar {
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
     );
 
-    list.appendChild(item);
-  });
+  color: white;
+
+  font-size: 20px;
+  font-weight: 900;
 }
 
 
-// ============================================================
-// 21. LOAD CHAT USERS
-// ============================================================
+.chat-avatar img,
+.contact-avatar img,
+.profile-avatar img,
+.call-avatar img {
+  width: 100%;
+  height: 100%;
 
-async function loadChats() {
-  const list =
-    $("chatList");
+  object-fit: cover;
+}
 
-  if (!list || !currentUser) return;
 
-  list.innerHTML =
-    '<div class="loading-state">Loading chats...</div>';
+.chat-info,
+.contact-info {
+  min-width: 0;
 
-  const { data: sent, error: sentError } =
-    await supabaseClient
-      .from("messages")
-      .select("receiver_id")
-      .eq("sender_id", currentUser.id);
+  flex: 1;
+}
 
-  const { data: received, error: receivedError } =
-    await supabaseClient
-      .from("messages")
-      .select("sender_id")
-      .eq("receiver_id", currentUser.id);
 
-  if (sentError || receivedError) {
-    console.error(
-      "Chat loading error:",
-      sentError || receivedError
+.chat-name,
+.contact-name {
+  display: block;
+
+  overflow: hidden;
+
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 800;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.chat-preview,
+.contact-username {
+  display: block;
+
+  margin-top: 4px;
+
+  overflow: hidden;
+
+  color: var(--text-light);
+
+  font-size: 12px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.chat-meta {
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 5px;
+}
+
+
+.chat-time {
+  color: var(--text-muted);
+
+  font-size: 11px;
+}
+
+
+.online-dot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: var(--green);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 184, 148, 0.12);
+}
+
+
+/* =========================================================
+   8. EMPTY / LOADING STATES
+   ========================================================= */
+
+.empty-state,
+.loading-state {
+  width: 100%;
+
+  padding: 50px 22px;
+
+  text-align: center;
+
+  color: var(--text-light);
+}
+
+
+.empty-icon {
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 22px;
+
+  background: var(--primary-light);
+
+  font-size: 30px;
+}
+
+
+.empty-state h3 {
+  margin-bottom: 7px;
+
+  color: var(--text);
+
+  font-size: 18px;
+}
+
+
+.empty-state p {
+  max-width: 320px;
+
+  margin: 0 auto 20px;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+
+.loading-state {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   9. PROFILE
+   ========================================================= */
+
+.profile-card {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 22px;
+
+  margin-bottom: 14px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 20px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+}
+
+
+.profile-avatar {
+  width: 82px;
+  height: 82px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 26px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
     );
 
-    list.innerHTML =
-      '<div class="loading-state">Could not load chats.</div>';
+  color: white;
 
-    return;
-  }
+  font-size: 32px;
+  font-weight: 900;
 
-  const ids = new Set();
+  box-shadow:
+    0 10px 25px rgba(108, 92, 231, 0.22);
+}
 
-  (sent || []).forEach(row => {
-    if (row.receiver_id) {
-      ids.add(row.receiver_id);
-    }
-  });
 
-  (received || []).forEach(row => {
-    if (row.sender_id) {
-      ids.add(row.sender_id);
-    }
-  });
+.profile-main-info {
+  min-width: 0;
+}
 
-  if (ids.size === 0) {
-    show($("chatEmpty"));
-    list.innerHTML = "";
-    return;
-  }
 
-  hide($("chatEmpty"));
+.profile-main-info h2 {
+  overflow: hidden;
 
-  const idArray =
-    Array.from(ids);
+  font-size: 21px;
+  font-weight: 900;
 
-  const { data: users, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .in("id", idArray);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
-  if (error) {
-    console.error(
-      "Chat users error:",
-      error
+
+.profile-main-info p {
+  margin-top: 4px;
+
+  overflow: hidden;
+
+  color: var(--text-light);
+
+  font-size: 13px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.profile-info-card {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 15px;
+
+  margin-bottom: 10px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 15px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.profile-info-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: var(--primary-light);
+}
+
+
+.profile-info-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.profile-info-content strong {
+  font-size: 13px;
+}
+
+
+.profile-info-content span {
+  overflow: hidden;
+
+  color: var(--text-light);
+
+  font-size: 12px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.profile-page .primary-btn {
+  margin-top: 8px;
+}
+
+
+.profile-editor {
+  margin-top: 16px;
+
+  padding: 20px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 20px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+}
+
+
+.editor-title {
+  margin-bottom: 18px;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+
+.editor-actions {
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 6px;
+}
+
+
+.editor-actions .primary-btn {
+  flex: 1;
+}
+
+
+.editor-actions .secondary-btn {
+  flex: 0 0 auto;
+}
+
+
+.danger-btn {
+  width: 100%;
+
+  min-height: 46px;
+
+  margin-top: 18px;
+
+  border-radius: 13px;
+
+  background: rgba(231, 76, 60, 0.10);
+
+  color: var(--red);
+
+  font-weight: 800;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+.danger-btn:hover {
+  background: rgba(231, 76, 60, 0.16);
+}
+
+
+.danger-btn:active {
+  transform: scale(0.98);
+}
+
+
+/* =========================================================
+   10. BOTTOM NAV
+   ========================================================= */
+
+.bottom-nav {
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 50;
+
+  height:
+    calc(
+      var(--bottom-nav-height)
+      + env(safe-area-inset-bottom)
     );
 
-    return;
-  }
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 
-  renderChatList(users || []);
+  padding:
+    8px
+    12px
+    env(safe-area-inset-bottom);
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border-top: 1px solid var(--border);
+
+  backdrop-filter: blur(18px);
 }
 
 
-// ============================================================
-// 22. RENDER CHAT LIST
-// ============================================================
+.nav-btn {
+  flex: 1;
 
-function renderChatList(users) {
-  const list =
-    $("chatList");
+  max-width: 150px;
 
-  if (!list) return;
+  height: 56px;
 
-  list.innerHTML = "";
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-  if (!users.length) {
-    show($("chatEmpty"));
-    return;
-  }
+  gap: 3px;
 
-  hide($("chatEmpty"));
+  border-radius: 14px;
 
-  users.forEach(user => {
-    const item =
-      document.createElement("div");
+  background: transparent;
 
-    item.className = "chat-item";
+  color: var(--text-light);
 
-    const name =
-      user.display_name ||
-      "QEVIRA User";
-
-    const initial =
-      name.charAt(0).toUpperCase();
-
-    const status =
-      user.is_online
-        ? "Online"
-        : "Offline";
-
-    item.innerHTML = `
-      <div class="chat-avatar">
-        ${escapeHTML(initial)}
-      </div>
-
-      <div class="chat-info">
-        <div class="chat-name">
-          ${escapeHTML(name)}
-        </div>
-
-        <div class="chat-status">
-          ${escapeHTML(status)}
-        </div>
-      </div>
-    `;
-
-    item.addEventListener(
-      "click",
-      () => {
-        openChat(user);
-      }
-    );
-
-    list.appendChild(item);
-  });
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 
-// ============================================================
-// 23. OPEN CHAT
-// ============================================================
+.nav-btn.active {
+  background: var(--primary-light);
 
-async function openChat(user) {
-  if (!user || !currentUser) return;
-
-  currentChatUser = user;
-
-  const modal =
-    $("chatModal");
-
-  if (!modal) return;
-
-  show(modal);
-
-  const name =
-    user.display_name ||
-    "QEVIRA User";
-
-  const initial =
-    name.charAt(0).toUpperCase();
-
-  if ($("chatTitle")) {
-    $("chatTitle").textContent =
-      name;
-  }
-
-  if ($("chatAvatar")) {
-    $("chatAvatar").textContent =
-      initial;
-  }
-
-  if ($("chatStatus")) {
-    if (user.is_online) {
-      $("chatStatus").textContent =
-        "Online";
-    } else {
-      $("chatStatus").textContent =
-        formatLastSeen(user.last_seen);
-    }
-  }
-
-  await loadMessages(user.id);
-
-  subscribeToMessages();
+  color: var(--primary);
 }
 
 
-// ============================================================
-// 24. CLOSE CHAT
-// ============================================================
-
-function closeChat() {
-  hide($("chatModal"));
-
-  currentChatUser = null;
-
-  if (messageSubscription) {
-    supabaseClient.removeChannel(
-      messageSubscription
-    );
-
-    messageSubscription = null;
-  }
+.nav-btn:hover {
+  color: var(--primary);
 }
 
 
-// ============================================================
-// 25. LOAD MESSAGES
-// ============================================================
-
-async function loadMessages(otherUserId) {
-  const container =
-    $("messages");
-
-  if (!container) return;
-
-  container.innerHTML =
-    '<div class="loading-state">Loading messages...</div>';
-
-  const { data, error } =
-    await supabaseClient
-      .from("messages")
-      .select("*")
-      .or(
-        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`
-      )
-      .order("created_at", {
-        ascending: true
-      });
-
-  if (error) {
-    console.error(
-      "Messages error:",
-      error
-    );
-
-    container.innerHTML =
-      '<div class="loading-state">Could not load messages.</div>';
-
-    return;
-  }
-
-  renderMessages(data || []);
-
-  scrollMessagesToBottom();
+.nav-btn:active {
+  transform: scale(0.96);
 }
 
 
-// ============================================================
-// 26. RENDER MESSAGES
-// ============================================================
+.nav-icon {
+  font-size: 19px;
 
-function renderMessages(messages) {
-  const container =
-    $("messages");
-
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (!messages.length) {
-    container.innerHTML = `
-      <div class="loading-state">
-        No messages yet. Say hello 👋
-      </div>
-    `;
-
-    return;
-  }
-
-  messages.forEach(message => {
-    appendMessage(message);
-  });
+  line-height: 1;
 }
 
 
-// ============================================================
-// 27. APPEND MESSAGE
-// ============================================================
-
-function appendMessage(message) {
-  const container =
-    $("messages");
-
-  if (!container) return;
-
-  const isMine =
-    message.sender_id === currentUser.id;
-
-  const row =
-    document.createElement("div");
-
-  row.className =
-    "message-row " +
-    (isMine ? "mine" : "theirs");
-
-  const bubble =
-    document.createElement("div");
-
-  bubble.className =
-    "message-bubble";
-
-  bubble.innerHTML = `
-    <div class="message-text">
-      ${escapeHTML(message.body)}
-    </div>
-
-    <div class="message-time">
-      ${escapeHTML(
-        formatTime(message.created_at)
-      )}
-    </div>
-  `;
-
-  row.appendChild(bubble);
-
-  container.appendChild(row);
+.nav-label {
+  font-size: 10px;
+  font-weight: 800;
 }
 
 
-// ============================================================
-// 28. SEND MESSAGE
-// ============================================================
+/* =========================================================
+   11. CHAT MODAL
+   ========================================================= */
 
-async function sendMessage(event) {
-  if (event) {
-    event.preventDefault();
-  }
+.modal {
+  position: fixed;
 
-  if (!currentUser || !currentChatUser) {
-    return;
-  }
+  inset: 0;
 
-  const input =
-    $("messageInput");
+  z-index: 100;
 
-  if (!input) return;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  const body =
-    input.value.trim();
+  background:
+    rgba(16, 15, 30, 0.55);
 
-  if (!body) return;
+  backdrop-filter: blur(8px);
 
-  const button =
-    $("sendMessageBtn");
-
-  if (button) {
-    button.disabled = true;
-  }
-
-  try {
-    const { data, error } =
-      await supabaseClient
-        .from("messages")
-        .insert({
-          sender_id: currentUser.id,
-          receiver_id: currentChatUser.id,
-          body
-        })
-        .select()
-        .single();
-
-    if (error) {
-      throw error;
-    }
-
-    input.value = "";
-
-    // Add immediately if realtime does not return it to this client
-    if (data) {
-      const existing =
-        document.querySelector(
-          `[data-message-id="${data.id}"]`
-        );
-
-      if (!existing) {
-        appendMessage(data);
-      }
-    }
-
-    scrollMessagesToBottom();
-
-    loadChats();
-
-  } catch (error) {
-    console.error(
-      "Send message error:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Message could not be sent."
-    );
-
-  } finally {
-    if (button) {
-      button.disabled = false;
-    }
-
-    input.focus();
-  }
+  padding: 14px;
 }
 
 
-// ============================================================
-// 29. REALTIME MESSAGE SUBSCRIPTION
-// ============================================================
+.chat-window {
+  width: 100%;
+  max-width: 760px;
 
-function subscribeToMessages() {
-  if (!currentUser) return;
-
-  if (messageSubscription) {
-    supabaseClient.removeChannel(
-      messageSubscription
-    );
-
-    messageSubscription = null;
-  }
-
-  messageSubscription =
-    supabaseClient
-      .channel(
-        "qevira-messages-" +
-        currentUser.id
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages"
-        },
-        payload => {
-          const message =
-            payload.new;
-
-          if (!currentChatUser) {
-            return;
-          }
-
-          const belongsToCurrentChat =
-            (
-              message.sender_id === currentUser.id &&
-              message.receiver_id === currentChatUser.id
-            ) ||
-            (
-              message.sender_id === currentChatUser.id &&
-              message.receiver_id === currentUser.id
-            );
-
-          if (!belongsToCurrentChat) {
-            loadChats();
-            return;
-          }
-
-          // Avoid duplicate messages
-          const existing =
-            document.querySelector(
-              `[data-message-id="${message.id}"]`
-            );
-
-          if (existing) return;
-
-          appendMessage(message);
-
-          scrollMessagesToBottom();
-
-          loadChats();
-        }
-      )
-      .subscribe();
-}
-
-
-// ============================================================
-// 30. SCROLL MESSAGES
-// ============================================================
-
-function scrollMessagesToBottom() {
-  const container =
-    $("messages");
-
-  if (!container) return;
-
-  setTimeout(() => {
-    container.scrollTop =
-      container.scrollHeight;
-  }, 50);
-}
-
-
-// ============================================================
-// 31. NAVIGATION
-// ============================================================
-
-function showPage(pageName) {
-  const pages =
-    document.querySelectorAll(".page");
-
-  pages.forEach(page => {
-    hide(page);
-  });
-
-  const target =
-    $(pageName);
-
-  if (target) {
-    show(target);
-  }
-
-  if (pageName === "chatsPage") {
-    loadChats();
-  }
-
-  if (pageName === "contactsPage") {
-    loadContacts();
-  }
-
-  if (pageName === "profilePage") {
-    loadCurrentProfile();
-  }
-}
-
-
-// ============================================================
-// 32. CONTACT SEARCH
-// ============================================================
-
-function filterContacts() {
-  const search =
-    $("contactsSearchInput")?.value
-      .trim()
-      .toLowerCase() || "";
-
-  const items =
-    document.querySelectorAll(
-      "#contactsList .contact-item"
-    );
-
-  items.forEach(item => {
-    const text =
-      item.textContent
-        .toLowerCase();
-
-    if (!search || text.includes(search)) {
-      show(item);
-    } else {
-      hide(item);
-    }
-  });
-}
-
-
-// ============================================================
-// 33. CHAT SEARCH
-// ============================================================
-
-function filterChats() {
-  const search =
-    $("searchInput")?.value
-      .trim()
-      .toLowerCase() || "";
-
-  const items =
-    document.querySelectorAll(
-      "#chatList .chat-item"
-    );
-
-  items.forEach(item => {
-    const text =
-      item.textContent
-        .toLowerCase();
-
-    if (!search || text.includes(search)) {
-      show(item);
-    } else {
-      hide(item);
-    }
-  });
-}
-
-
-// ============================================================
-// 34. NEW CHAT
-// ============================================================
-
-function startNewChat() {
-  showPage("contactsPage");
-}
-
-
-// ============================================================
-// 35. PROFILE EDIT TOGGLE
-// ============================================================
-
-function toggleProfileEdit() {
-  const edit =
-    $("profileEdit");
-
-  if (!edit) return;
-
-  if (edit.classList.contains("hidden")) {
-    renderCurrentProfile();
-    show(edit);
-  } else {
-    hide(edit);
-  }
-}
-
-
-// ============================================================
-// 36. DARK MODE
-// ============================================================
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-
-  const isDark =
-    document.body.classList.contains("dark");
-
-  localStorage.setItem(
-    "qevira-dark-mode",
-    isDark ? "true" : "false"
+  height: min(
+    90vh,
+    760px
   );
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border-radius: 24px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-lg);
 }
 
-function loadDarkMode() {
-  const saved =
-    localStorage.getItem(
-      "qevira-dark-mode"
+
+/* =========================================================
+   12. CHAT HEADER
+   ========================================================= */
+
+.chat-header {
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 9px 12px;
+
+  border-bottom:
+    1px solid var(--border);
+
+  background: var(--surface);
+
+  flex-shrink: 0;
+}
+
+
+.chat-header-info {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+.chat-header-info h3 {
+  overflow: hidden;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.chat-header-info span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--text-light);
+
+  font-size: 11px;
+}
+
+
+.chat-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 2px;
+}
+
+
+/* =========================================================
+   13. MESSAGES
+   ========================================================= */
+
+.messages {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 18px 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(246, 247, 255, 0.85),
+      rgba(255, 255, 255, 0.95)
     );
 
-  if (saved === "true") {
-    document.body.classList.add("dark");
-  }
+  scroll-behavior: smooth;
 }
 
 
-// ============================================================
-// 37. VOICE CALL — PHASE 2
-// ============================================================
+.messages::-webkit-scrollbar {
+  width: 5px;
+}
 
-function startVoiceCall() {
-  if (!currentChatUser) return;
 
-  alert(
-    "Voice calling will be activated in QEVIRA Phase 2."
+.messages::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+
+  background: rgba(108, 92, 231, 0.20);
+}
+
+
+.message-row {
+  width: 100%;
+
+  display: flex;
+
+  margin-bottom: 8px;
+}
+
+
+.message-row.mine {
+  justify-content: flex-end;
+}
+
+
+.message-row.theirs {
+  justify-content: flex-start;
+}
+
+
+.message-bubble {
+  max-width: min(76%, 520px);
+
+  padding: 9px 12px 7px;
+
+  border-radius: 17px;
+
+  background: var(--surface);
+
+  border:
+    1px solid var(--border);
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.message-row.mine .message-bubble {
+  border: 0;
+
+  border-bottom-right-radius: 5px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--primary-dark)
+    );
+
+  color: white;
+}
+
+
+.message-row.theirs .message-bubble {
+  border-bottom-left-radius: 5px;
+}
+
+
+.message-text {
+  font-size: 14px;
+
+  line-height: 1.45;
+
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+}
+
+
+.message-time {
+  margin-top: 4px;
+
+  text-align: right;
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+}
+
+
+.message-row.mine .message-time {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+
+/* =========================================================
+   14. MESSAGE FORM
+   ========================================================= */
+
+.message-form {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 10px;
+
+  border-top:
+    1px solid var(--border);
+
+  background: var(--surface);
+
+  flex-shrink: 0;
+}
+
+
+.message-form input {
+  flex: 1;
+
+  min-width: 0;
+
+  height: 44px;
+
+  padding: 0 14px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 14px;
+
+  background: var(--surface-2);
+
+  color: var(--text);
+
+  font-size: 14px;
+}
+
+
+.message-form input:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px rgba(108, 92, 231, 0.08);
+}
+
+
+.send-btn {
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
+    );
+
+  color: white;
+
+  font-size: 18px;
+
+  box-shadow:
+    0 7px 18px rgba(108, 92, 231, 0.22);
+
+  transition:
+    transform 0.18s ease;
+}
+
+
+.send-btn:hover {
+  transform: translateY(-1px);
+}
+
+
+.send-btn:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   15. CALL OVERLAY
+   ========================================================= */
+
+.call-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(10, 10, 20, 0.78);
+
+  backdrop-filter: blur(12px);
+}
+
+
+.incoming-call-card {
+  width: 100%;
+  max-width: 360px;
+
+  padding: 32px 24px;
+
+  text-align: center;
+
+  border-radius: 28px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-lg);
+}
+
+
+.call-pulse {
+  width: 110px;
+  height: 110px;
+
+  margin: 0 auto 20px;
+
+  padding: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    rgba(108, 92, 231, 0.12);
+
+  animation:
+    callPulse 1.6s infinite;
+}
+
+
+@keyframes callPulse {
+
+  0% {
+    transform: scale(0.92);
+
+    box-shadow:
+      0 0 0 0 rgba(108, 92, 231, 0.25);
+  }
+
+  70% {
+    transform: scale(1);
+
+    box-shadow:
+      0 0 0 18px rgba(108, 92, 231, 0);
+  }
+
+  100% {
+    transform: scale(0.92);
+
+    box-shadow:
+      0 0 0 0 rgba(108, 92, 231, 0);
+  }
+
+}
+
+
+.call-avatar {
+  width: 92px;
+  height: 92px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--primary),
+      var(--pink)
+    );
+
+  color: white;
+
+  font-size: 32px;
+  font-weight: 900;
+}
+
+
+.incoming-call-card h2 {
+  margin-bottom: 6px;
+
+  font-size: 22px;
+  font-weight: 900;
+}
+
+
+.incoming-call-card p {
+  color: var(--text-light);
+
+  font-size: 13px;
+}
+
+
+.call-actions {
+  display: flex;
+  justify-content: center;
+
+  gap: 30px;
+
+  margin-top: 26px;
+}
+
+
+.accept-call-btn,
+.decline-call-btn {
+  width: 58px;
+  height: 58px;
+
+  border-radius: 50%;
+
+  color: white;
+
+  font-size: 22px;
+
+  box-shadow: var(--shadow);
+
+  transition:
+    transform 0.18s ease;
+}
+
+
+.accept-call-btn {
+  background: var(--green);
+}
+
+
+.decline-call-btn {
+  background: var(--red);
+}
+
+
+.accept-call-btn:hover,
+.decline-call-btn:hover {
+  transform: scale(1.06);
+}
+
+
+.accept-call-btn:active,
+.decline-call-btn:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   16. ACTIVE CALL
+   ========================================================= */
+
+.active-call-screen {
+  position: relative;
+
+  width: 100%;
+  max-width: 1000px;
+
+  height: min(
+    90vh,
+    760px
   );
+
+  overflow: hidden;
+
+  border-radius: 28px;
+
+  background: #111;
+
+  box-shadow: var(--shadow-lg);
 }
 
 
-// ============================================================
-// 38. VIDEO CALL — PHASE 2
-// ============================================================
+.remote-video {
+  position: absolute;
 
-function startVideoCall() {
-  if (!currentChatUser) return;
+  inset: 0;
 
-  alert(
-    "Video calling will be activated in QEVIRA Phase 2."
-  );
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  background: #111;
 }
 
 
-// ============================================================
-// 39. LOGOUT
-// ============================================================
+.local-video {
+  position: absolute;
 
-async function logout() {
-  try {
-    stopPresence();
+  right: 18px;
+  top: 18px;
 
-    if (messageSubscription) {
-      await supabaseClient.removeChannel(
-        messageSubscription
+  width: 110px;
+  height: 150px;
+
+  object-fit: cover;
+
+  border-radius: 16px;
+
+  background: #222;
+
+  border:
+    2px solid rgba(255, 255, 255, 0.65);
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+
+.active-call-info {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  top: 30px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  color: white;
+
+  pointer-events: none;
+
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+
+.active-call-info .call-avatar {
+  width: 76px;
+  height: 76px;
+
+  margin-bottom: 10px;
+
+  border:
+    2px solid rgba(255, 255, 255, 0.75);
+}
+
+
+.active-call-info h2 {
+  font-size: 21px;
+  font-weight: 900;
+}
+
+
+.active-call-info p {
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  opacity: 0.85;
+}
+
+
+.active-call-controls {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 16px;
+}
+
+
+.call-control-btn,
+.end-call-btn {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: white;
+
+  font-size: 19px;
+
+  background:
+    rgba(255, 255, 255, 0.17);
+
+  border:
+    1px solid rgba(255, 255, 255, 0.22);
+
+  backdrop-filter: blur(10px);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+
+.call-control-btn:hover {
+  background:
+    rgba(255, 255, 255, 0.25);
+
+  transform: translateY(-2px);
+}
+
+
+.end-call-btn {
+  width: 62px;
+  height: 62px;
+
+  background: var(--red);
+
+  transform: rotate(135deg);
+}
+
+
+.end-call-btn:hover {
+  transform:
+    rotate(135deg)
+    scale(1.06);
+}
+
+
+/* =========================================================
+   17. DARK MODE
+   ========================================================= */
+
+body.dark-mode {
+
+  --background: #10111a;
+  --surface: #181a27;
+  --surface-2: #202231;
+
+  --text: #f5f5f7;
+  --text-light: #a8acbb;
+  --text-muted: #777c8d;
+
+  --border: #2a2d3d;
+
+  --primary-light: #292449;
+}
+
+
+body.dark-mode .topbar {
+  background:
+    rgba(24, 26, 39, 0.92);
+}
+
+
+body.dark-mode .bottom-nav {
+  background:
+    rgba(24, 26, 39, 0.94);
+}
+
+
+body.dark-mode .chat-item:hover,
+body.dark-mode .contact-item:hover {
+  background: #1e2030;
+}
+
+
+body.dark-mode .messages {
+  background:
+    linear-gradient(
+      180deg,
+      #12131d,
+      #171923
+    );
+}
+
+
+body.dark-mode .message-row.theirs .message-bubble {
+  background: #202231;
+}
+
+
+body.dark-mode .message-form input {
+  background: #202231;
+}
+
+
+body.dark-mode .auth-card {
+  background:
+    rgba(24, 26, 39, 0.96);
+
+  border-color:
+    rgba(255, 255, 255, 0.06);
+}
+
+
+body.dark-mode .auth-screen {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(108, 92, 231, 0.18),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(253, 121, 168, 0.12),
+      transparent 35%
+    ),
+    var(--background);
+}
+
+
+/* =========================================================
+   18. SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+
+  background:
+    rgba(108, 92, 231, 0.20);
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(108, 92, 231, 0.35);
+}
+
+
+/* =========================================================
+   19. SELECTION
+   ========================================================= */
+
+::selection {
+  background: rgba(108, 92, 231, 0.22);
+
+  color: var(--text);
+}
+
+
+/* =========================================================
+   20. FOCUS ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline:
+    3px solid rgba(108, 92, 231, 0.28);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   21. MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .auth-screen {
+    padding: 16px;
+  }
+
+
+  .auth-card {
+    padding: 28px 20px;
+
+    border-radius: 24px;
+  }
+
+
+  .auth-logo {
+    width: 68px;
+    height: 68px;
+
+    border-radius: 21px;
+
+    font-size: 34px;
+  }
+
+
+  .auth-card h1 {
+    font-size: 29px;
+  }
+
+
+  .page-container {
+    padding:
+      18px
+      14px
+      calc(
+        var(--bottom-nav-height)
+        + 28px
       );
-
-      messageSubscription = null;
-    }
-
-    if (currentUser) {
-      await updatePresence(false);
-    }
-
-    await supabaseClient.auth.signOut();
-
-  } catch (error) {
-    console.error(
-      "Logout error:",
-      error
-    );
-
-  } finally {
-    currentUser = null;
-    currentProfile = null;
-    currentChatUser = null;
-
-    showAuth();
-    showLoginMode();
   }
-}
 
 
-// ============================================================
-// 40. START APP
-// ============================================================
-
-async function startApp() {
-  if (!currentUser) return;
-
-  // Show app FIRST.
-  // Database problems should never prevent login screen
-  // from changing to the main app.
-  showApp();
-
-  try {
-    await ensureProfile();
-
-    await loadCurrentProfile();
-
-    startPresence();
-
-    loadChats();
-
-    showPage("chatsPage");
-
-  } catch (error) {
-    console.error(
-      "App startup error:",
-      error
-    );
+  .page-header h2 {
+    font-size: 23px;
   }
-}
 
 
-// ============================================================
-// 41. AUTH STATE
-// ============================================================
-
-supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
-    console.log(
-      "Auth event:",
-      event
-    );
-
-    if (session?.user) {
-      currentUser =
-        session.user;
-
-      if (
-        event === "SIGNED_IN" ||
-        event === "INITIAL_SESSION"
-      ) {
-        await startApp();
-      }
-
-    } else {
-      currentUser = null;
-      currentProfile = null;
-
-      stopPresence();
-
-      showAuth();
-    }
+  .topbar {
+    padding-left: 14px;
+    padding-right: 14px;
   }
-);
 
 
-// ============================================================
-// 42. EVENT LISTENERS
-// ============================================================
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    // Dark mode
-    loadDarkMode();
-
-
-    // Auth switch
-    $("switchAuthBtn")?.addEventListener(
-      "click",
-      () => {
-        if (authMode === "login") {
-          showSignupMode();
-        } else {
-          showLoginMode();
-        }
-      }
-    );
-
-
-    // Signup
-    $("signupBtn")?.addEventListener(
-      "click",
-      signup
-    );
-
-
-    // Login
-    $("loginBtn")?.addEventListener(
-      "click",
-      login
-    );
-
-
-    // Enter key login
-    $("loginPassword")?.addEventListener(
-      "keydown",
-      event => {
-        if (event.key === "Enter") {
-          login();
-        }
-      }
-    );
-
-
-    // Enter key signup
-    $("signupPassword")?.addEventListener(
-      "keydown",
-      event => {
-        if (event.key === "Enter") {
-          signup();
-        }
-      }
-    );
-
-
-    // Navigation
-    $("chatsNavBtn")?.addEventListener(
-      "click",
-      () => showPage("chatsPage")
-    );
-
-    $("contactsNavBtn")?.addEventListener(
-      "click",
-      () => showPage("contactsPage")
-    );
-
-    $("profileNavBtn")?.addEventListener(
-      "click",
-      () => showPage("profilePage")
-    );
-
-
-    // Chat close
-    $("closeChatModal")?.addEventListener(
-      "click",
-      closeChat
-    );
-
-
-    // Message form
-    $("messageForm")?.addEventListener(
-      "submit",
-      sendMessage
-    );
-
-
-    // Search
-    $("searchInput")?.addEventListener(
-      "input",
-      filterChats
-    );
-
-    $("contactsSearchInput")?.addEventListener(
-      "input",
-      filterContacts
-    );
-
-
-    // New chat
-    $("newChatBtn")?.addEventListener(
-      "click",
-      startNewChat
-    );
-
-
-    // Dark mode
-    $("darkModeBtn")?.addEventListener(
-      "click",
-      toggleDarkMode
-    );
-
-
-    // Profile edit
-    $("editProfileBtn")?.addEventListener(
-      "click",
-      toggleProfileEdit
-    );
-
-
-    // Profile save
-    $("saveProfileBtn")?.addEventListener(
-      "click",
-      saveProfile
-    );
-
-
-    // Profile cancel
-    $("cancelProfileEditBtn")?.addEventListener(
-      "click",
-      () => hide($("profileEdit"))
-    );
-
-
-    // Logout
-    $("logoutBtn")?.addEventListener(
-      "click",
-      logout
-    );
-
-
-    // Calls
-    $("voiceCallBtn")?.addEventListener(
-      "click",
-      startVoiceCall
-    );
-
-    $("videoCallBtn")?.addEventListener(
-      "click",
-      startVideoCall
-    );
-
-
-    // Start with login mode
-    showLoginMode();
+  .brand-name {
+    font-size: 18px;
   }
-);
 
 
-// ============================================================
-// 43. CHECK EXISTING SESSION
-// ============================================================
+  .chat-window {
+    width: 100%;
+    height: 100%;
 
-(async function checkExistingSession() {
-  try {
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.getSession();
+    max-height: none;
 
-    if (error) {
-      console.error(
-        "Session error:",
-        error
+    border-radius: 0;
+  }
+
+
+  .modal {
+    padding: 0;
+  }
+
+
+  .message-bubble {
+    max-width: 82%;
+  }
+
+
+  .profile-card {
+    padding: 18px;
+
+    gap: 14px;
+  }
+
+
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+
+    border-radius: 22px;
+
+    font-size: 27px;
+  }
+
+
+  .profile-main-info h2 {
+    font-size: 18px;
+  }
+
+
+  .editor-actions {
+    flex-direction: column;
+  }
+
+
+  .editor-actions .secondary-btn {
+    width: 100%;
+  }
+
+
+  .active-call-screen {
+    width: 100%;
+    height: 100%;
+
+    border-radius: 0;
+  }
+
+
+  .local-video {
+    width: 92px;
+    height: 125px;
+
+    right: 12px;
+    top: 12px;
+  }
+
+
+  .active-call-controls {
+    bottom:
+      calc(
+        20px
+        + env(safe-area-inset-bottom)
       );
-
-      showAuth();
-      return;
-    }
-
-    if (data?.session?.user) {
-      currentUser =
-        data.session.user;
-
-      await startApp();
-
-    } else {
-      showAuth();
-    }
-
-  } catch (error) {
-    console.error(
-      "Initial session error:",
-      error
-    );
-
-    showAuth();
   }
-})();
+
+}
+
+
+/* =========================================================
+   22. SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .page-container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+
+  .chat-item,
+  .contact-item {
+    padding: 11px;
+  }
+
+
+  .chat-avatar,
+  .contact-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+
+  .message-bubble {
+    max-width: 88%;
+  }
+
+
+  .nav-btn {
+    max-width: none;
+  }
+
+}
+
+
+/* =========================================================
+   23. LANDSCAPE MOBILE
+   ========================================================= */
+
+@media (
+  max-height: 500px
+) and (
+  orientation: landscape
+) {
+
+  .auth-screen {
+    align-items: flex-start;
+
+    overflow-y: auto;
+  }
+
+
+  .auth-card {
+    margin: 20px auto;
+  }
+
+
+  .chat-window {
+    height: 100vh;
+  }
+
+
+  .active-call-screen {
+    height: 100vh;
+  }
+
+}
+
+
+/* =========================================================
+   24. REDUCED MOTION
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion: reduce
+) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+
+    }
