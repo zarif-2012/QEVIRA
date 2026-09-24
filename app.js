@@ -1,19 +1,13 @@
-// ======================================================
+// ============================================================
 // QEVIRA
-// PHASE 1 STABLE BUILD
-//
-// AUTH
-// PROFILES
-// 1-TO-1 REALTIME MESSAGING
-// PRESENCE
-//
-// Calls are reserved for PHASE 2.
-// ======================================================
+// STEP 2 — PROFILE + BIO + ONLINE/LAST SEEN
+// AUTH + 1-TO-1 CHAT + REALTIME MESSAGES
+// ============================================================
 
 
-// ======================================================
+// ============================================================
 // 1. SUPABASE CONFIG
-// ======================================================
+// ============================================================
 
 const SUPABASE_URL =
   "https://wcdywnkxtuexjbjgerzd.supabase.co";
@@ -21,1707 +15,1219 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
   "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
 
-
-// ======================================================
-// 2. CREATE SUPABASE CLIENT
-// ======================================================
-
-if (!window.supabase) {
-
-  console.error(
-    "QEVIRA ERROR: Supabase library did not load."
-  );
-
-} else {
-
-  console.log(
-    "QEVIRA: Supabase library loaded."
-  );
-
-}
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
 
-const supabaseClient =
-  window.supabase
-    ? window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      )
-    : null;
-
-
-// ======================================================
-// 3. GLOBAL STATE
-// ======================================================
+// ============================================================
+// 2. GLOBAL VARIABLES
+// ============================================================
 
 let currentUser = null;
-
 let currentProfile = null;
-
 let currentChatUser = null;
+let messageSubscription = null;
+let presenceInterval = null;
 
-let messageChannel = null;
-
-let presenceTimer = null;
-
-let authSubscription = null;
+let authMode = "login";
 
 
-// ======================================================
-// 4. DOM ELEMENTS
-// ======================================================
+// ============================================================
+// 3. BASIC HELPERS
+// ============================================================
 
+function $(id) {
+  return document.getElementById(id);
+}
 
-// ---------- AUTH ----------
+function show(element) {
+  if (element) element.classList.remove("hidden");
+}
 
-const authScreen =
-  document.getElementById("authScreen");
+function hide(element) {
+  if (element) element.classList.add("hidden");
+}
 
-const app =
-  document.getElementById("app");
+function escapeHTML(value) {
+  if (value === null || value === undefined) return "";
 
-const signupForm =
-  document.getElementById("signupForm");
-
-const loginForm =
-  document.getElementById("loginForm");
-
-const signupEmail =
-  document.getElementById("signupEmail");
-
-const signupPassword =
-  document.getElementById("signupPassword");
-
-const loginEmail =
-  document.getElementById("loginEmail");
-
-const loginPassword =
-  document.getElementById("loginPassword");
-
-const signupBtn =
-  document.getElementById("signupBtn");
-
-const loginBtn =
-  document.getElementById("loginBtn");
-
-const switchAuthBtn =
-  document.getElementById("switchAuthBtn");
-
-const authMessage =
-  document.getElementById("authMessage");
-
-
-// ---------- TOP BAR ----------
-
-const currentUserEmail =
-  document.getElementById("currentUserEmail");
-
-const darkModeBtn =
-  document.getElementById("darkModeBtn");
-
-
-// ---------- PROFILE ----------
-
-const profileAvatar =
-  document.getElementById("profileAvatar");
-
-const profileName =
-  document.getElementById("profileName");
-
-const profileUsername =
-  document.getElementById("profileUsername");
-
-const profileEmail =
-  document.getElementById("profileEmail");
-
-const logoutBtn =
-  document.getElementById("logoutBtn");
-
-
-// ---------- CHATS ----------
-
-const chatList =
-  document.getElementById("chatList");
-
-const chatEmpty =
-  document.getElementById("chatEmpty");
-
-const searchInput =
-  document.getElementById("searchInput");
-
-const newChatBtn =
-  document.getElementById("newChatBtn");
-
-
-// ---------- CONTACTS ----------
-
-const contactsList =
-  document.getElementById("contactsList");
-
-const contactsSearchInput =
-  document.getElementById(
-    "contactsSearchInput"
-  );
-
-
-// ---------- CHAT MODAL ----------
-
-const chatModal =
-  document.getElementById("chatModal");
-
-const closeChatModal =
-  document.getElementById("closeChatModal");
-
-const chatAvatar =
-  document.getElementById("chatAvatar");
-
-const chatTitle =
-  document.getElementById("chatTitle");
-
-const chatStatus =
-  document.getElementById("chatStatus");
-
-const messages =
-  document.getElementById("messages");
-
-const messageForm =
-  document.getElementById("messageForm");
-
-const messageInput =
-  document.getElementById("messageInput");
-
-
-// ---------- CALL BUTTONS ----------
-
-const voiceCallBtn =
-  document.getElementById("voiceCallBtn");
-
-const videoCallBtn =
-  document.getElementById("videoCallBtn");
-
-
-// ======================================================
-// 5. BASIC HELPERS
-// ======================================================
-
-
-function escapeHtml(value) {
-
-  return String(value ?? "")
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
 }
 
+function formatTime(dateString) {
+  if (!dateString) return "";
 
-function getInitial(name) {
+  const date = new Date(dateString);
 
-  const text =
-    String(name || "Q")
-      .trim();
+  if (Number.isNaN(date.getTime())) return "";
 
-  return (
-    text.charAt(0).toUpperCase()
-    || "Q"
-  );
-
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
+function formatLastSeen(dateString) {
+  if (!dateString) return "Offline";
 
-function getDisplayName(profile) {
+  const date = new Date(dateString);
 
-  if (!profile) {
-    return "QEVIRA User";
+  if (Number.isNaN(date.getTime())) {
+    return "Offline";
   }
 
-  return (
-    profile.display_name ||
-    profile.username ||
-    profile.email ||
-    "QEVIRA User"
-  );
-
+  return "Last seen " + date.toLocaleString([], {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
 }
 
 
-function formatTime(value) {
+// ============================================================
+// 4. AUTH SCREEN
+// ============================================================
 
-  if (!value) {
-    return "";
+function showLoginMode() {
+  authMode = "login";
+
+  hide($("signupForm"));
+  show($("loginForm"));
+
+  const message = $("authMessage");
+
+  if (message) {
+    message.textContent = "";
   }
+}
 
-  const date =
-    new Date(value);
+function showSignupMode() {
+  authMode = "signup";
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return "";
+  hide($("loginForm"));
+  show($("signupForm"));
+
+  const message = $("authMessage");
+
+  if (message) {
+    message.textContent = "";
   }
-
-  return date.toLocaleTimeString(
-    [],
-    {
-      hour: "2-digit",
-      minute: "2-digit"
-    }
-  );
-
 }
 
 
-function setAuthMessage(
-  message,
-  isError = false
-) {
+// ============================================================
+// 5. AUTH MESSAGE
+// ============================================================
 
-  if (!authMessage) {
+function setAuthMessage(message, type = "") {
+  const box = $("authMessage");
+
+  if (!box) return;
+
+  box.textContent = message;
+
+  box.className = "";
+
+  if (type) {
+    box.classList.add(type);
+  }
+}
+
+
+// ============================================================
+// 6. SIGN UP
+// ============================================================
+
+async function signup() {
+  const email = $("signupEmail")?.value.trim();
+  const password = $("signupPassword")?.value;
+
+  if (!email || !password) {
+    setAuthMessage("Please enter email and password.");
     return;
   }
 
-  authMessage.textContent =
-    message || "";
-
-  authMessage.style.color =
-    isError
-      ? "#e74c3c"
-      : "#00b894";
-
-}
-
-
-function showAuth() {
-
-  authScreen?.classList.remove(
-    "hidden"
-  );
-
-  app?.classList.add(
-    "hidden"
-  );
-
-}
-
-
-function showApp() {
-
-  authScreen?.classList.add(
-    "hidden"
-  );
-
-  app?.classList.remove(
-    "hidden"
-  );
-
-}
-
-
-function updateAuthSwitchText() {
-
-  if (!switchAuthBtn) {
+  if (password.length < 6) {
+    setAuthMessage("Password must be at least 6 characters.");
     return;
   }
 
-  const loginVisible =
-    loginForm &&
-    !loginForm.classList.contains(
-      "hidden"
-    );
+  const button = $("signupBtn");
 
-  if (loginVisible) {
-
-    switchAuthBtn.textContent =
-      "Don't have an account? Sign up";
-
-  } else {
-
-    switchAuthBtn.textContent =
-      "Already have an account? Login";
-
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Creating account...";
   }
-
-}
-
-
-// ======================================================
-// 6. AUTH MODE SWITCH
-// ======================================================
-
-switchAuthBtn?.addEventListener(
-  "click",
-  () => {
-
-    signupForm?.classList.toggle(
-      "hidden"
-    );
-
-    loginForm?.classList.toggle(
-      "hidden"
-    );
-
-    setAuthMessage("");
-
-    updateAuthSwitchText();
-
-  }
-);
-
-
-// ======================================================
-// 7. SIGN UP
-// ======================================================
-
-signupForm?.addEventListener(
-  "submit",
-  async (event) => {
-
-    event.preventDefault();
-
-    if (!supabaseClient) {
-
-      setAuthMessage(
-        "QEVIRA authentication is unavailable.",
-        true
-      );
-
-      return;
-    }
-
-
-    const email =
-      signupEmail?.value
-        .trim();
-
-    const password =
-      signupPassword?.value || "";
-
-
-    if (!email || !password) {
-
-      setAuthMessage(
-        "Please enter email and password.",
-        true
-      );
-
-      return;
-    }
-
-
-    signupBtn.disabled = true;
-
-    signupBtn.textContent =
-      "Creating account...";
-
-    setAuthMessage("");
-
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth.signUp({
-          email,
-          password
-        });
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      console.log(
-        "QEVIRA SIGNUP:",
-        data
-      );
-
-
-      // If email confirmation is disabled
-      // Supabase may give us a session.
-
-      if (
-        data?.session &&
-        data?.user
-      ) {
-
-        await startApp(
-          data.user
-        );
-
-        return;
-      }
-
-
-      // Normal email-confirmation flow.
-
-      setAuthMessage(
-        "Account created! Check your email, confirm your account, then login."
-      );
-
-
-      signupForm?.classList.add(
-        "hidden"
-      );
-
-      loginForm?.classList.remove(
-        "hidden"
-      );
-
-      updateAuthSwitchText();
-
-
-      if (loginEmail) {
-
-        loginEmail.value =
-          email;
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "QEVIRA SIGNUP ERROR:",
-        error
-      );
-
-
-      setAuthMessage(
-        error?.message ||
-        "Signup failed.",
-        true
-      );
-
-
-    } finally {
-
-      signupBtn.disabled =
-        false;
-
-      signupBtn.textContent =
-        "Create Account";
-
-    }
-
-  }
-);
-
-
-// ======================================================
-// 8. LOGIN
-// ======================================================
-
-loginForm?.addEventListener(
-  "submit",
-  async (event) => {
-
-    event.preventDefault();
-
-    if (!supabaseClient) {
-
-      setAuthMessage(
-        "QEVIRA authentication is unavailable.",
-        true
-      );
-
-      return;
-    }
-
-
-    const email =
-      loginEmail?.value
-        .trim();
-
-    const password =
-      loginPassword?.value || "";
-
-
-    if (!email || !password) {
-
-      setAuthMessage(
-        "Please enter email and password.",
-        true
-      );
-
-      return;
-    }
-
-
-    loginBtn.disabled = true;
-
-    loginBtn.textContent =
-      "Logging in...";
-
-    setAuthMessage("");
-
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email,
-            password
-          });
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (!data?.user) {
-
-        throw new Error(
-          "Login succeeded but no user was returned."
-        );
-
-      }
-
-
-      console.log(
-        "QEVIRA LOGIN SUCCESS:",
-        data.user.email
-      );
-
-
-      await startApp(
-        data.user
-      );
-
-
-    } catch (error) {
-
-      console.error(
-        "QEVIRA LOGIN ERROR:",
-        error
-      );
-
-
-      setAuthMessage(
-        error?.message ||
-        "Login failed.",
-        true
-      );
-
-
-    } finally {
-
-      loginBtn.disabled =
-        false;
-
-      loginBtn.textContent =
-        "Login";
-
-    }
-
-  }
-);
-
-
-// ======================================================
-// 9. PROFILE — ENSURE
-// ======================================================
-
-async function ensureProfile() {
-
-  if (
-    !currentUser ||
-    !supabaseClient
-  ) {
-    return;
-  }
-
 
   try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("profiles")
-        .select(
-          "id,email,display_name,username"
-        )
-        .eq(
-          "id",
-          currentUser.id
-        )
-        .maybeSingle();
-
+    const { data, error } =
+      await supabaseClient.auth.signUp({
+        email,
+        password
+      });
 
     if (error) {
+      throw error;
+    }
 
-      console.error(
-        "Profile lookup error:",
-        error
+    if (data.session) {
+      setAuthMessage("Account created successfully.", "success");
+    } else {
+      setAuthMessage(
+        "Account created. Check your email to confirm your account.",
+        "success"
       );
-
-      return;
-
     }
 
+  } catch (error) {
+    console.error("Signup error:", error);
 
-    if (data) {
+    setAuthMessage(
+      error.message || "Signup failed."
+    );
 
-      currentProfile =
-        data;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Create Account";
+    }
+  }
+}
 
-      return;
 
+// ============================================================
+// 7. LOGIN
+// ============================================================
+
+async function login() {
+  const email = $("loginEmail")?.value.trim();
+  const password = $("loginPassword")?.value;
+
+  if (!email || !password) {
+    setAuthMessage("Please enter email and password.");
+    return;
+  }
+
+  const button = $("loginBtn");
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Logging in...";
+  }
+
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+      throw error;
     }
 
+    currentUser = data.user;
 
-    const emailName =
-      currentUser.email
-        ?.split("@")[0]
-        ?.toLowerCase()
-        .replace(
-          /[^a-z0-9_]/g,
-          ""
-        )
-        .slice(0, 20)
-      || "qevirauser";
+    await startApp();
+
+  } catch (error) {
+    console.error("Login error:", error);
+
+    setAuthMessage(
+      error.message || "Login failed."
+    );
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Login";
+    }
+  }
+}
 
 
-    const {
-      data: created,
-      error: createError
-    } =
+// ============================================================
+// 8. SHOW MAIN APP
+// ============================================================
+
+function showApp() {
+  hide($("authScreen"));
+  show($("app"));
+}
+
+
+// ============================================================
+// 9. SHOW AUTH
+// ============================================================
+
+function showAuth() {
+  hide($("app"));
+  show($("authScreen"));
+}
+
+
+// ============================================================
+// 10. ENSURE PROFILE EXISTS
+// ============================================================
+
+async function ensureProfile() {
+  if (!currentUser) return null;
+
+  const { data: existingProfile, error: selectError } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+  if (selectError) {
+    console.error("Profile select error:", selectError);
+    return null;
+  }
+
+  if (existingProfile) {
+    currentProfile = existingProfile;
+    return existingProfile;
+  }
+
+  const defaultUsername =
+    "user" + currentUser.id.substring(0, 8);
+
+  const newProfile = {
+    id: currentUser.id,
+    email: currentUser.email,
+    display_name: "QEVIRA User",
+    username: defaultUsername,
+    bio: "",
+    last_seen: new Date().toISOString(),
+    is_online: true
+  };
+
+  const { data, error } =
+    await supabaseClient
+      .from("profiles")
+      .insert(newProfile)
+      .select()
+      .single();
+
+  if (error) {
+    console.error("Profile creation error:", error);
+
+    // Fallback in case some optional columns don't exist yet
+    const basicProfile = {
+      id: currentUser.id,
+      email: currentUser.email,
+      display_name: "QEVIRA User",
+      username: defaultUsername
+    };
+
+    const retry =
       await supabaseClient
         .from("profiles")
-        .insert({
-          id: currentUser.id,
-          email:
-            currentUser.email ||
-            null,
-          display_name:
-            currentUser.email
-              ?.split("@")[0]
-              || "QEVIRA User",
-          username:
-            emailName
-        })
+        .insert(basicProfile)
         .select()
         .single();
 
-
-    if (createError) {
-
-      console.error(
-        "Profile creation error:",
-        createError
-      );
-
-      return;
-
+    if (retry.error) {
+      console.error("Basic profile creation error:", retry.error);
+      return null;
     }
 
-
-    currentProfile =
-      created;
-
-
-  } catch (error) {
-
-    console.error(
-      "ensureProfile exception:",
-      error
-    );
-
+    currentProfile = retry.data;
+    return retry.data;
   }
 
+  currentProfile = data;
+
+  return data;
 }
 
 
-// ======================================================
-// 10. LOAD PROFILE
-// ======================================================
+// ============================================================
+// 11. LOAD CURRENT PROFILE
+// ============================================================
 
-async function loadProfile() {
+async function loadCurrentProfile() {
+  if (!currentUser) return;
 
-  if (
-    !currentUser ||
-    !supabaseClient
-  ) {
-    return;
-  }
-
-
-  const {
-    data,
-    error
-  } =
+  const { data, error } =
     await supabaseClient
       .from("profiles")
-      .select(
-        "id,email,display_name,username"
-      )
-      .eq(
-        "id",
-        currentUser.id
-      )
+      .select("*")
+      .eq("id", currentUser.id)
       .maybeSingle();
 
-
   if (error) {
+    console.error("Load profile error:", error);
+    return;
+  }
 
+  if (data) {
+    currentProfile = data;
+    renderCurrentProfile();
+  }
+}
+
+
+// ============================================================
+// 12. RENDER PROFILE
+// ============================================================
+
+function renderCurrentProfile() {
+  if (!currentProfile) return;
+
+  const displayName =
+    currentProfile.display_name ||
+    "QEVIRA User";
+
+  const username =
+    currentProfile.username ||
+    "user";
+
+  const email =
+    currentProfile.email ||
+    currentUser?.email ||
+    "";
+
+  const bio =
+    currentProfile.bio ||
+    "";
+
+  const avatar =
+    $("profileAvatar");
+
+  if (avatar) {
+    const firstLetter =
+      displayName
+        .trim()
+        .charAt(0)
+        .toUpperCase() || "Q";
+
+    avatar.textContent = firstLetter;
+  }
+
+  const nameElement =
+    $("profileName");
+
+  if (nameElement) {
+    nameElement.textContent = displayName;
+  }
+
+  const usernameElement =
+    $("profileUsername");
+
+  if (usernameElement) {
+    usernameElement.textContent =
+      "@" + username.replace(/^@/, "");
+  }
+
+  const emailElement =
+    $("profileEmail");
+
+  if (emailElement) {
+    emailElement.textContent = email;
+  }
+
+  const bioElement =
+    $("profileBio");
+
+  if (bioElement) {
+    bioElement.textContent =
+      bio || "No bio yet.";
+  }
+
+  const onlineElement =
+    $("profileOnlineStatus");
+
+  if (onlineElement) {
+    if (currentProfile.is_online) {
+      onlineElement.textContent = "● Online";
+    } else {
+      onlineElement.textContent =
+        formatLastSeen(currentProfile.last_seen);
+    }
+  }
+
+  // Fill edit fields if they exist
+  const editName =
+    $("editDisplayName");
+
+  if (editName) {
+    editName.value =
+      currentProfile.display_name || "";
+  }
+
+  const editUsername =
+    $("editUsername");
+
+  if (editUsername) {
+    editUsername.value =
+      currentProfile.username || "";
+  }
+
+  const editBio =
+    $("editBio");
+
+  if (editBio) {
+    editBio.value =
+      currentProfile.bio || "";
+  }
+}
+
+
+// ============================================================
+// 13. SAVE PROFILE
+// ============================================================
+
+async function saveProfile() {
+  if (!currentUser) return;
+
+  const displayName =
+    $("editDisplayName")?.value.trim() ||
+    "QEVIRA User";
+
+  let username =
+    $("editUsername")?.value.trim() ||
+    ("user" + currentUser.id.substring(0, 8));
+
+  const bio =
+    $("editBio")?.value.trim() || "";
+
+  username = username.replace(/^@/, "");
+
+  if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
+    alert(
+      "Username can contain only letters, numbers, _ and ."
+    );
+    return;
+  }
+
+  const button =
+    $("saveProfileBtn");
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Saving...";
+  }
+
+  try {
+    // Check if username is already used
+    const { data: existingUser, error: usernameError } =
+      await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("username", username)
+        .neq("id", currentUser.id)
+        .maybeSingle();
+
+    if (usernameError) {
+      console.error(
+        "Username check error:",
+        usernameError
+      );
+    }
+
+    if (existingUser) {
+      alert("That username is already taken.");
+      return;
+    }
+
+    const updates = {
+      display_name: displayName,
+      username,
+      bio
+    };
+
+    const { data, error } =
+      await supabaseClient
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUser.id)
+        .select()
+        .single();
+
+    if (error) {
+      throw error;
+    }
+
+    currentProfile = data;
+
+    renderCurrentProfile();
+
+    hide($("profileEdit"));
+
+    alert("Profile updated successfully!");
+
+  } catch (error) {
     console.error(
-      "Load profile error:",
+      "Save profile error:",
       error
     );
 
-    return;
-
-  }
-
-
-  currentProfile =
-    data || currentProfile;
-
-
-  const name =
-    getDisplayName(
-      currentProfile
+    alert(
+      error.message ||
+      "Could not update profile."
     );
 
-
-  if (profileName) {
-
-    profileName.textContent =
-      name;
-
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Save Profile";
+    }
   }
-
-
-  if (profileUsername) {
-
-    profileUsername.textContent =
-      currentProfile?.username
-        ? "@" +
-          currentProfile.username
-        : "@user";
-
-  }
-
-
-  if (profileEmail) {
-
-    profileEmail.textContent =
-      currentUser.email || "";
-
-  }
-
-
-  if (profileAvatar) {
-
-    profileAvatar.textContent =
-      getInitial(name);
-
-  }
-
-
-  if (currentUserEmail) {
-
-    currentUserEmail.textContent =
-      currentUser.email || "";
-
-  }
-
 }
 
 
-// ======================================================
-// 11. PRESENCE
-// ======================================================
+// ============================================================
+// 14. UPDATE ONLINE STATUS
+// ============================================================
 
-async function updatePresence() {
+async function updatePresence(isOnline = true) {
+  if (!currentUser) return;
 
-  if (
-    !currentUser ||
-    !supabaseClient
-  ) {
-    return;
-  }
+  const updateData = {
+    last_seen: new Date().toISOString(),
+    is_online: isOnline
+  };
 
-
-  // This is safe even if last_seen
-  // has not been added yet.
-  //
-  // If your profiles table already has
-  // last_seen, it will update normally.
-
-  const {
-    error
-  } =
+  const { error } =
     await supabaseClient
       .from("profiles")
-      .update({
-        last_seen:
-          new Date().toISOString()
-      })
-      .eq(
-        "id",
-        currentUser.id
-      );
-
+      .update(updateData)
+      .eq("id", currentUser.id);
 
   if (error) {
-
     console.warn(
-      "Presence update:",
+      "Presence update failed:",
       error.message
     );
-
   }
-
 }
 
 
-// ======================================================
-// 12. CONTACTS
-// ======================================================
+// ============================================================
+// 15. START PRESENCE SYSTEM
+// ============================================================
 
-async function loadContacts(
-  search = ""
-) {
+function startPresence() {
+  stopPresence();
 
-  if (
-    !currentUser ||
-    !supabaseClient ||
-    !contactsList
-  ) {
-    return;
+  updatePresence(true);
+
+  presenceInterval =
+    setInterval(() => {
+      updatePresence(true);
+    }, 30000);
+}
+
+
+// ============================================================
+// 16. STOP PRESENCE
+// ============================================================
+
+function stopPresence() {
+  if (presenceInterval) {
+    clearInterval(presenceInterval);
+    presenceInterval = null;
   }
+}
 
 
-  contactsList.innerHTML =
-    `
-      <div class="loading-state">
-        Loading contacts...
-      </div>
-    `;
+// ============================================================
+// 17. PAGE VISIBILITY PRESENCE
+// ============================================================
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (!currentUser) return;
+
+    if (document.visibilityState === "visible") {
+      updatePresence(true);
+    } else {
+      updatePresence(false);
+    }
+  }
+);
 
 
-  let query =
+// ============================================================
+// 18. BEFORE PAGE CLOSE
+// ============================================================
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    if (!currentUser) return;
+
+    // Best-effort update
     supabaseClient
       .from("profiles")
-      .select(
-        "id,email,display_name,username"
-      )
-      .neq(
-        "id",
-        currentUser.id
-      )
-      .order(
-        "display_name",
-        {
-          ascending: true
-        }
-      )
-      .limit(100);
-
-
-  const term =
-    search.trim();
-
-
-  if (term) {
-
-    const safeTerm =
-      term.replace(
-        /[%_]/g,
-        ""
-      );
-
-
-    query =
-      query.or(
-        "display_name.ilike.%" +
-        safeTerm +
-        "%," +
-        "username.ilike.%" +
-        safeTerm +
-        "%," +
-        "email.ilike.%" +
-        safeTerm +
-        "%"
-      );
-
+      .update({
+        is_online: false,
+        last_seen: new Date().toISOString()
+      })
+      .eq("id", currentUser.id);
   }
+);
 
 
-  const {
-    data,
-    error
-  } =
-    await query;
+// ============================================================
+// 19. LOAD CONTACTS
+// ============================================================
 
+async function loadContacts() {
+  const list =
+    $("contactsList");
+
+  if (!list || !currentUser) return;
+
+  list.innerHTML =
+    '<div class="loading-state">Loading contacts...</div>';
+
+  const { data, error } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .neq("id", currentUser.id)
+      .order("display_name", {
+        ascending: true
+      });
 
   if (error) {
-
     console.error(
       "Contacts error:",
       error
     );
 
-
-    contactsList.innerHTML =
-      `
-        <div class="empty-state">
-          <h3>Contacts unavailable</h3>
-          <p>Check your Supabase profiles table.</p>
-        </div>
-      `;
+    list.innerHTML =
+      '<div class="loading-state">Could not load contacts.</div>';
 
     return;
-
   }
 
-
-  if (!data?.length) {
-
-    contactsList.innerHTML =
-      `
-        <div class="empty-state">
-          <h3>No users found</h3>
-          <p>Try another search.</p>
-        </div>
-      `;
+  if (!data || data.length === 0) {
+    list.innerHTML =
+      '<div class="loading-state">No other users yet.</div>';
 
     return;
-
   }
 
-
-  contactsList.innerHTML =
-    data
-      .map(
-        (profile) => {
-
-          const name =
-            getDisplayName(
-              profile
-            );
-
-
-          return `
-            <button
-              class="contact-item"
-              type="button"
-              data-user-id="${escapeHtml(profile.id)}"
-            >
-
-              <div class="mini-avatar">
-                ${escapeHtml(
-                  getInitial(name)
-                )}
-              </div>
-
-              <div class="contact-info">
-
-                <strong>
-                  ${escapeHtml(name)}
-                </strong>
-
-                <span>
-                  @${escapeHtml(
-                    profile.username ||
-                    "user"
-                  )}
-                </span>
-
-              </div>
-
-            </button>
-          `;
-
-        }
-      )
-      .join("");
-
-
-  contactsList
-    .querySelectorAll(
-      "[data-user-id]"
-    )
-    .forEach(
-      (button) => {
-
-        button.addEventListener(
-          "click",
-          async () => {
-
-            const userId =
-              button.dataset.userId;
-
-
-            const profile =
-              data.find(
-                (item) =>
-                  item.id === userId
-              );
-
-
-            if (profile) {
-
-              await openChat(
-                profile
-              );
-
-            }
-
-          }
-        );
-
-      }
-    );
-
+  renderContacts(data);
 }
 
 
-// ======================================================
-// 13. GET CHAT USERS
-// ======================================================
+// ============================================================
+// 20. RENDER CONTACTS
+// ============================================================
 
-async function getChatUsers() {
+function renderContacts(users) {
+  const list =
+    $("contactsList");
 
-  if (
-    !currentUser ||
-    !supabaseClient
-  ) {
-    return [];
-  }
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  users.forEach(user => {
+    const item =
+      document.createElement("div");
+
+    item.className = "contact-item";
+
+    const name =
+      user.display_name ||
+      "QEVIRA User";
+
+    const username =
+      user.username ||
+      "user";
+
+    const initial =
+      name.charAt(0).toUpperCase();
+
+    let status =
+      "Offline";
+
+    if (user.is_online) {
+      status = "Online";
+    } else if (user.last_seen) {
+      status = formatLastSeen(
+        user.last_seen
+      );
+    }
+
+    item.innerHTML = `
+      <div class="contact-avatar">
+        ${escapeHTML(initial)}
+      </div>
+
+      <div class="contact-info">
+        <div class="contact-name">
+          ${escapeHTML(name)}
+        </div>
+
+        <div class="contact-username">
+          @${escapeHTML(username)}
+        </div>
+
+        <div class="contact-status">
+          ${escapeHTML(status)}
+        </div>
+      </div>
+    `;
+
+    item.addEventListener(
+      "click",
+      () => {
+        openChat(user);
+      }
+    );
+
+    list.appendChild(item);
+  });
+}
 
 
-  const sentResult =
+// ============================================================
+// 21. LOAD CHAT USERS
+// ============================================================
+
+async function loadChats() {
+  const list =
+    $("chatList");
+
+  if (!list || !currentUser) return;
+
+  list.innerHTML =
+    '<div class="loading-state">Loading chats...</div>';
+
+  const { data: sent, error: sentError } =
     await supabaseClient
       .from("messages")
-      .select(
-        "receiver_id,created_at"
-      )
-      .eq(
-        "sender_id",
-        currentUser.id
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(100);
+      .select("receiver_id")
+      .eq("sender_id", currentUser.id);
 
-
-  const receivedResult =
+  const { data: received, error: receivedError } =
     await supabaseClient
       .from("messages")
-      .select(
-        "sender_id,created_at"
-      )
-      .eq(
-        "receiver_id",
-        currentUser.id
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(100);
+      .select("sender_id")
+      .eq("receiver_id", currentUser.id);
 
-
-  if (
-    sentResult.error ||
-    receivedResult.error
-  ) {
-
+  if (sentError || receivedError) {
     console.error(
-      "Chat query error:",
-      sentResult.error ||
-      receivedResult.error
+      "Chat loading error:",
+      sentError || receivedError
     );
 
-    return [];
+    list.innerHTML =
+      '<div class="loading-state">Could not load chats.</div>';
 
+    return;
   }
 
+  const ids = new Set();
 
-  const ids =
-    new Set();
+  (sent || []).forEach(row => {
+    if (row.receiver_id) {
+      ids.add(row.receiver_id);
+    }
+  });
 
+  (received || []).forEach(row => {
+    if (row.sender_id) {
+      ids.add(row.sender_id);
+    }
+  });
 
-  (sentResult.data || [])
-    .forEach(
-      (row) => {
-
-        if (row.receiver_id) {
-
-          ids.add(
-            row.receiver_id
-          );
-
-        }
-
-      }
-    );
-
-
-  (receivedResult.data || [])
-    .forEach(
-      (row) => {
-
-        if (row.sender_id) {
-
-          ids.add(
-            row.sender_id
-          );
-
-        }
-
-      }
-    );
-
-
-  if (!ids.size) {
-
-    return [];
-
+  if (ids.size === 0) {
+    show($("chatEmpty"));
+    list.innerHTML = "";
+    return;
   }
 
+  hide($("chatEmpty"));
 
-  const {
-    data,
-    error
-  } =
+  const idArray =
+    Array.from(ids);
+
+  const { data: users, error } =
     await supabaseClient
       .from("profiles")
-      .select(
-        "id,email,display_name,username"
-      )
-      .in(
-        "id",
-        [...ids]
-      );
-
+      .select("*")
+      .in("id", idArray);
 
   if (error) {
-
     console.error(
-      "Chat profile error:",
+      "Chat users error:",
       error
     );
 
-    return [];
-
-  }
-
-
-  return data || [];
-
-}
-
-
-// ======================================================
-// 14. LOAD CHATS
-// ======================================================
-
-async function loadChats(
-  search = ""
-) {
-
-  if (
-    !currentUser ||
-    !chatList
-  ) {
     return;
   }
 
+  renderChatList(users || []);
+}
 
-  chatList.innerHTML =
-    `
-      <div class="loading-state">
-        Loading chats...
+
+// ============================================================
+// 22. RENDER CHAT LIST
+// ============================================================
+
+function renderChatList(users) {
+  const list =
+    $("chatList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (!users.length) {
+    show($("chatEmpty"));
+    return;
+  }
+
+  hide($("chatEmpty"));
+
+  users.forEach(user => {
+    const item =
+      document.createElement("div");
+
+    item.className = "chat-item";
+
+    const name =
+      user.display_name ||
+      "QEVIRA User";
+
+    const initial =
+      name.charAt(0).toUpperCase();
+
+    const status =
+      user.is_online
+        ? "Online"
+        : "Offline";
+
+    item.innerHTML = `
+      <div class="chat-avatar">
+        ${escapeHTML(initial)}
+      </div>
+
+      <div class="chat-info">
+        <div class="chat-name">
+          ${escapeHTML(name)}
+        </div>
+
+        <div class="chat-status">
+          ${escapeHTML(status)}
+        </div>
       </div>
     `;
 
-
-  const profiles =
-    await getChatUsers();
-
-
-  const term =
-    search.trim()
-      .toLowerCase();
-
-
-  const filtered =
-    profiles.filter(
-      (profile) => {
-
-        if (!term) {
-          return true;
-        }
-
-
-        const text =
-          (
-            getDisplayName(
-              profile
-            ) +
-            " " +
-            (profile.username || "") +
-            " " +
-            (profile.email || "")
-          )
-          .toLowerCase();
-
-
-        return text.includes(
-          term
-        );
-
+    item.addEventListener(
+      "click",
+      () => {
+        openChat(user);
       }
     );
 
-
-  if (chatEmpty) {
-
-    chatEmpty.classList.toggle(
-      "hidden",
-      filtered.length > 0
-    );
-
-  }
-
-
-  if (!filtered.length) {
-
-    chatList.innerHTML =
-      "";
-
-    return;
-
-  }
-
-
-  chatList.innerHTML =
-    filtered
-      .map(
-        (profile) => {
-
-          const name =
-            getDisplayName(
-              profile
-            );
-
-
-          return `
-            <button
-              class="chat-item"
-              type="button"
-              data-user-id="${escapeHtml(profile.id)}"
-            >
-
-              <div class="mini-avatar">
-                ${escapeHtml(
-                  getInitial(name)
-                )}
-              </div>
-
-              <div class="chat-info">
-
-                <strong>
-                  ${escapeHtml(name)}
-                </strong>
-
-                <span>
-                  @${escapeHtml(
-                    profile.username ||
-                    "user"
-                  )}
-                </span>
-
-              </div>
-
-            </button>
-          `;
-
-        }
-      )
-      .join("");
-
-
-  chatList
-    .querySelectorAll(
-      "[data-user-id]"
-    )
-    .forEach(
-      (button) => {
-
-        button.addEventListener(
-          "click",
-          async () => {
-
-            const profile =
-              filtered.find(
-                (item) =>
-                  item.id ===
-                  button.dataset.userId
-              );
-
-
-            if (profile) {
-
-              await openChat(
-                profile
-              );
-
-            }
-
-          }
-        );
-
-      }
-    );
-
+    list.appendChild(item);
+  });
 }
 
 
-// ======================================================
-// 15. OPEN CHAT
-// ======================================================
+// ============================================================
+// 23. OPEN CHAT
+// ============================================================
 
-async function openChat(
-  profile
-) {
+async function openChat(user) {
+  if (!user || !currentUser) return;
 
-  if (!profile) {
-    return;
-  }
+  currentChatUser = user;
 
+  const modal =
+    $("chatModal");
 
-  currentChatUser =
-    profile;
+  if (!modal) return;
 
-
-  chatModal?.classList.remove(
-    "hidden"
-  );
-
+  show(modal);
 
   const name =
-    getDisplayName(
-      profile
-    );
+    user.display_name ||
+    "QEVIRA User";
 
+  const initial =
+    name.charAt(0).toUpperCase();
 
-  if (chatTitle) {
-
-    chatTitle.textContent =
+  if ($("chatTitle")) {
+    $("chatTitle").textContent =
       name;
-
   }
 
-
-  if (chatAvatar) {
-
-    chatAvatar.textContent =
-      getInitial(name);
-
+  if ($("chatAvatar")) {
+    $("chatAvatar").textContent =
+      initial;
   }
 
-
-  if (chatStatus) {
-
-    chatStatus.textContent =
-      "Online";
-
+  if ($("chatStatus")) {
+    if (user.is_online) {
+      $("chatStatus").textContent =
+        "Online";
+    } else {
+      $("chatStatus").textContent =
+        formatLastSeen(user.last_seen);
+    }
   }
 
-
-  await loadMessages();
+  await loadMessages(user.id);
 
   subscribeToMessages();
-
-
-  messageInput?.focus();
-
 }
 
 
-// ======================================================
-// 16. CLOSE CHAT
-// ======================================================
+// ============================================================
+// 24. CLOSE CHAT
+// ============================================================
 
 function closeChat() {
+  hide($("chatModal"));
 
-  chatModal?.classList.add(
-    "hidden"
-  );
+  currentChatUser = null;
 
-
-  currentChatUser =
-    null;
-
-
-  if (
-    messageChannel &&
-    supabaseClient
-  ) {
-
+  if (messageSubscription) {
     supabaseClient.removeChannel(
-      messageChannel
+      messageSubscription
     );
 
-    messageChannel =
-      null;
-
+    messageSubscription = null;
   }
-
 }
 
 
-closeChatModal?.addEventListener(
-  "click",
-  closeChat
-);
+// ============================================================
+// 25. LOAD MESSAGES
+// ============================================================
 
+async function loadMessages(otherUserId) {
+  const container =
+    $("messages");
 
-chatModal?.addEventListener(
-  "click",
-  (event) => {
+  if (!container) return;
 
-    if (
-      event.target ===
-      chatModal
-    ) {
+  container.innerHTML =
+    '<div class="loading-state">Loading messages...</div>';
 
-      closeChat();
-
-    }
-
-  }
-);
-
-
-// ======================================================
-// 17. LOAD MESSAGES
-// ======================================================
-
-async function loadMessages() {
-
-  if (
-    !currentUser ||
-    !currentChatUser ||
-    !supabaseClient ||
-    !messages
-  ) {
-    return;
-  }
-
-
-  messages.innerHTML =
-    `
-      <div class="loading-state">
-        Loading messages...
-      </div>
-    `;
-
-
-  const userA =
-    currentUser.id;
-
-  const userB =
-    currentChatUser.id;
-
-
-  const {
-    data,
-    error
-  } =
+  const { data, error } =
     await supabaseClient
       .from("messages")
-      .select(
-        "id,sender_id,receiver_id,body,created_at"
-      )
+      .select("*")
       .or(
-        "and(sender_id.eq." +
-        userA +
-        ",receiver_id.eq." +
-        userB +
-        ")," +
-        "and(sender_id.eq." +
-        userB +
-        ",receiver_id.eq." +
-        userA +
-        ")"
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`
       )
-      .order(
-        "created_at",
-        {
-          ascending: true
-        }
-      );
-
+      .order("created_at", {
+        ascending: true
+      });
 
   if (error) {
-
     console.error(
       "Messages error:",
       error
     );
 
-
-    messages.innerHTML =
-      `
-        <div class="empty-state">
-          <h3>Messages unavailable</h3>
-          <p>Check your Supabase messages table and policies.</p>
-        </div>
-      `;
+    container.innerHTML =
+      '<div class="loading-state">Could not load messages.</div>';
 
     return;
-
   }
 
+  renderMessages(data || []);
 
-  renderMessages(
-    data || []
-  );
-
+  scrollMessagesToBottom();
 }
 
 
-// ======================================================
-// 18. RENDER MESSAGES
-// ======================================================
+// ============================================================
+// 26. RENDER MESSAGES
+// ============================================================
 
-function renderMessages(
-  rows
-) {
+function renderMessages(messages) {
+  const container =
+    $("messages");
 
-  if (!messages) {
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!messages.length) {
+    container.innerHTML = `
+      <div class="loading-state">
+        No messages yet. Say hello 👋
+      </div>
+    `;
+
     return;
   }
 
-
-  if (!rows.length) {
-
-    messages.innerHTML =
-      `
-        <div class="empty-state">
-          <h3>No messages yet</h3>
-          <p>Say hello 👋</p>
-        </div>
-      `;
-
-    return;
-
-  }
-
-
-  messages.innerHTML =
-    rows
-      .map(
-        (row) => {
-
-          const mine =
-            row.sender_id ===
-            currentUser?.id;
-
-
-          return `
-            <div
-              class="message-row ${
-                mine
-                  ? "mine"
-                  : "theirs"
-              }"
-            >
-
-              <div class="message-bubble">
-
-                <div>
-                  ${escapeHtml(
-                    row.body
-                  )}
-                </div>
-
-                <small>
-                  ${escapeHtml(
-                    formatTime(
-                      row.created_at
-                    )
-                  )}
-                </small>
-
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-
-
-  messages.scrollTop =
-    messages.scrollHeight;
-
+  messages.forEach(message => {
+    appendMessage(message);
+  });
 }
 
 
-// ======================================================
-// 19. REALTIME MESSAGES
-// ======================================================
+// ============================================================
+// 27. APPEND MESSAGE
+// ============================================================
 
-function subscribeToMessages() {
+function appendMessage(message) {
+  const container =
+    $("messages");
 
-  if (
-    !currentUser ||
-    !currentChatUser ||
-    !supabaseClient
-  ) {
+  if (!container) return;
+
+  const isMine =
+    message.sender_id === currentUser.id;
+
+  const row =
+    document.createElement("div");
+
+  row.className =
+    "message-row " +
+    (isMine ? "mine" : "theirs");
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className =
+    "message-bubble";
+
+  bubble.innerHTML = `
+    <div class="message-text">
+      ${escapeHTML(message.body)}
+    </div>
+
+    <div class="message-time">
+      ${escapeHTML(
+        formatTime(message.created_at)
+      )}
+    </div>
+  `;
+
+  row.appendChild(bubble);
+
+  container.appendChild(row);
+}
+
+
+// ============================================================
+// 28. SEND MESSAGE
+// ============================================================
+
+async function sendMessage(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  if (!currentUser || !currentChatUser) {
     return;
   }
 
+  const input =
+    $("messageInput");
 
-  if (messageChannel) {
+  if (!input) return;
 
-    supabaseClient.removeChannel(
-      messageChannel
+  const body =
+    input.value.trim();
+
+  if (!body) return;
+
+  const button =
+    $("sendMessageBtn");
+
+  if (button) {
+    button.disabled = true;
+  }
+
+  try {
+    const { data, error } =
+      await supabaseClient
+        .from("messages")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: currentChatUser.id,
+          body
+        })
+        .select()
+        .single();
+
+    if (error) {
+      throw error;
+    }
+
+    input.value = "";
+
+    // Add immediately if realtime does not return it to this client
+    if (data) {
+      const existing =
+        document.querySelector(
+          `[data-message-id="${data.id}"]`
+        );
+
+      if (!existing) {
+        appendMessage(data);
+      }
+    }
+
+    scrollMessagesToBottom();
+
+    loadChats();
+
+  } catch (error) {
+    console.error(
+      "Send message error:",
+      error
     );
 
-    messageChannel =
-      null;
+    alert(
+      error.message ||
+      "Message could not be sent."
+    );
 
+  } finally {
+    if (button) {
+      button.disabled = false;
+    }
+
+    input.focus();
+  }
+}
+
+
+// ============================================================
+// 29. REALTIME MESSAGE SUBSCRIPTION
+// ============================================================
+
+function subscribeToMessages() {
+  if (!currentUser) return;
+
+  if (messageSubscription) {
+    supabaseClient.removeChannel(
+      messageSubscription
+    );
+
+    messageSubscription = null;
   }
 
-
-  const channelName =
-    "qevira-messages-" +
-    currentUser.id +
-    "-" +
-    currentChatUser.id;
-
-
-  messageChannel =
+  messageSubscription =
     supabaseClient
       .channel(
-        channelName
+        "qevira-messages-" +
+        currentUser.id
       )
       .on(
         "postgres_changes",
@@ -1730,777 +1236,545 @@ function subscribeToMessages() {
           schema: "public",
           table: "messages"
         },
-        (payload) => {
-
-          const row =
+        payload => {
+          const message =
             payload.new;
 
-
-          if (!row) {
+          if (!currentChatUser) {
             return;
           }
 
-
-          const belongs =
+          const belongsToCurrentChat =
             (
-              row.sender_id ===
-              currentUser.id &&
-              row.receiver_id ===
-              currentChatUser.id
+              message.sender_id === currentUser.id &&
+              message.receiver_id === currentChatUser.id
             ) ||
             (
-              row.sender_id ===
-              currentChatUser.id &&
-              row.receiver_id ===
-              currentUser.id
+              message.sender_id === currentChatUser.id &&
+              message.receiver_id === currentUser.id
             );
 
-
-          if (belongs) {
-
-            loadMessages();
-
+          if (!belongsToCurrentChat) {
+            loadChats();
+            return;
           }
 
+          // Avoid duplicate messages
+          const existing =
+            document.querySelector(
+              `[data-message-id="${message.id}"]`
+            );
+
+          if (existing) return;
+
+          appendMessage(message);
+
+          scrollMessagesToBottom();
+
+          loadChats();
         }
       )
-      .subscribe(
-        (status) => {
-
-          console.log(
-            "QEVIRA realtime:",
-            status
-          );
-
-        }
-      );
-
+      .subscribe();
 }
 
 
-// ======================================================
-// 20. SEND MESSAGE
-// ======================================================
+// ============================================================
+// 30. SCROLL MESSAGES
+// ============================================================
 
-messageForm?.addEventListener(
-  "submit",
-  async (event) => {
+function scrollMessagesToBottom() {
+  const container =
+    $("messages");
 
-    event.preventDefault();
+  if (!container) return;
 
-
-    if (
-      !currentUser ||
-      !currentChatUser ||
-      !supabaseClient
-    ) {
-      return;
-    }
-
-
-    const body =
-      messageInput?.value
-        .trim();
-
-
-    if (!body) {
-      return;
-    }
-
-
-    const sendButton =
-      messageForm.querySelector(
-        "button[type='submit']"
-      );
-
-
-    if (sendButton) {
-
-      sendButton.disabled =
-        true;
-
-    }
-
-
-    try {
-
-      const {
-        error
-      } =
-        await supabaseClient
-          .from("messages")
-          .insert({
-            sender_id:
-              currentUser.id,
-
-            receiver_id:
-              currentChatUser.id,
-
-            body:
-              body
-          });
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (messageInput) {
-
-        messageInput.value =
-          "";
-
-      }
-
-
-      await loadMessages();
-
-
-    } catch (error) {
-
-      console.error(
-        "Send message error:",
-        error
-      );
-
-
-      setAuthMessage(
-        error?.message ||
-        "Message failed to send.",
-        true
-      );
-
-
-    } finally {
-
-      if (sendButton) {
-
-        sendButton.disabled =
-          false;
-
-      }
-
-    }
-
-  }
-);
-
-
-// ======================================================
-// 21. NAVIGATION
-// ======================================================
-
-function showPage(
-  pageId
-) {
-
-  document
-    .querySelectorAll(".page")
-    .forEach(
-      (page) => {
-
-        page.classList.toggle(
-          "hidden",
-          page.id !== pageId
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      ".nav-item[data-page]"
-    )
-    .forEach(
-      (item) => {
-
-        item.classList.toggle(
-          "active",
-          item.dataset.page ===
-          pageId
-        );
-
-      }
-    );
-
+  setTimeout(() => {
+    container.scrollTop =
+      container.scrollHeight;
+  }, 50);
 }
 
 
-document
-  .querySelectorAll(
-    ".nav-item[data-page]"
-  )
-  .forEach(
-    (item) => {
+// ============================================================
+// 31. NAVIGATION
+// ============================================================
 
-      item.addEventListener(
-        "click",
-        async () => {
+function showPage(pageName) {
+  const pages =
+    document.querySelectorAll(".page");
 
-          const pageId =
-            item.dataset.page;
+  pages.forEach(page => {
+    hide(page);
+  });
 
+  const target =
+    $(pageName);
 
-          showPage(
-            pageId
-          );
+  if (target) {
+    show(target);
+  }
 
+  if (pageName === "chatsPage") {
+    loadChats();
+  }
 
-          if (
-            pageId ===
-            "contactsPage"
-          ) {
+  if (pageName === "contactsPage") {
+    loadContacts();
+  }
 
-            await loadContacts(
-              contactsSearchInput?.value ||
-              ""
-            );
-
-          }
-
-
-          if (
-            pageId ===
-            "chatsPage"
-          ) {
-
-            await loadChats(
-              searchInput?.value ||
-              ""
-            );
-
-          }
+  if (pageName === "profilePage") {
+    loadCurrentProfile();
+  }
+}
 
 
-          if (
-            pageId ===
-            "profilePage"
-          ) {
+// ============================================================
+// 32. CONTACT SEARCH
+// ============================================================
 
-            await loadProfile();
+function filterContacts() {
+  const search =
+    $("contactsSearchInput")?.value
+      .trim()
+      .toLowerCase() || "";
 
-          }
+  const items =
+    document.querySelectorAll(
+      "#contactsList .contact-item"
+    );
 
-        }
-      );
+  items.forEach(item => {
+    const text =
+      item.textContent
+        .toLowerCase();
 
+    if (!search || text.includes(search)) {
+      show(item);
+    } else {
+      hide(item);
     }
-  );
+  });
+}
 
 
-// ======================================================
-// 22. CONTACT SEARCH
-// ======================================================
+// ============================================================
+// 33. CHAT SEARCH
+// ============================================================
 
-contactsSearchInput?.addEventListener(
-  "input",
-  () => {
+function filterChats() {
+  const search =
+    $("searchInput")?.value
+      .trim()
+      .toLowerCase() || "";
 
-    loadContacts(
-      contactsSearchInput.value
+  const items =
+    document.querySelectorAll(
+      "#chatList .chat-item"
     );
 
+  items.forEach(item => {
+    const text =
+      item.textContent
+        .toLowerCase();
+
+    if (!search || text.includes(search)) {
+      show(item);
+    } else {
+      hide(item);
+    }
+  });
+}
+
+
+// ============================================================
+// 34. NEW CHAT
+// ============================================================
+
+function startNewChat() {
+  showPage("contactsPage");
+}
+
+
+// ============================================================
+// 35. PROFILE EDIT TOGGLE
+// ============================================================
+
+function toggleProfileEdit() {
+  const edit =
+    $("profileEdit");
+
+  if (!edit) return;
+
+  if (edit.classList.contains("hidden")) {
+    renderCurrentProfile();
+    show(edit);
+  } else {
+    hide(edit);
   }
-);
+}
 
 
-// ======================================================
-// 23. CHAT SEARCH
-// ======================================================
+// ============================================================
+// 36. DARK MODE
+// ============================================================
 
-searchInput?.addEventListener(
-  "input",
-  () => {
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
 
-    loadChats(
-      searchInput.value
-    );
-
-  }
-);
-
-
-// ======================================================
-// 24. NEW CHAT
-// ======================================================
-
-newChatBtn?.addEventListener(
-  "click",
-  async () => {
-
-    showPage(
-      "contactsPage"
-    );
-
-
-    await loadContacts(
-      contactsSearchInput?.value ||
-      ""
-    );
-
-
-    contactsSearchInput?.focus();
-
-  }
-);
-
-
-// ======================================================
-// 25. DARK MODE
-// ======================================================
-
-function applyDarkMode(
-  enabled
-) {
-
-  document.body.classList.toggle(
-    "dark",
-    enabled
-  );
-
+  const isDark =
+    document.body.classList.contains("dark");
 
   localStorage.setItem(
-    "qevira-dark",
-    enabled
-      ? "1"
-      : "0"
+    "qevira-dark-mode",
+    isDark ? "true" : "false"
   );
+}
 
-
-  const icon =
-    darkModeBtn?.querySelector(
-      ".icon"
+function loadDarkMode() {
+  const saved =
+    localStorage.getItem(
+      "qevira-dark-mode"
     );
 
-
-  if (icon) {
-
-    icon.textContent =
-      enabled
-        ? "☀"
-        : "☾";
-
+  if (saved === "true") {
+    document.body.classList.add("dark");
   }
-
 }
 
 
-darkModeBtn?.addEventListener(
-  "click",
-  () => {
+// ============================================================
+// 37. VOICE CALL — PHASE 2
+// ============================================================
 
-    applyDarkMode(
-      !document.body.classList.contains(
-        "dark"
-      )
-    );
+function startVoiceCall() {
+  if (!currentChatUser) return;
 
-  }
-);
-
-
-applyDarkMode(
-  localStorage.getItem(
-    "qevira-dark"
-  ) === "1"
-);
+  alert(
+    "Voice calling will be activated in QEVIRA Phase 2."
+  );
+}
 
 
-// ======================================================
-// 26. CALL BUTTONS
-// PHASE 2
-// ======================================================
+// ============================================================
+// 38. VIDEO CALL — PHASE 2
+// ============================================================
 
-voiceCallBtn?.addEventListener(
-  "click",
-  () => {
+function startVideoCall() {
+  if (!currentChatUser) return;
 
-    alert(
-      "QEVIRA Voice Calling will be activated in Phase 2."
-    );
-
-  }
-);
+  alert(
+    "Video calling will be activated in QEVIRA Phase 2."
+  );
+}
 
 
-videoCallBtn?.addEventListener(
-  "click",
-  () => {
+// ============================================================
+// 39. LOGOUT
+// ============================================================
 
-    alert(
-      "QEVIRA Video Calling will be activated in Phase 2."
-    );
+async function logout() {
+  try {
+    stopPresence();
 
-  }
-);
-
-
-// ======================================================
-// 27. LOGOUT
-// ======================================================
-
-logoutBtn?.addEventListener(
-  "click",
-  async () => {
-
-    try {
-
-      if (presenceTimer) {
-
-        clearInterval(
-          presenceTimer
-        );
-
-        presenceTimer =
-          null;
-
-      }
-
-
-      if (
-        messageChannel &&
-        supabaseClient
-      ) {
-
-        await supabaseClient
-          .removeChannel(
-            messageChannel
-          );
-
-        messageChannel =
-          null;
-
-      }
-
-
-      if (
-        authSubscription
-      ) {
-
-        authSubscription.unsubscribe();
-
-        authSubscription =
-          null;
-
-      }
-
-
-      if (supabaseClient) {
-
-        await supabaseClient
-          .auth
-          .signOut();
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Logout error:",
-        error
+    if (messageSubscription) {
+      await supabaseClient.removeChannel(
+        messageSubscription
       );
 
+      messageSubscription = null;
     }
 
+    if (currentUser) {
+      await updatePresence(false);
+    }
 
-    currentUser =
-      null;
+    await supabaseClient.auth.signOut();
 
-    currentProfile =
-      null;
-
-    currentChatUser =
-      null;
-
-
-    showAuth();
-
-    setAuthMessage(
-      "Logged out."
+  } catch (error) {
+    console.error(
+      "Logout error:",
+      error
     );
 
+  } finally {
+    currentUser = null;
+    currentProfile = null;
+    currentChatUser = null;
+
+    showAuth();
+    showLoginMode();
+  }
+}
+
+
+// ============================================================
+// 40. START APP
+// ============================================================
+
+async function startApp() {
+  if (!currentUser) return;
+
+  // Show app FIRST.
+  // Database problems should never prevent login screen
+  // from changing to the main app.
+  showApp();
+
+  try {
+    await ensureProfile();
+
+    await loadCurrentProfile();
+
+    startPresence();
+
+    loadChats();
+
+    showPage("chatsPage");
+
+  } catch (error) {
+    console.error(
+      "App startup error:",
+      error
+    );
+  }
+}
+
+
+// ============================================================
+// 41. AUTH STATE
+// ============================================================
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+    console.log(
+      "Auth event:",
+      event
+    );
+
+    if (session?.user) {
+      currentUser =
+        session.user;
+
+      if (
+        event === "SIGNED_IN" ||
+        event === "INITIAL_SESSION"
+      ) {
+        await startApp();
+      }
+
+    } else {
+      currentUser = null;
+      currentProfile = null;
+
+      stopPresence();
+
+      showAuth();
+    }
   }
 );
 
 
-// ======================================================
-// 28. AUTH STATE
-// ======================================================
+// ============================================================
+// 42. EVENT LISTENERS
+// ============================================================
 
-async function initAuth() {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  if (!supabaseClient) {
+    // Dark mode
+    loadDarkMode();
 
-    showAuth();
 
-    setAuthMessage(
-      "Supabase could not load. Please refresh.",
-      true
+    // Auth switch
+    $("switchAuthBtn")?.addEventListener(
+      "click",
+      () => {
+        if (authMode === "login") {
+          showSignupMode();
+        } else {
+          showLoginMode();
+        }
+      }
     );
 
-    return;
 
+    // Signup
+    $("signupBtn")?.addEventListener(
+      "click",
+      signup
+    );
+
+
+    // Login
+    $("loginBtn")?.addEventListener(
+      "click",
+      login
+    );
+
+
+    // Enter key login
+    $("loginPassword")?.addEventListener(
+      "keydown",
+      event => {
+        if (event.key === "Enter") {
+          login();
+        }
+      }
+    );
+
+
+    // Enter key signup
+    $("signupPassword")?.addEventListener(
+      "keydown",
+      event => {
+        if (event.key === "Enter") {
+          signup();
+        }
+      }
+    );
+
+
+    // Navigation
+    $("chatsNavBtn")?.addEventListener(
+      "click",
+      () => showPage("chatsPage")
+    );
+
+    $("contactsNavBtn")?.addEventListener(
+      "click",
+      () => showPage("contactsPage")
+    );
+
+    $("profileNavBtn")?.addEventListener(
+      "click",
+      () => showPage("profilePage")
+    );
+
+
+    // Chat close
+    $("closeChatModal")?.addEventListener(
+      "click",
+      closeChat
+    );
+
+
+    // Message form
+    $("messageForm")?.addEventListener(
+      "submit",
+      sendMessage
+    );
+
+
+    // Search
+    $("searchInput")?.addEventListener(
+      "input",
+      filterChats
+    );
+
+    $("contactsSearchInput")?.addEventListener(
+      "input",
+      filterContacts
+    );
+
+
+    // New chat
+    $("newChatBtn")?.addEventListener(
+      "click",
+      startNewChat
+    );
+
+
+    // Dark mode
+    $("darkModeBtn")?.addEventListener(
+      "click",
+      toggleDarkMode
+    );
+
+
+    // Profile edit
+    $("editProfileBtn")?.addEventListener(
+      "click",
+      toggleProfileEdit
+    );
+
+
+    // Profile save
+    $("saveProfileBtn")?.addEventListener(
+      "click",
+      saveProfile
+    );
+
+
+    // Profile cancel
+    $("cancelProfileEditBtn")?.addEventListener(
+      "click",
+      () => hide($("profileEdit"))
+    );
+
+
+    // Logout
+    $("logoutBtn")?.addEventListener(
+      "click",
+      logout
+    );
+
+
+    // Calls
+    $("voiceCallBtn")?.addEventListener(
+      "click",
+      startVoiceCall
+    );
+
+    $("videoCallBtn")?.addEventListener(
+      "click",
+      startVideoCall
+    );
+
+
+    // Start with login mode
+    showLoginMode();
   }
+);
 
 
+// ============================================================
+// 43. CHECK EXISTING SESSION
+// ============================================================
+
+(async function checkExistingSession() {
   try {
-
     const {
       data,
       error
     } =
-      await supabaseClient
-        .auth
-        .getSession();
-
+      await supabaseClient.auth.getSession();
 
     if (error) {
-
       console.error(
         "Session error:",
         error
       );
 
       showAuth();
-
-    } else if (
-      data?.session?.user
-    ) {
-
-      await startApp(
-        data.session.user
-      );
-
-    } else {
-
-      showAuth();
-
+      return;
     }
 
+    if (data?.session?.user) {
+      currentUser =
+        data.session.user;
 
-    const {
-      data: listener
-    } =
-      supabaseClient.auth
-        .onAuthStateChange(
-          async (
-            event,
-            session
-          ) => {
+      await startApp();
 
-            console.log(
-              "QEVIRA AUTH EVENT:",
-              event
-            );
-
-
-            if (
-              session?.user &&
-              event ===
-                "SIGNED_IN"
-            ) {
-
-              await startApp(
-                session.user
-              );
-
-            }
-
-
-            if (
-              event ===
-              "SIGNED_OUT"
-            ) {
-
-              showAuth();
-
-            }
-
-          }
-        );
-
-
-    authSubscription =
-      listener?.subscription ||
-      null;
-
+    } else {
+      showAuth();
+    }
 
   } catch (error) {
-
     console.error(
-      "QEVIRA AUTH START ERROR:",
+      "Initial session error:",
       error
     );
-
 
     showAuth();
-
-
-    setAuthMessage(
-      "Authentication could not start. Refresh the page.",
-      true
-    );
-
   }
-
-}
-
-
-// ======================================================
-// 29. START APP
-// ======================================================
-
-async function startApp(
-  user
-) {
-
-  if (!user) {
-
-    showAuth();
-
-    return;
-
-  }
-
-
-  currentUser =
-    user;
-
-
-  if (currentUserEmail) {
-
-    currentUserEmail.textContent =
-      user.email || "";
-
-  }
-
-
-  // IMPORTANT:
-  // Open the app FIRST.
-  // Database errors must not trap
-  // the user on the login screen.
-
-  showApp();
-
-
-  console.log(
-    "QEVIRA APP OPENED:",
-    user.email
-  );
-
-
-  try {
-
-    await ensureProfile();
-
-  } catch (error) {
-
-    console.error(
-      "ensureProfile:",
-      error
-    );
-
-  }
-
-
-  try {
-
-    await loadProfile();
-
-  } catch (error) {
-
-    console.error(
-      "loadProfile:",
-      error
-    );
-
-  }
-
-
-  try {
-
-    await loadContacts();
-
-  } catch (error) {
-
-    console.error(
-      "loadContacts:",
-      error
-    );
-
-  }
-
-
-  try {
-
-    await loadChats();
-
-  } catch (error) {
-
-    console.error(
-      "loadChats:",
-      error
-    );
-
-  }
-
-
-  try {
-
-    await updatePresence();
-
-  } catch (error) {
-
-    console.error(
-      "Presence:",
-      error
-    );
-
-  }
-
-
-  if (presenceTimer) {
-
-    clearInterval(
-      presenceTimer
-    );
-
-  }
-
-
-  presenceTimer =
-    setInterval(
-      updatePresence,
-      60000
-    );
-
-}
-
-
-// ======================================================
-// 30. START QEVIRA
-// ======================================================
-
-console.log(
-  "======================================"
-);
-
-console.log(
-  "QEVIRA PHASE 1 JS LOADED"
-);
-
-console.log(
-  "Auth + Profiles + Chat + Presence"
-);
-
-console.log(
-  "======================================"
-);
-
-
-updateAuthSwitchText();
-
-
-initAuth();
+})();
