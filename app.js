@@ -1,2219 +1,4442 @@
-/* =========================================================
-   QEVIRA
-   PROFESSIONAL REAL-TIME MESSAGING UI
-   ========================================================= */
-
-
-/* =========================================================
-   1. ROOT VARIABLES
-   ========================================================= */
-
-:root {
-  --primary: #6c5ce7;
-  --primary-dark: #5847d8;
-  --primary-light: #eeeaff;
-
-  --pink: #fd79a8;
-  --orange: #fdcb6e;
-  --green: #00b894;
-  --red: #e74c3c;
-
-  --background: #f6f7ff;
-  --surface: #ffffff;
-  --surface-2: #f8f8ff;
-
-  --text: #202124;
-  --text-light: #777b87;
-  --text-muted: #9da1ad;
-
-  --border: #e7e8f0;
-
-  --shadow-sm:
-    0 2px 8px rgba(55, 48, 100, 0.06);
-
-  --shadow:
-    0 8px 30px rgba(55, 48, 100, 0.10);
-
-  --shadow-lg:
-    0 18px 55px rgba(55, 48, 100, 0.18);
-
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 22px;
-
-  --bottom-nav-height: 72px;
-}
-
-
-/* =========================================================
-   2. RESET
-   ========================================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-
-html {
-  width: 100%;
-  min-height: 100%;
-  scroll-behavior: smooth;
-}
-
-
-body {
-  width: 100%;
-  min-height: 100vh;
-
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-
-  background: var(--background);
-  color: var(--text);
-
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-
-  overflow-x: hidden;
-}
-
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-
-button {
-  border: 0;
-  cursor: pointer;
-}
-
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-
-input,
-textarea {
-  outline: none;
-}
-
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-
-.hidden {
-  display: none !important;
-}
-
-
-/* =========================================================
-   3. AUTH SCREEN
-   ========================================================= */
-
-.auth-screen {
-  min-height: 100vh;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 24px;
-
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(108, 92, 231, 0.20),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(253, 121, 168, 0.18),
-      transparent 35%
-    ),
-    var(--background);
-}
-
-
-.auth-card {
-  width: 100%;
-  max-width: 420px;
-
-  padding: 34px 28px;
-
-  background: rgba(255, 255, 255, 0.96);
-
-  border: 1px solid rgba(255, 255, 255, 0.8);
-
-  border-radius: 28px;
-
-  box-shadow: var(--shadow-lg);
-
-  backdrop-filter: blur(16px);
-}
-
-
-.auth-logo {
-  width: 76px;
-  height: 76px;
-
-  margin: 0 auto 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 24px;
-
-  color: white;
-
-  font-size: 38px;
-  font-weight: 900;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  box-shadow:
-    0 12px 28px rgba(108, 92, 231, 0.30);
-}
-
-
-.auth-card h1 {
-  text-align: center;
-
-  font-size: 32px;
-  font-weight: 900;
-
-  letter-spacing: -1px;
-}
-
-
-.auth-subtitle {
-  margin-top: 6px;
-  margin-bottom: 28px;
-
-  text-align: center;
-
-  color: var(--text-light);
-
-  font-size: 14px;
-}
-
-
-.input-group {
-  margin-bottom: 16px;
-}
-
-
-.input-group label {
-  display: block;
-
-  margin-bottom: 7px;
-
-  color: var(--text);
-
-  font-size: 13px;
-  font-weight: 700;
-}
-
-
-.input-group input,
-.input-group textarea {
-  width: 100%;
-
-  padding: 13px 14px;
-
-  border: 1px solid var(--border);
-  border-radius: 12px;
-
-  background: var(--surface);
-
-  color: var(--text);
-
-  font-size: 15px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-
-.input-group input:focus,
-.input-group textarea:focus {
-  border-color: var(--primary);
-
-  box-shadow:
-    0 0 0 4px rgba(108, 92, 231, 0.10);
-}
-
-
-.input-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-
-.primary-btn {
-  width: 100%;
-
-  min-height: 48px;
-
-  padding: 12px 18px;
-
-  border-radius: 13px;
-
-  color: white;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--primary-dark)
-    );
-
-  font-weight: 800;
-
-  box-shadow:
-    0 8px 20px rgba(108, 92, 231, 0.22);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    opacity 0.18s ease;
-}
-
-
-.primary-btn:hover {
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 12px 25px rgba(108, 92, 231, 0.28);
-}
-
-
-.primary-btn:active {
-  transform: scale(0.98);
-}
-
-
-.small-btn {
-  width: auto;
-  min-width: 170px;
-}
-
-
-.secondary-btn {
-  min-height: 46px;
-
-  padding: 11px 18px;
-
-  border-radius: 12px;
-
-  background: var(--primary-light);
-  color: var(--primary);
-
-  font-weight: 800;
-}
-
-
-.text-btn {
-  display: block;
-
-  width: 100%;
-
-  margin-top: 16px;
-
-  padding: 10px;
-
-  background: transparent;
-
-  color: var(--primary);
-
-  font-weight: 700;
-}
-
-
-.auth-message {
-  min-height: 22px;
-
-  margin-top: 12px;
-
-  text-align: center;
-
-  color: var(--text-light);
-
-  font-size: 13px;
-}
-
-
-/* =========================================================
-   4. MAIN APP
-   ========================================================= */
-
-.app {
-  min-height: 100vh;
-
-  background: var(--background);
-}
-
-
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-
-  height: 64px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding:
-    0 max(18px, env(safe-area-inset-left))
-    0 max(18px, env(safe-area-inset-right));
-
-  background: rgba(255, 255, 255, 0.90);
-
-  border-bottom: 1px solid var(--border);
-
-  backdrop-filter: blur(18px);
-}
-
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-
-.brand-logo {
-  width: 38px;
-  height: 38px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 12px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-weight: 900;
-  font-size: 20px;
-
-  box-shadow:
-    0 6px 16px rgba(108, 92, 231, 0.22);
-}
-
-
-.brand-name {
-  font-size: 20px;
-  font-weight: 900;
-
-  letter-spacing: 0.3px;
-}
-
-
-.icon-btn {
-  width: 42px;
-  height: 42px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 12px;
-
-  background: transparent;
-
-  color: var(--text);
-
-  font-size: 18px;
-
-  transition:
-    background 0.18s ease,
-    transform 0.18s ease;
-}
-
-
-.icon-btn:hover {
-  background: var(--primary-light);
-
-  transform: translateY(-1px);
-}
-
-
-.icon-btn:active {
-  transform: scale(0.94);
-}
-
-
-/* =========================================================
-   5. PAGE CONTAINER
-   ========================================================= */
-
-.page-container {
-  width: 100%;
-  max-width: 760px;
-
-  margin: 0 auto;
-
-  padding:
-    22px
-    22px
-    calc(var(--bottom-nav-height) + 28px);
-}
-
-
-.page {
-  width: 100%;
-}
-
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 16px;
-
-  margin-bottom: 18px;
-}
-
-
-.page-header h2 {
-  font-size: 26px;
-  font-weight: 900;
-
-  letter-spacing: -0.5px;
-}
-
-
-.page-subtitle {
-  margin-top: 4px;
-
-  color: var(--text-light);
-
-  font-size: 13px;
-}
-
-
-.round-btn {
-  width: 46px;
-  height: 46px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 28px;
-  font-weight: 400;
-
-  box-shadow:
-    0 8px 20px rgba(108, 92, 231, 0.25);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-
-.round-btn:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 12px 26px rgba(108, 92, 231, 0.30);
-}
-
-
-/* =========================================================
-   6. SEARCH
-   ========================================================= */
-
-.search-box {
-  width: 100%;
-
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 0 14px;
-
-  margin-bottom: 16px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 14px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow-sm);
-}
-
-
-.search-icon {
-  font-size: 16px;
-  opacity: 0.65;
-}
-
-
-.search-box input {
-  flex: 1;
-
-  width: 100%;
-
-  border: 0;
-  outline: 0;
-
-  background: transparent;
-
-  color: var(--text);
-
-  font-size: 14px;
-}
-
-
-.search-box:focus-within {
-  border-color: var(--primary);
-
-  box-shadow:
-    0 0 0 4px rgba(108, 92, 231, 0.08);
-}
-
-
-/* =========================================================
-   7. LISTS
-   ========================================================= */
-
-.list {
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-
-.chat-item,
-.contact-item {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 13px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 16px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow-sm);
-
-  text-align: left;
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
-}
-
-
-.chat-item:hover,
-.contact-item:hover {
-  transform: translateY(-1px);
-
-  box-shadow: var(--shadow);
-
-  background: #fff;
-}
-
-
-.chat-item:active,
-.contact-item:active {
-  transform: scale(0.99);
-}
-
-
-.chat-avatar,
-.contact-avatar {
-  width: 50px;
-  height: 50px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-
-  border-radius: 16px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 20px;
-  font-weight: 900;
-}
-
-
-.chat-avatar img,
-.contact-avatar img,
-.profile-avatar img,
-.call-avatar img {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-}
-
-
-.chat-info,
-.contact-info {
-  min-width: 0;
-
-  flex: 1;
-}
-
-
-.chat-name,
-.contact-name {
-  display: block;
-
-  overflow: hidden;
-
-  color: var(--text);
-
-  font-size: 15px;
-  font-weight: 800;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-.chat-preview,
-.contact-username {
-  display: block;
-
-  margin-top: 4px;
-
-  overflow: hidden;
-
-  color: var(--text-light);
-
-  font-size: 12px;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-.chat-meta {
-  flex-shrink: 0;
-
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-
-  gap: 5px;
-}
-
-
-.chat-time {
-  color: var(--text-muted);
-
-  font-size: 11px;
-}
-
-
-.online-dot {
-  width: 9px;
-  height: 9px;
-
-  border-radius: 50%;
-
-  background: var(--green);
-
-  box-shadow:
-    0 0 0 3px rgba(0, 184, 148, 0.12);
-}
-
-
-/* =========================================================
-   8. EMPTY / LOADING STATES
-   ========================================================= */
-
-.empty-state,
-.loading-state {
-  width: 100%;
-
-  padding: 50px 22px;
-
-  text-align: center;
-
-  color: var(--text-light);
-}
-
-
-.empty-icon {
-  width: 70px;
-  height: 70px;
-
-  margin: 0 auto 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 22px;
-
-  background: var(--primary-light);
-
-  font-size: 30px;
-}
-
-
-.empty-state h3 {
-  margin-bottom: 7px;
-
-  color: var(--text);
-
-  font-size: 18px;
-}
-
-
-.empty-state p {
-  max-width: 320px;
-
-  margin: 0 auto 20px;
-
-  font-size: 13px;
-
-  line-height: 1.6;
-}
-
-
-.loading-state {
-  font-size: 13px;
-}
-
-
-/* =========================================================
-   9. PROFILE
-   ========================================================= */
-
-.profile-card {
-  display: flex;
-  align-items: center;
-
-  gap: 18px;
-
-  padding: 22px;
-
-  margin-bottom: 14px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 20px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow);
-}
-
-
-.profile-avatar {
-  width: 82px;
-  height: 82px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-
-  border-radius: 26px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 32px;
-  font-weight: 900;
-
-  box-shadow:
-    0 10px 25px rgba(108, 92, 231, 0.22);
-}
-
-
-.profile-main-info {
-  min-width: 0;
-}
-
-
-.profile-main-info h2 {
-  overflow: hidden;
-
-  font-size: 21px;
-  font-weight: 900;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-.profile-main-info p {
-  margin-top: 4px;
-
-  overflow: hidden;
-
-  color: var(--text-light);
-
-  font-size: 13px;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-.profile-info-card {
-  display: flex;
-  align-items: center;
-
-  gap: 14px;
-
-  padding: 15px;
-
-  margin-bottom: 10px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 15px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow-sm);
-}
-
-
-.profile-info-icon {
-  width: 38px;
-  height: 38px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 12px;
-
-  background: var(--primary-light);
-}
-
-
-.profile-info-content {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-
-.profile-info-content strong {
-  font-size: 13px;
-}
-
-
-.profile-info-content span {
-  overflow: hidden;
-
-  color: var(--text-light);
-
-  font-size: 12px;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-.profile-page .primary-btn {
-  margin-top: 8px;
-}
-
-
-.profile-editor {
-  margin-top: 16px;
-
-  padding: 20px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 20px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow);
-}
-
-
-.editor-title {
-  margin-bottom: 18px;
-
-  font-size: 18px;
-  font-weight: 900;
-}
-
-
-.editor-actions {
-  display: flex;
-
-  gap: 10px;
-
-  margin-top: 6px;
-}
-
-
-.editor-actions .primary-btn {
-  flex: 1;
-}
-
-
-.editor-actions .secondary-btn {
-  flex: 0 0 auto;
-}
-
-
-.danger-btn {
-  width: 100%;
-
-  min-height: 46px;
-
-  margin-top: 18px;
-
-  border-radius: 13px;
-
-  background: rgba(231, 76, 60, 0.10);
-
-  color: var(--red);
-
-  font-weight: 800;
-
-  transition:
-    background 0.18s ease,
-    transform 0.18s ease;
-}
-
-
-.danger-btn:hover {
-  background: rgba(231, 76, 60, 0.16);
-}
-
-
-.danger-btn:active {
-  transform: scale(0.98);
-}
-
-
-/* =========================================================
-   10. BOTTOM NAV
-   ========================================================= */
-
-.bottom-nav {
-  position: fixed;
-
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  z-index: 50;
-
-  height:
-    calc(
-      var(--bottom-nav-height)
-      + env(safe-area-inset-bottom)
-    );
-
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-
-  padding:
-    8px
-    12px
-    env(safe-area-inset-bottom);
-
-  background: rgba(255, 255, 255, 0.94);
-
-  border-top: 1px solid var(--border);
-
-  backdrop-filter: blur(18px);
-}
-
-
-.nav-btn {
-  flex: 1;
-
-  max-width: 150px;
-
-  height: 56px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  gap: 3px;
-
-  border-radius: 14px;
-
-  background: transparent;
-
-  color: var(--text-light);
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-
-.nav-btn.active {
-  background: var(--primary-light);
-
-  color: var(--primary);
-}
-
-
-.nav-btn:hover {
-  color: var(--primary);
-}
-
-
-.nav-btn:active {
-  transform: scale(0.96);
-}
-
-
-.nav-icon {
-  font-size: 19px;
-
-  line-height: 1;
-}
-
-
-.nav-label {
-  font-size: 10px;
-  font-weight: 800;
-}
-
-
-/* =========================================================
-   11. CHAT MODAL
-   ========================================================= */
-
-.modal {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 100;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background:
-    rgba(16, 15, 30, 0.55);
-
-  backdrop-filter: blur(8px);
-
-  padding: 14px;
-}
-
-
-.chat-window {
-  width: 100%;
-  max-width: 760px;
-
-  height: min(
-    90vh,
-    760px
+// ============================================================
+// QEVIRA
+// FILE 3 — app.js
+// ============================================================
+// REAL SUPABASE AUTH
+// REAL PROFILES
+// REAL 1-TO-1 REALTIME MESSAGING
+// REAL WEBRTC VOICE + VIDEO CALLING
+// SEARCH
+// DARK MODE
+// STATUS / DAILY / QUIZ UI FOUNDATION
+// NOTIFICATIONS
+// ============================================================
+
+
+// ============================================================
+// 1. SUPABASE CONFIG
+// ============================================================
+
+const SUPABASE_URL =
+  "https://wcdywnkxtuexjbjgerzd.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
   );
 
-  display: flex;
-  flex-direction: column;
 
-  overflow: hidden;
+// ============================================================
+// 2. GLOBAL STATE
+// ============================================================
 
-  border-radius: 24px;
+let currentUser = null;
+let currentProfile = null;
+let currentChatUser = null;
 
-  background: var(--surface);
+let authSubscription = null;
 
-  box-shadow: var(--shadow-lg);
+let messagesChannel = null;
+let profileChannel = null;
+
+let callInboxChannel = null;
+let callPairChannel = null;
+
+let peerConnection = null;
+
+let localStream = null;
+let remoteStream = null;
+
+let pendingIceCandidates = [];
+
+let activeCallPeerId = null;
+let activeCallRole = null;
+let activeCallType = null;
+
+let incomingCallData = null;
+
+let activeCallAccepted = false;
+
+let isMuted = false;
+let isCameraOff = false;
+
+let allContacts = [];
+let allChats = [];
+
+let currentMessages = [];
+
+let currentDailyCategory = "india";
+
+let quizMode = null;
+let quizClass = null;
+let quizSubject = null;
+
+let darkModeEnabled = false;
+
+
+// ============================================================
+// 3. WEBRTC CONFIGURATION
+// ============================================================
+
+const rtcConfiguration = {
+
+  iceServers: [
+
+    {
+      urls: "stun:stun.l.google.com:19302"
+    },
+
+    {
+      urls: "stun:stun1.l.google.com:19302"
+    }
+
+  ]
+
+};
+
+
+// ============================================================
+// 4. DOM HELPERS
+// ============================================================
+
+function $(id) {
+  return document.getElementById(id);
 }
 
 
-/* =========================================================
-   12. CHAT HEADER
-   ========================================================= */
+const authScreen = $("authScreen");
+const app = $("app");
 
-.chat-header {
-  min-height: 68px;
+const signupForm = $("signupForm");
+const loginForm = $("loginForm");
 
-  display: flex;
-  align-items: center;
+const signupEmail = $("signupEmail");
+const signupPassword = $("signupPassword");
 
-  gap: 10px;
+const loginEmail = $("loginEmail");
+const loginPassword = $("loginPassword");
 
-  padding: 9px 12px;
+const signupBtn = $("signupBtn");
+const loginBtn = $("loginBtn");
 
-  border-bottom:
-    1px solid var(--border);
+const switchAuthBtn = $("switchAuthBtn");
+const authMessage = $("authMessage");
 
-  background: var(--surface);
+const notificationBtn = $("notificationBtn");
+const darkModeBtn = $("darkModeBtn");
 
-  flex-shrink: 0;
-}
+const notificationPanel = $("notificationPanel");
+const notificationTitle = $("notificationTitle");
+const closeNotificationBtn = $("closeNotificationBtn");
+const notificationList = $("notificationList");
 
+const chatsPage = $("chatsPage");
+const contactsPage = $("contactsPage");
+const statusPage = $("statusPage");
+const dailyPage = $("dailyPage");
+const quizPage = $("quizPage");
+const profilePage = $("profilePage");
 
-.chat-header-info {
-  min-width: 0;
+const chatsNavBtn = $("chatsNavBtn");
+const statusNavBtn = $("statusNavBtn");
+const contactsNavBtn = $("contactsNavBtn");
+const dailyNavBtn = $("dailyNavBtn");
+const profileNavBtn = $("profileNavBtn");
 
-  flex: 1;
-}
+const newChatBtn = $("newChatBtn");
+const searchInput = $("searchInput");
 
+const chatList = $("chatList");
+const chatEmpty = $("chatEmpty");
 
-.chat-header-info h3 {
-  overflow: hidden;
+const contactsSearchInput = $("contactsSearchInput");
+const contactsList = $("contactsList");
 
-  font-size: 15px;
-  font-weight: 900;
+const createStatusBtn = $("createStatusBtn");
+const myStatus = $("myStatus");
+const statusList = $("statusList");
 
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+const dailyCategories = $("dailyCategories");
+const dailyList = $("dailyList");
 
+const quizStart = $("quizStart");
+const quizContent = $("quizContent");
 
-.chat-header-info span {
-  display: block;
+const profileAvatar = $("profileAvatar");
+const profileName = $("profileName");
+const profileUsername = $("profileUsername");
+const profileEmail = $("profileEmail");
+const profileOnlineStatus = $("profileOnlineStatus");
+const profileBio = $("profileBio");
+const referralCode = $("referralCode");
 
-  margin-top: 3px;
+const editProfileBtn = $("editProfileBtn");
+const profileEdit = $("profileEdit");
 
-  color: var(--text-light);
+const editDisplayName = $("editDisplayName");
+const editUsername = $("editUsername");
+const editBio = $("editBio");
+const editAvatarUrl = $("editAvatarUrl");
 
-  font-size: 11px;
-}
+const saveProfileBtn = $("saveProfileBtn");
+const cancelProfileEditBtn = $("cancelProfileEditBtn");
 
+const logoutBtn = $("logoutBtn");
 
-.chat-actions {
-  display: flex;
-  align-items: center;
+const chatModal = $("chatModal");
+const closeChatModal = $("closeChatModal");
 
-  gap: 2px;
-}
+const chatAvatar = $("chatAvatar");
+const chatTitle = $("chatTitle");
+const chatStatus = $("chatStatus");
 
+const voiceCallBtn = $("voiceCallBtn");
+const videoCallBtn = $("videoCallBtn");
 
-/* =========================================================
-   13. MESSAGES
-   ========================================================= */
+const messagesBox = $("messages");
 
-.messages {
-  flex: 1;
+const messageForm = $("messageForm");
+const messageInput = $("messageInput");
+const sendMessageBtn = $("sendMessageBtn");
 
-  overflow-y: auto;
+const incomingCallOverlay = $("incomingCallOverlay");
+const incomingCallAvatar = $("incomingCallAvatar");
+const incomingCallName = $("incomingCallName");
+const incomingCallType = $("incomingCallType");
 
-  padding: 18px 14px;
+const acceptCallBtn = $("acceptCallBtn");
+const declineCallBtn = $("declineCallBtn");
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(246, 247, 255, 0.85),
-      rgba(255, 255, 255, 0.95)
-    );
+const activeCallOverlay = $("activeCallOverlay");
+const remoteVideo = $("remoteVideo");
+const localVideo = $("localVideo");
 
-  scroll-behavior: smooth;
-}
+const activeCallAvatar = $("activeCallAvatar");
+const activeCallName = $("activeCallName");
+const activeCallStatus = $("activeCallStatus");
 
+const muteCallBtn = $("muteCallBtn");
+const cameraCallBtn = $("cameraCallBtn");
+const endCallBtn = $("endCallBtn");
 
-.messages::-webkit-scrollbar {
-  width: 5px;
-}
 
+// ============================================================
+// 5. BASIC HELPERS
+// ============================================================
 
-.messages::-webkit-scrollbar-thumb {
-  border-radius: 20px;
+function escapeHtml(value) {
 
-  background: rgba(108, 92, 231, 0.20);
-}
-
-
-.message-row {
-  width: 100%;
-
-  display: flex;
-
-  margin-bottom: 8px;
-}
-
-
-.message-row.mine {
-  justify-content: flex-end;
-}
-
-
-.message-row.theirs {
-  justify-content: flex-start;
-}
-
-
-.message-bubble {
-  max-width: min(76%, 520px);
-
-  padding: 9px 12px 7px;
-
-  border-radius: 17px;
-
-  background: var(--surface);
-
-  border:
-    1px solid var(--border);
-
-  box-shadow: var(--shadow-sm);
-}
-
-
-.message-row.mine .message-bubble {
-  border: 0;
-
-  border-bottom-right-radius: 5px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--primary-dark)
-    );
-
-  color: white;
-}
-
-
-.message-row.theirs .message-bubble {
-  border-bottom-left-radius: 5px;
-}
-
-
-.message-text {
-  font-size: 14px;
-
-  line-height: 1.45;
-
-  white-space: pre-wrap;
-
-  overflow-wrap: anywhere;
-}
-
-
-.message-time {
-  margin-top: 4px;
-
-  text-align: right;
-
-  color: var(--text-muted);
-
-  font-size: 9px;
-}
-
-
-.message-row.mine .message-time {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-
-/* =========================================================
-   14. MESSAGE FORM
-   ========================================================= */
-
-.message-form {
-  display: flex;
-  align-items: center;
-
-  gap: 9px;
-
-  padding: 10px;
-
-  border-top:
-    1px solid var(--border);
-
-  background: var(--surface);
-
-  flex-shrink: 0;
-}
-
-
-.message-form input {
-  flex: 1;
-
-  min-width: 0;
-
-  height: 44px;
-
-  padding: 0 14px;
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 14px;
-
-  background: var(--surface-2);
-
-  color: var(--text);
-
-  font-size: 14px;
-}
-
-
-.message-form input:focus {
-  border-color: var(--primary);
-
-  box-shadow:
-    0 0 0 3px rgba(108, 92, 231, 0.08);
-}
-
-
-.send-btn {
-  width: 44px;
-  height: 44px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 14px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 18px;
-
-  box-shadow:
-    0 7px 18px rgba(108, 92, 231, 0.22);
-
-  transition:
-    transform 0.18s ease;
-}
-
-
-.send-btn:hover {
-  transform: translateY(-1px);
-}
-
-
-.send-btn:active {
-  transform: scale(0.94);
-}
-
-
-/* =========================================================
-   15. CALL OVERLAY
-   ========================================================= */
-
-.call-overlay {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 200;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background:
-    rgba(10, 10, 20, 0.78);
-
-  backdrop-filter: blur(12px);
-}
-
-
-.incoming-call-card {
-  width: 100%;
-  max-width: 360px;
-
-  padding: 32px 24px;
-
-  text-align: center;
-
-  border-radius: 28px;
-
-  background: var(--surface);
-
-  box-shadow: var(--shadow-lg);
-}
-
-
-.call-pulse {
-  width: 110px;
-  height: 110px;
-
-  margin: 0 auto 20px;
-
-  padding: 8px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background:
-    rgba(108, 92, 231, 0.12);
-
-  animation:
-    callPulse 1.6s infinite;
-}
-
-
-@keyframes callPulse {
-
-  0% {
-    transform: scale(0.92);
-
-    box-shadow:
-      0 0 0 0 rgba(108, 92, 231, 0.25);
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
   }
 
-  70% {
-    transform: scale(1);
-
-    box-shadow:
-      0 0 0 18px rgba(108, 92, 231, 0);
-  }
-
-  100% {
-    transform: scale(0.92);
-
-    box-shadow:
-      0 0 0 0 rgba(108, 92, 231, 0);
-  }
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 }
 
 
-.call-avatar {
-  width: 92px;
-  height: 92px;
+function getInitial(name) {
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  const text =
+    String(name || "Q").trim();
 
-  overflow: hidden;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--primary),
-      var(--pink)
-    );
-
-  color: white;
-
-  font-size: 32px;
-  font-weight: 900;
-}
-
-
-.incoming-call-card h2 {
-  margin-bottom: 6px;
-
-  font-size: 22px;
-  font-weight: 900;
-}
-
-
-.incoming-call-card p {
-  color: var(--text-light);
-
-  font-size: 13px;
-}
-
-
-.call-actions {
-  display: flex;
-  justify-content: center;
-
-  gap: 30px;
-
-  margin-top: 26px;
-}
-
-
-.accept-call-btn,
-.decline-call-btn {
-  width: 58px;
-  height: 58px;
-
-  border-radius: 50%;
-
-  color: white;
-
-  font-size: 22px;
-
-  box-shadow: var(--shadow);
-
-  transition:
-    transform 0.18s ease;
-}
-
-
-.accept-call-btn {
-  background: var(--green);
-}
-
-
-.decline-call-btn {
-  background: var(--red);
-}
-
-
-.accept-call-btn:hover,
-.decline-call-btn:hover {
-  transform: scale(1.06);
-}
-
-
-.accept-call-btn:active,
-.decline-call-btn:active {
-  transform: scale(0.94);
-}
-
-
-/* =========================================================
-   16. ACTIVE CALL
-   ========================================================= */
-
-.active-call-screen {
-  position: relative;
-
-  width: 100%;
-  max-width: 1000px;
-
-  height: min(
-    90vh,
-    760px
+  return (
+    text.charAt(0).toUpperCase() ||
+    "Q"
   );
 
-  overflow: hidden;
-
-  border-radius: 28px;
-
-  background: #111;
-
-  box-shadow: var(--shadow-lg);
 }
 
 
-.remote-video {
-  position: absolute;
+function getDisplayName(profile) {
 
-  inset: 0;
+  if (!profile) {
+    return "QEVIRA User";
+  }
 
-  width: 100%;
-  height: 100%;
+  return (
+    profile.display_name ||
+    profile.username ||
+    "QEVIRA User"
+  );
 
-  object-fit: cover;
-
-  background: #111;
 }
 
 
-.local-video {
-  position: absolute;
+function getUsername(profile) {
 
-  right: 18px;
-  top: 18px;
+  if (!profile) {
+    return "";
+  }
 
-  width: 110px;
-  height: 150px;
+  return profile.username
+    ? `@${profile.username}`
+    : "";
 
-  object-fit: cover;
-
-  border-radius: 16px;
-
-  background: #222;
-
-  border:
-    2px solid rgba(255, 255, 255, 0.65);
-
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.35);
 }
 
 
-.active-call-info {
-  position: absolute;
+function getAvatar(profile) {
 
-  left: 0;
-  right: 0;
-  top: 30px;
+  if (!profile) {
+    return "";
+  }
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  return (
+    profile.avatar_url ||
+    profile.photo_url ||
+    ""
+  );
 
-  text-align: center;
-
-  color: white;
-
-  pointer-events: none;
-
-  text-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 
-.active-call-info .call-avatar {
-  width: 76px;
-  height: 76px;
+function formatTime(dateValue) {
 
-  margin-bottom: 10px;
+  if (!dateValue) {
+    return "";
+  }
 
-  border:
-    2px solid rgba(255, 255, 255, 0.75);
+  const date =
+    new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
+
 }
 
 
-.active-call-info h2 {
-  font-size: 21px;
-  font-weight: 900;
+function formatDate(dateValue) {
+
+  if (!dateValue) {
+    return "";
+  }
+
+  const date =
+    new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleDateString(
+    [],
+    {
+      day: "2-digit",
+      month: "short"
+    }
+  );
+
 }
 
 
-.active-call-info p {
-  margin-top: 4px;
+function getPairId(userA, userB) {
 
-  font-size: 12px;
+  return [
+    String(userA),
+    String(userB)
+  ]
+    .sort()
+    .join("-");
 
-  opacity: 0.85;
 }
 
 
-.active-call-controls {
-  position: absolute;
+function getCallInboxName(userId) {
 
-  left: 0;
-  right: 0;
-  bottom: 26px;
+  return `qevira-call-inbox-${userId}`;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 16px;
 }
 
 
-.call-control-btn,
-.end-call-btn {
-  width: 54px;
-  height: 54px;
+function getCallPairName(userA, userB) {
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  return `qevira-call-${getPairId(userA, userB)}`;
 
-  border-radius: 50%;
-
-  color: white;
-
-  font-size: 19px;
-
-  background:
-    rgba(255, 255, 255, 0.17);
-
-  border:
-    1px solid rgba(255, 255, 255, 0.22);
-
-  backdrop-filter: blur(10px);
-
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease;
 }
 
 
-.call-control-btn:hover {
-  background:
-    rgba(255, 255, 255, 0.25);
+function setAuthMessage(
+  message,
+  isError = false
+) {
 
-  transform: translateY(-2px);
+  if (!authMessage) {
+    return;
+  }
+
+  authMessage.textContent =
+    message || "";
+
+  authMessage.style.color =
+    isError
+      ? "#e74c3c"
+      : "#00b894";
+
 }
 
 
-.end-call-btn {
-  width: 62px;
-  height: 62px;
+function showApp() {
 
-  background: var(--red);
+  authScreen?.classList.add("hidden");
+  app?.classList.remove("hidden");
 
-  transform: rotate(135deg);
 }
 
 
-.end-call-btn:hover {
-  transform:
-    rotate(135deg)
-    scale(1.06);
+function showAuth() {
+
+  app?.classList.add("hidden");
+  authScreen?.classList.remove("hidden");
+
 }
 
 
-/* =========================================================
-   17. DARK MODE
-   ========================================================= */
+function safeClick(element, callback) {
 
-body.dark-mode {
+  if (!element) {
+    return;
+  }
 
-  --background: #10111a;
-  --surface: #181a27;
-  --surface-2: #202231;
+  element.addEventListener(
+    "click",
+    callback
+  );
 
-  --text: #f5f5f7;
-  --text-light: #a8acbb;
-  --text-muted: #777c8d;
-
-  --border: #2a2d3d;
-
-  --primary-light: #292449;
 }
 
 
-body.dark-mode .topbar {
-  background:
-    rgba(24, 26, 39, 0.92);
-}
+// ============================================================
+// 6. AUTH MODE SWITCH
+// ============================================================
 
+safeClick(
+  switchAuthBtn,
+  () => {
 
-body.dark-mode .bottom-nav {
-  background:
-    rgba(24, 26, 39, 0.94);
-}
-
-
-body.dark-mode .chat-item:hover,
-body.dark-mode .contact-item:hover {
-  background: #1e2030;
-}
-
-
-body.dark-mode .messages {
-  background:
-    linear-gradient(
-      180deg,
-      #12131d,
-      #171923
+    signupForm?.classList.toggle(
+      "hidden"
     );
-}
 
+    loginForm?.classList.toggle(
+      "hidden"
+    );
 
-body.dark-mode .message-row.theirs .message-bubble {
-  background: #202231;
-}
+    setAuthMessage("");
 
+    if (
+      loginForm &&
+      !loginForm.classList.contains(
+        "hidden"
+      )
+    ) {
 
-body.dark-mode .message-form input {
-  background: #202231;
-}
+      switchAuthBtn.textContent =
+        "Don't have an account? Sign up";
 
+    } else {
 
-body.dark-mode .auth-card {
-  background:
-    rgba(24, 26, 39, 0.96);
-
-  border-color:
-    rgba(255, 255, 255, 0.06);
-}
-
-
-body.dark-mode .auth-screen {
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(108, 92, 231, 0.18),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(253, 121, 168, 0.12),
-      transparent 35%
-    ),
-    var(--background);
-}
-
-
-/* =========================================================
-   18. SCROLLBAR
-   ========================================================= */
-
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-
-::-webkit-scrollbar-thumb {
-  border-radius: 20px;
-
-  background:
-    rgba(108, 92, 231, 0.20);
-}
-
-
-::-webkit-scrollbar-thumb:hover {
-  background:
-    rgba(108, 92, 231, 0.35);
-}
-
-
-/* =========================================================
-   19. SELECTION
-   ========================================================= */
-
-::selection {
-  background: rgba(108, 92, 231, 0.22);
-
-  color: var(--text);
-}
-
-
-/* =========================================================
-   20. FOCUS ACCESSIBILITY
-   ========================================================= */
-
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline:
-    3px solid rgba(108, 92, 231, 0.28);
-
-  outline-offset: 2px;
-}
-
-
-/* =========================================================
-   21. MOBILE
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .auth-screen {
-    padding: 16px;
-  }
-
-
-  .auth-card {
-    padding: 28px 20px;
-
-    border-radius: 24px;
-  }
-
-
-  .auth-logo {
-    width: 68px;
-    height: 68px;
-
-    border-radius: 21px;
-
-    font-size: 34px;
-  }
-
-
-  .auth-card h1 {
-    font-size: 29px;
-  }
-
-
-  .page-container {
-    padding:
-      18px
-      14px
-      calc(
-        var(--bottom-nav-height)
-        + 28px
-      );
-  }
-
-
-  .page-header h2 {
-    font-size: 23px;
-  }
-
-
-  .topbar {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-
-  .brand-name {
-    font-size: 18px;
-  }
-
-
-  .chat-window {
-    width: 100%;
-    height: 100%;
-
-    max-height: none;
-
-    border-radius: 0;
-  }
-
-
-  .modal {
-    padding: 0;
-  }
-
-
-  .message-bubble {
-    max-width: 82%;
-  }
-
-
-  .profile-card {
-    padding: 18px;
-
-    gap: 14px;
-  }
-
-
-  .profile-avatar {
-    width: 70px;
-    height: 70px;
-
-    border-radius: 22px;
-
-    font-size: 27px;
-  }
-
-
-  .profile-main-info h2 {
-    font-size: 18px;
-  }
-
-
-  .editor-actions {
-    flex-direction: column;
-  }
-
-
-  .editor-actions .secondary-btn {
-    width: 100%;
-  }
-
-
-  .active-call-screen {
-    width: 100%;
-    height: 100%;
-
-    border-radius: 0;
-  }
-
-
-  .local-video {
-    width: 92px;
-    height: 125px;
-
-    right: 12px;
-    top: 12px;
-  }
-
-
-  .active-call-controls {
-    bottom:
-      calc(
-        20px
-        + env(safe-area-inset-bottom)
-      );
-  }
-
-}
-
-
-/* =========================================================
-   22. SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 380px) {
-
-  .page-container {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-
-  .chat-item,
-  .contact-item {
-    padding: 11px;
-  }
-
-
-  .chat-avatar,
-  .contact-avatar {
-    width: 46px;
-    height: 46px;
-  }
-
-
-  .message-bubble {
-    max-width: 88%;
-  }
-
-
-  .nav-btn {
-    max-width: none;
-  }
-
-}
-
-
-/* =========================================================
-   23. LANDSCAPE MOBILE
-   ========================================================= */
-
-@media (
-  max-height: 500px
-) and (
-  orientation: landscape
-) {
-
-  .auth-screen {
-    align-items: flex-start;
-
-    overflow-y: auto;
-  }
-
-
-  .auth-card {
-    margin: 20px auto;
-  }
-
-
-  .chat-window {
-    height: 100vh;
-  }
-
-
-  .active-call-screen {
-    height: 100vh;
-  }
-
-}
-
-
-/* =========================================================
-   24. REDUCED MOTION
-   ========================================================= */
-
-@media (
-  prefers-reduced-motion: reduce
-) {
-
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-
-    transition-duration: 0.01ms !important;
-  }
+      switchAuthBtn.textContent =
+        "Already have an account? Login";
 
     }
+
+  }
+);
+
+
+// ============================================================
+// 7. SIGN UP
+// ============================================================
+
+signupForm?.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const email =
+      signupEmail?.value
+        ?.trim();
+
+    const password =
+      signupPassword?.value || "";
+
+    if (!email || !password) {
+
+      setAuthMessage(
+        "Please enter email and password.",
+        true
+      );
+
+      return;
+    }
+
+    if (password.length < 6) {
+
+      setAuthMessage(
+        "Password must be at least 6 characters.",
+        true
+      );
+
+      return;
+    }
+
+    if (signupBtn) {
+
+      signupBtn.disabled = true;
+
+      signupBtn.textContent =
+        "Creating account...";
+
+    }
+
+    setAuthMessage("");
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.signUp({
+          email,
+          password
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      signupPassword.value = "";
+
+      if (
+        data?.session &&
+        data?.user
+      ) {
+
+        await startApp(
+          data.user
+        );
+
+        return;
+      }
+
+      setAuthMessage(
+        "Account created! Check your email, confirm your account, then login."
+      );
+
+      signupForm?.classList.add(
+        "hidden"
+      );
+
+      loginForm?.classList.remove(
+        "hidden"
+      );
+
+      if (switchAuthBtn) {
+
+        switchAuthBtn.textContent =
+          "Don't have an account? Sign up";
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "QEVIRA signup error:",
+        error
+      );
+
+      setAuthMessage(
+        error?.message ||
+        "Signup failed.",
+        true
+      );
+
+    } finally {
+
+      if (signupBtn) {
+
+        signupBtn.disabled = false;
+
+        signupBtn.textContent =
+          "Create Account";
+
+      }
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// 8. LOGIN
+// ============================================================
+
+loginForm?.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const email =
+      loginEmail?.value
+        ?.trim();
+
+    const password =
+      loginPassword?.value || "";
+
+    if (!email || !password) {
+
+      setAuthMessage(
+        "Please enter email and password.",
+        true
+      );
+
+      return;
+    }
+
+    if (loginBtn) {
+
+      loginBtn.disabled = true;
+
+      loginBtn.textContent =
+        "Logging in...";
+
+    }
+
+    setAuthMessage("");
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.user) {
+
+        throw new Error(
+          "No user returned from Supabase."
+        );
+
+      }
+
+      await startApp(
+        data.user
+      );
+
+    } catch (error) {
+
+      console.error(
+        "QEVIRA login error:",
+        error
+      );
+
+      setAuthMessage(
+        error?.message ||
+        "Login failed.",
+        true
+      );
+
+    } finally {
+
+      if (loginBtn) {
+
+        loginBtn.disabled = false;
+
+        loginBtn.textContent =
+          "Login";
+
+      }
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// 9. AUTH SESSION
+// ============================================================
+
+async function restoreSession() {
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth
+        .getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    if (data?.session?.user) {
+
+      await startApp(
+        data.session.user
+      );
+
+    } else {
+
+      showAuth();
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Session restore error:",
+      error
+    );
+
+    showAuth();
+
+  }
+
+}
+
+
+async function setupAuthListener() {
+
+  const result =
+    await supabaseClient.auth
+      .onAuthStateChange(
+        async (
+          event,
+          session
+        ) => {
+
+          console.log(
+            "QEVIRA AUTH EVENT:",
+            event
+          );
+
+          if (
+            event === "SIGNED_IN" &&
+            session?.user
+          ) {
+
+            if (
+              !currentUser ||
+              currentUser.id !==
+                session.user.id
+            ) {
+
+              await startApp(
+                session.user
+              );
+
+            }
+
+          }
+
+          if (
+            event === "SIGNED_OUT"
+          ) {
+
+            await cleanupApp();
+
+            showAuth();
+
+          }
+
+        }
+      );
+
+    authSubscription =
+      result?.data?.subscription ||
+      null;
+
+}
+
+
+// ============================================================
+// 10. PROFILE
+// ============================================================
+
+async function ensureProfile() {
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+  if (error) {
+
+    console.error(
+      "Profile lookup error:",
+      error
+    );
+
+    return null;
+  }
+
+  if (data) {
+
+    currentProfile = data;
+
+    return data;
+  }
+
+  const usernameBase =
+    (
+      currentUser.email
+        ?.split("@")[0] ||
+      "user"
+    )
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9_]/g,
+        ""
+      )
+      .slice(0, 20);
+
+  const username =
+    usernameBase ||
+    `user${Date.now()
+      .toString()
+      .slice(-6)}`;
+
+  const newProfile = {
+
+    id: currentUser.id,
+
+    display_name:
+      usernameBase || "QEVIRA User",
+
+    username,
+
+    bio: "",
+
+    avatar_url: "",
+
+    updated_at:
+      new Date().toISOString()
+
+  };
+
+  const {
+    data: created,
+    error: createError
+  } =
+    await supabaseClient
+      .from("profiles")
+      .insert(newProfile)
+      .select("*")
+      .single();
+
+  if (createError) {
+
+    console.error(
+      "Profile creation error:",
+      createError
+    );
+
+    return null;
+  }
+
+  currentProfile =
+    created;
+
+  return created;
+
+}
+
+
+async function loadProfile() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+  if (error) {
+
+    console.error(
+      "loadProfile:",
+      error
+    );
+
+    return;
+  }
+
+  if (data) {
+
+    currentProfile =
+      data;
+
+    renderProfile();
+
+  }
+
+}
+
+
+function renderProfile() {
+
+  const profile =
+    currentProfile;
+
+  if (!profile) {
+    return;
+  }
+
+  const name =
+    getDisplayName(profile);
+
+  const username =
+    getUsername(profile);
+
+  const avatar =
+    getAvatar(profile);
+
+  if (profileName) {
+
+    profileName.textContent =
+      name;
+
+  }
+
+  if (profileUsername) {
+
+    profileUsername.textContent =
+      username;
+
+  }
+
+  if (profileEmail) {
+
+    profileEmail.textContent =
+      currentUser?.email || "";
+
+  }
+
+  if (profileBio) {
+
+    profileBio.textContent =
+      profile.bio ||
+      "No bio added yet.";
+
+  }
+
+  if (profileOnlineStatus) {
+
+    profileOnlineStatus.textContent =
+      "● Online";
+
+  }
+
+  if (profileAvatar) {
+
+    if (avatar) {
+
+      profileAvatar.innerHTML =
+        `<img src="${escapeHtml(
+          avatar
+        )}" alt="Profile photo">`;
+
+    } else {
+
+      profileAvatar.textContent =
+        getInitial(name);
+
+    }
+
+  }
+
+  if (referralCode) {
+
+    referralCode.textContent =
+      profile.referral_code ||
+      generateReferralCode(
+        currentUser?.id
+      );
+
+  }
+
+}
+
+
+function generateReferralCode(userId) {
+
+  if (!userId) {
+    return "QEVIRA";
+  }
+
+  return (
+    "QEV-" +
+    userId
+      .replace(/-/g, "")
+      .slice(0, 8)
+      .toUpperCase()
+  );
+
+}
+
+
+async function updateProfile() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const displayName =
+    editDisplayName?.value
+      ?.trim() || "";
+
+  const username =
+    editUsername?.value
+      ?.trim()
+      .toLowerCase() || "";
+
+  const bio =
+    editBio?.value
+      ?.trim() || "";
+
+  const avatarUrl =
+    editAvatarUrl?.value
+      ?.trim() || "";
+
+  if (!displayName) {
+
+    alert(
+      "Please enter a display name."
+    );
+
+    return;
+  }
+
+  const updates = {
+
+    display_name:
+      displayName,
+
+    username:
+      username || null,
+
+    bio,
+
+    avatar_url:
+      avatarUrl,
+
+    updated_at:
+      new Date().toISOString()
+
+  };
+
+  if (saveProfileBtn) {
+
+    saveProfileBtn.disabled =
+      true;
+
+    saveProfileBtn.textContent =
+      "Saving...";
+
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUser.id)
+        .select("*")
+        .single();
+
+    if (error) {
+      throw error;
+    }
+
+    currentProfile =
+      data;
+
+    renderProfile();
+
+    profileEdit?.classList.add(
+      "hidden"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Profile update:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Could not update profile."
+    );
+
+  } finally {
+
+    if (saveProfileBtn) {
+
+      saveProfileBtn.disabled =
+        false;
+
+      saveProfileBtn.textContent =
+        "Save Profile";
+
+    }
+
+  }
+
+}
+
+
+safeClick(
+  editProfileBtn,
+  () => {
+
+    if (!currentProfile) {
+      return;
+    }
+
+    profileEdit?.classList.remove(
+      "hidden"
+    );
+
+    if (editDisplayName) {
+
+      editDisplayName.value =
+        currentProfile.display_name ||
+        "";
+
+    }
+
+    if (editUsername) {
+
+      editUsername.value =
+        currentProfile.username ||
+        "";
+
+    }
+
+    if (editBio) {
+
+      editBio.value =
+        currentProfile.bio ||
+        "";
+
+    }
+
+    if (editAvatarUrl) {
+
+      editAvatarUrl.value =
+        currentProfile.avatar_url ||
+        "";
+
+    }
+
+  }
+);
+
+
+safeClick(
+  cancelProfileEditBtn,
+  () => {
+
+    profileEdit?.classList.add(
+      "hidden"
+    );
+
+  }
+);
+
+
+safeClick(
+  saveProfileBtn,
+  updateProfile
+);
+
+
+// ============================================================
+// 11. CONTACTS
+// ============================================================
+
+async function loadContacts() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .neq("id", currentUser.id)
+      .order(
+        "display_name",
+        {
+          ascending: true
+        }
+      );
+
+  if (error) {
+
+    console.error(
+      "Contacts error:",
+      error
+    );
+
+    renderContacts([]);
+
+    return;
+  }
+
+  allContacts =
+    data || [];
+
+  renderContacts(
+    allContacts
+  );
+
+}
+
+
+function renderContacts(
+  contacts
+) {
+
+  if (!contactsList) {
+    return;
+  }
+
+  if (!contacts.length) {
+
+    contactsList.innerHTML =
+      `<div class="empty-state">
+        No users found yet.
+      </div>`;
+
+    return;
+  }
+
+  contactsList.innerHTML =
+    contacts
+      .map(user => {
+
+        const name =
+          getDisplayName(user);
+
+        const avatar =
+          getAvatar(user);
+
+        const avatarHtml =
+          avatar
+            ? `<img src="${escapeHtml(
+                avatar
+              )}" alt="">`
+            : escapeHtml(
+                getInitial(name)
+              );
+
+        return `
+          <button
+            class="contact-item"
+            data-user-id="${escapeHtml(
+              user.id
+            )}"
+          >
+            <div class="avatar">
+              ${avatarHtml}
+            </div>
+
+            <div class="contact-info">
+              <strong>
+                ${escapeHtml(name)}
+              </strong>
+
+              <span>
+                ${escapeHtml(
+                  getUsername(user)
+                )}
+              </span>
+            </div>
+
+            <span class="online-dot">
+              ●
+            </span>
+          </button>
+        `;
+
+      })
+      .join("");
+
+  contactsList
+    .querySelectorAll(
+      "[data-user-id]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const user =
+            allContacts.find(
+              item =>
+                item.id ===
+                button.dataset.userId
+            );
+
+          if (user) {
+
+            await openChat(
+              user
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+contactsSearchInput?.addEventListener(
+  "input",
+  () => {
+
+    const query =
+      contactsSearchInput.value
+        .trim()
+        .toLowerCase();
+
+    const filtered =
+      allContacts.filter(
+        user => {
+
+          const name =
+            String(
+              user.display_name ||
+              ""
+            ).toLowerCase();
+
+          const username =
+            String(
+              user.username ||
+              ""
+            ).toLowerCase();
+
+          return (
+            name.includes(query) ||
+            username.includes(query)
+          );
+
+        }
+      );
+
+    renderContacts(
+      filtered
+    );
+
+  }
+);
+
+
+// ============================================================
+// 12. CHATS
+// ============================================================
+
+async function loadChats() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("messages")
+        .select("*")
+        .or(
+          `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    const map =
+      new Map();
+
+    for (const message of data || []) {
+
+      const otherId =
+        message.sender_id ===
+        currentUser.id
+          ? message.receiver_id
+          : message.sender_id;
+
+      if (
+        otherId &&
+        !map.has(otherId)
+      ) {
+
+        map.set(
+          otherId,
+          message
+        );
+
+      }
+
+    }
+
+    const ids =
+      [...map.keys()];
+
+    if (!ids.length) {
+
+      allChats = [];
+
+      renderChats([]);
+
+      return;
+    }
+
+    const {
+      data: profiles,
+      error: profilesError
+    } =
+      await supabaseClient
+        .from("profiles")
+        .select("*")
+        .in(
+          "id",
+          ids
+        );
+
+    if (profilesError) {
+      throw profilesError;
+    }
+
+    const profileMap =
+      new Map(
+        (profiles || [])
+          .map(
+            profile =>
+              [
+                profile.id,
+                profile
+              ]
+          )
+      );
+
+    allChats =
+      ids
+        .map(id => {
+
+          const profile =
+            profileMap.get(id);
+
+          const last =
+            map.get(id);
+
+          if (!profile) {
+            return null;
+          }
+
+          return {
+
+            ...profile,
+
+            last_message:
+              last?.body || "",
+
+            last_message_at:
+              last?.created_at || ""
+
+          };
+
+        })
+        .filter(Boolean);
+
+    renderChats(
+      allChats
+    );
+
+  } catch (error) {
+
+    console.error(
+      "loadChats:",
+      error
+    );
+
+    renderChats([]);
+
+  }
+
+}
+
+
+function renderChats(
+  chats
+) {
+
+  if (!chatList) {
+    return;
+  }
+
+  if (!chats.length) {
+
+    chatList.innerHTML = "";
+
+    chatEmpty?.classList.remove(
+      "hidden"
+    );
+
+    return;
+  }
+
+  chatEmpty?.classList.add(
+    "hidden"
+  );
+
+  chatList.innerHTML =
+    chats
+      .map(user => {
+
+        const name =
+          getDisplayName(user);
+
+        const avatar =
+          getAvatar(user);
+
+        const avatarHtml =
+          avatar
+            ? `<img src="${escapeHtml(
+                avatar
+              )}" alt="">`
+            : escapeHtml(
+                getInitial(name)
+              );
+
+        return `
+          <button
+            class="chat-item"
+            data-chat-user-id="${escapeHtml(
+              user.id
+            )}"
+          >
+
+            <div class="avatar">
+              ${avatarHtml}
+            </div>
+
+            <div class="chat-item-info">
+
+              <div class="chat-item-top">
+                <strong>
+                  ${escapeHtml(name)}
+                </strong>
+
+                <span>
+                  ${escapeHtml(
+                    formatTime(
+                      user.last_message_at
+                    )
+                  )}
+                </span>
+              </div>
+
+              <div class="chat-item-bottom">
+
+                <span>
+                  ${escapeHtml(
+                    user.last_message ||
+                    "Start chatting"
+                  )}
+                </span>
+
+              </div>
+
+            </div>
+
+          </button>
+        `;
+
+      })
+      .join("");
+
+  chatList
+    .querySelectorAll(
+      "[data-chat-user-id]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const user =
+            allChats.find(
+              item =>
+                item.id ===
+                button.dataset.chatUserId
+            );
+
+          if (user) {
+
+            await openChat(
+              user
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+searchInput?.addEventListener(
+  "input",
+  () => {
+
+    const query =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+    const filtered =
+      allChats.filter(
+        user => {
+
+          const name =
+            String(
+              user.display_name ||
+              ""
+            ).toLowerCase();
+
+          const username =
+            String(
+              user.username ||
+              ""
+            ).toLowerCase();
+
+          return (
+            name.includes(query) ||
+            username.includes(query)
+          );
+
+        }
+      );
+
+    renderChats(
+      filtered
+    );
+
+  }
+);
+
+
+// ============================================================
+// 13. OPEN CHAT
+// ============================================================
+
+async function openChat(user) {
+
+  if (!user || !currentUser) {
+    return;
+  }
+
+  currentChatUser =
+    user;
+
+  if (chatTitle) {
+
+    chatTitle.textContent =
+      getDisplayName(user);
+
+  }
+
+  if (chatStatus) {
+
+    chatStatus.textContent =
+      "Online";
+
+  }
+
+  if (chatAvatar) {
+
+    const avatar =
+      getAvatar(user);
+
+    if (avatar) {
+
+      chatAvatar.innerHTML =
+        `<img src="${escapeHtml(
+          avatar
+        )}" alt="">`;
+
+    } else {
+
+      chatAvatar.textContent =
+        getInitial(
+          getDisplayName(user)
+        );
+
+    }
+
+  }
+
+  chatModal?.classList.remove(
+    "hidden"
+  );
+
+  await loadMessages(
+    user.id
+  );
+
+  messageInput?.focus();
+
+}
+
+
+safeClick(
+  closeChatModal,
+  () => {
+
+    chatModal?.classList.add(
+      "hidden"
+    );
+
+    currentChatUser = null;
+
+  }
+);
+
+
+// ============================================================
+// 14. LOAD MESSAGES
+// ============================================================
+
+async function loadMessages(
+  otherUserId
+) {
+
+  if (
+    !currentUser ||
+    !otherUserId
+  ) {
+    return;
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    currentMessages =
+      data || [];
+
+    renderMessages(
+      currentMessages
+    );
+
+  } catch (error) {
+
+    console.error(
+      "loadMessages:",
+      error
+    );
+
+    if (messagesBox) {
+
+      messagesBox.innerHTML =
+        `<div class="empty-state">
+          Unable to load messages.
+        </div>`;
+
+    }
+
+  }
+
+}
+
+
+function renderMessages(
+  list
+) {
+
+  if (!messagesBox) {
+    return;
+  }
+
+  if (!list.length) {
+
+    messagesBox.innerHTML =
+      `<div class="empty-state">
+        No messages yet. Say hello 👋
+      </div>`;
+
+    return;
+  }
+
+  messagesBox.innerHTML =
+    list
+      .map(message => {
+
+        const mine =
+          message.sender_id ===
+          currentUser?.id;
+
+        return `
+          <div
+            class="message-row ${
+              mine
+                ? "sent"
+                : "received"
+            }"
+          >
+
+            <div class="message-bubble">
+
+              <div class="message-text">
+                ${escapeHtml(
+                  message.body
+                )}
+              </div>
+
+              <div class="message-time">
+                ${escapeHtml(
+                  formatTime(
+                    message.created_at
+                  )
+                )}
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      })
+      .join("");
+
+  messagesBox.scrollTop =
+    messagesBox.scrollHeight;
+
+}
+
+
+// ============================================================
+// 15. SEND MESSAGE
+// ============================================================
+
+messageForm?.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    if (
+      !currentUser ||
+      !currentChatUser
+    ) {
+      return;
+    }
+
+    const body =
+      messageInput?.value
+        ?.trim();
+
+    if (!body) {
+      return;
+    }
+
+    if (sendMessageBtn) {
+
+      sendMessageBtn.disabled =
+        true;
+
+    }
+
+    try {
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from("messages")
+          .insert({
+
+            sender_id:
+              currentUser.id,
+
+            receiver_id:
+              currentChatUser.id,
+
+            body
+
+          });
+
+      if (error) {
+        throw error;
+      }
+
+      messageInput.value =
+        "";
+
+      await loadMessages(
+        currentChatUser.id
+      );
+
+      await loadChats();
+
+    } catch (error) {
+
+      console.error(
+        "Send message:",
+        error
+      );
+
+      alert(
+        error?.message ||
+        "Message could not be sent."
+      );
+
+    } finally {
+
+      if (sendMessageBtn) {
+
+        sendMessageBtn.disabled =
+          false;
+
+      }
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// 16. REALTIME MESSAGES
+// ============================================================
+
+async function setupRealtimeMessages() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  if (messagesChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          messagesChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  messagesChannel =
+    supabaseClient
+      .channel(
+        `qevira-messages-${currentUser.id}`
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages"
+        },
+        async payload => {
+
+          const message =
+            payload.new;
+
+          if (!message) {
+            return;
+          }
+
+          const relevant =
+            message.sender_id ===
+              currentUser.id ||
+            message.receiver_id ===
+              currentUser.id;
+
+          if (!relevant) {
+            return;
+          }
+
+          if (
+            currentChatUser &&
+            (
+              (
+                message.sender_id ===
+                  currentChatUser.id &&
+                message.receiver_id ===
+                  currentUser.id
+              ) ||
+              (
+                message.sender_id ===
+                  currentUser.id &&
+                message.receiver_id ===
+                  currentChatUser.id
+              )
+            )
+          ) {
+
+            await loadMessages(
+              currentChatUser.id
+            );
+
+          }
+
+          await loadChats();
+
+          if (
+            message.sender_id !==
+            currentUser.id
+          ) {
+
+            showNotification(
+              "New message",
+              "You received a new message."
+            );
+
+          }
+
+        }
+      )
+      .subscribe();
+
+}
+
+
+// ============================================================
+// 17. DARK MODE
+// ============================================================
+
+function loadTheme() {
+
+  try {
+
+    darkModeEnabled =
+      localStorage.getItem(
+        "qevira-dark-mode"
+      ) === "true";
+
+  } catch (_) {
+
+    darkModeEnabled =
+      false;
+
+  }
+
+  applyTheme();
+
+}
+
+
+function applyTheme() {
+
+  document.body.classList.toggle(
+    "dark-mode",
+    darkModeEnabled
+  );
+
+  if (darkModeBtn) {
+
+    darkModeBtn.textContent =
+      darkModeEnabled
+        ? "☀️"
+        : "🌙";
+
+  }
+
+}
+
+
+safeClick(
+  darkModeBtn,
+  () => {
+
+    darkModeEnabled =
+      !darkModeEnabled;
+
+    try {
+
+      localStorage.setItem(
+        "qevira-dark-mode",
+        String(
+          darkModeEnabled
+        )
+      );
+
+    } catch (_) {}
+
+    applyTheme();
+
+  }
+);
+
+
+// ============================================================
+// 18. PAGE NAVIGATION
+// ============================================================
+
+const pages = {
+
+  chats:
+    chatsPage,
+
+  status:
+    statusPage,
+
+  contacts:
+    contactsPage,
+
+  daily:
+    dailyPage,
+
+  profile:
+    profilePage,
+
+  quiz:
+    quizPage
+
+};
+
+
+function showPage(
+  pageName
+) {
+
+  Object.values(pages)
+    .forEach(page => {
+
+      page?.classList.add(
+        "hidden"
+      );
+
+    });
+
+  pages[
+    pageName
+  ]?.classList.remove(
+    "hidden"
+  );
+
+  document
+    .querySelectorAll(
+      ".bottom-nav button"
+    )
+    .forEach(button => {
+
+      button.classList.remove(
+        "active"
+      );
+
+    });
+
+  const activeButton = {
+
+    chats:
+      chatsNavBtn,
+
+    status:
+      statusNavBtn,
+
+    contacts:
+      contactsNavBtn,
+
+    daily:
+      dailyNavBtn,
+
+    profile:
+      profileNavBtn
+
+  }[pageName];
+
+  activeButton?.classList.add(
+    "active"
+  );
+
+}
+
+
+safeClick(
+  chatsNavBtn,
+  () => showPage("chats")
+);
+
+safeClick(
+  statusNavBtn,
+  () => showPage("status")
+);
+
+safeClick(
+  contactsNavBtn,
+  () => showPage("contacts")
+);
+
+safeClick(
+  dailyNavBtn,
+  () => showPage("daily")
+);
+
+safeClick(
+  profileNavBtn,
+  () => {
+
+    renderProfile();
+
+    showPage("profile");
+
+  }
+);
+
+
+// ============================================================
+// 19. NEW CHAT
+// ============================================================
+
+safeClick(
+  newChatBtn,
+  () => {
+
+    showPage(
+      "contacts"
+    );
+
+    contactsSearchInput?.focus();
+
+  }
+);
+
+
+// ============================================================
+// 20. NOTIFICATIONS
+// ============================================================
+
+function showNotification(
+  title,
+  body
+) {
+
+  if (
+    notificationTitle &&
+    !notificationTitle.textContent
+  ) {
+
+    notificationTitle.textContent =
+      title;
+
+  }
+
+  if (notificationList) {
+
+    const item =
+      document.createElement(
+        "div"
+      );
+
+    item.className =
+      "notification-item";
+
+    item.innerHTML = `
+      <strong>
+        ${escapeHtml(title)}
+      </strong>
+
+      <p>
+        ${escapeHtml(body)}
+      </p>
+
+      <small>
+        ${escapeHtml(
+          formatTime(
+            new Date()
+          )
+        )}
+      </small>
+    `;
+
+    notificationList.prepend(
+      item
+    );
+
+  }
+
+}
+
+
+safeClick(
+  notificationBtn,
+  () => {
+
+    notificationPanel?.classList.toggle(
+      "hidden"
+    );
+
+  }
+);
+
+
+safeClick(
+  closeNotificationBtn,
+  () => {
+
+    notificationPanel?.classList.add(
+      "hidden"
+    );
+
+  }
+);
+
+
+// ============================================================
+// 21. STATUS FOUNDATION
+// ============================================================
+
+safeClick(
+  createStatusBtn,
+  () => {
+
+    const text =
+      prompt(
+        "Enter your status:"
+      );
+
+    if (!text?.trim()) {
+      return;
+    }
+
+    if (myStatus) {
+
+      myStatus.innerHTML = `
+        <div class="status-card">
+          <strong>
+            Your status
+          </strong>
+
+          <p>
+            ${escapeHtml(
+              text.trim()
+            )}
+          </p>
+
+          <small>
+            Just now
+          </small>
+        </div>
+      `;
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// 22. QEVIRA DAILY
+// ============================================================
+
+const dailySampleData = {
+
+  india: [
+
+    {
+      title:
+        "QEVIRA Daily — India",
+      text:
+        "India news will appear here when the Daily backend is connected."
+    }
+
+  ],
+
+  world: [
+
+    {
+      title:
+        "QEVIRA Daily — World",
+      text:
+        "World news will appear here."
+    }
+
+  ],
+
+  technology: [
+
+    {
+      title:
+        "QEVIRA Daily — Technology",
+      text:
+        "Technology news will appear here."
+    }
+
+  ],
+
+  sports: [
+
+    {
+      title:
+        "QEVIRA Daily — Sports",
+      text:
+        "Sports news will appear here."
+    }
+
+  ],
+
+  trending: [
+
+    {
+      title:
+        "QEVIRA Daily — Trending",
+      text:
+        "Trending stories will appear here."
+    }
+
+  ]
+
+};
+
+
+function renderDaily(
+  category
+) {
+
+  if (!dailyList) {
+    return;
+  }
+
+  const items =
+    dailySampleData[
+      category
+    ] || [];
+
+  dailyList.innerHTML =
+    items
+      .map(item => `
+        <article class="daily-card">
+
+          <h3>
+            ${escapeHtml(
+              item.title
+            )}
+          </h3>
+
+          <p>
+            ${escapeHtml(
+              item.text
+            )}
+          </p>
+
+        </article>
+      `)
+      .join("");
+
+}
+
+
+if (dailyCategories) {
+
+  dailyCategories
+    .querySelectorAll(
+      "[data-category]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          currentDailyCategory =
+            button.dataset.category;
+
+          dailyCategories
+            .querySelectorAll(
+              "[data-category]"
+            )
+            .forEach(item => {
+
+              item.classList.remove(
+                "active"
+              );
+
+            });
+
+          button.classList.add(
+            "active"
+          );
+
+          renderDaily(
+            currentDailyCategory
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+// ============================================================
+// 23. QUIZ FOUNDATION
+// ============================================================
+
+const quizSubjects = {
+
+  foundation: [
+    "Mathematics",
+    "Science",
+    "English"
+  ],
+
+  jee: [
+    "Physics",
+    "Chemistry",
+    "Mathematics"
+  ],
+
+  neet: [
+    "Physics",
+    "Chemistry",
+    "Biology"
+  ]
+
+};
+
+
+function renderQuizStart() {
+
+  if (!quizContent) {
+    return;
+  }
+
+  quizContent.innerHTML = `
+
+    <div class="quiz-container">
+
+      <h3>
+        Choose your preparation
+      </h3>
+
+      <div class="quiz-options">
+
+        <button
+          class="quiz-option"
+          data-quiz-mode="foundation"
+        >
+          📚 Foundation
+        </button>
+
+        <button
+          class="quiz-option"
+          data-quiz-mode="jee"
+        >
+          🧪 JEE
+        </button>
+
+        <button
+          class="quiz-option"
+          data-quiz-mode="neet"
+        >
+          🧬 NEET
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  quizContent
+    .querySelectorAll(
+      "[data-quiz-mode]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          quizMode =
+            button.dataset.quizMode;
+
+          renderQuizSubjects();
+
+        }
+      );
+
+    });
+
+}
+
+
+function renderQuizSubjects() {
+
+  if (!quizContent) {
+    return;
+  }
+
+  const subjects =
+    quizSubjects[
+      quizMode
+    ] || [];
+
+  quizContent.innerHTML = `
+
+    <div class="quiz-container">
+
+      <h3>
+        Choose a subject
+      </h3>
+
+      <div class="quiz-options">
+
+        ${
+          subjects
+            .map(
+              subject => `
+                <button
+                  class="quiz-option"
+                  data-subject="${escapeHtml(
+                    subject
+                  )}"
+                >
+                  ${escapeHtml(
+                    subject
+                  )}
+                </button>
+              `
+            )
+            .join("")
+        }
+
+      </div>
+
+      <button
+        class="secondary-btn"
+        id="quizBackBtn"
+      >
+        ← Back
+      </button>
+
+    </div>
+
+  `;
+
+  quizContent
+    .querySelectorAll(
+      "[data-subject]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          quizSubject =
+            button.dataset.subject;
+
+          renderQuizMessage();
+
+        }
+      );
+
+    });
+
+  $("quizBackBtn")
+    ?.addEventListener(
+      "click",
+      renderQuizStart
+    );
+
+}
+
+
+function renderQuizMessage() {
+
+  if (!quizContent) {
+    return;
+  }
+
+  quizContent.innerHTML = `
+
+    <div class="quiz-container">
+
+      <h3>
+        ${escapeHtml(
+          quizMode?.toUpperCase() ||
+          ""
+        )}
+        — ${escapeHtml(
+          quizSubject ||
+          ""
+        )}
+      </h3>
+
+      <p>
+        Your NCERT-based quiz engine will appear here.
+      </p>
+
+      <button
+        class="primary-btn"
+        id="startActualQuizBtn"
+      >
+        Start Quiz
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+safeClick(
+  quizStart,
+  () => {
+
+    showPage(
+      "quiz"
+    );
+
+    renderQuizStart();
+
+  }
+);
+
+
+// ============================================================
+// 24. WEBRTC — CREATE PEER
+// ============================================================
+
+function createPeerConnection(
+  peerId
+) {
+
+  if (peerConnection) {
+
+    try {
+
+      peerConnection.close();
+
+    } catch (_) {}
+
+  }
+
+  pendingIceCandidates = [];
+
+  peerConnection =
+    new RTCPeerConnection(
+      rtcConfiguration
+    );
+
+  peerConnection.onicecandidate =
+    async event => {
+
+      if (
+        !event.candidate ||
+        !activeCallPeerId
+      ) {
+        return;
+      }
+
+      await sendCallSignal(
+        activeCallPeerId,
+        {
+          type:
+            "ice-candidate",
+
+          candidate:
+            event.candidate
+        }
+      );
+
+    };
+
+  peerConnection.ontrack =
+    event => {
+
+      if (
+        !remoteStream
+      ) {
+
+        remoteStream =
+          new MediaStream();
+
+      }
+
+      event.streams?.[0]
+        ?.getTracks()
+        .forEach(track => {
+
+          if (
+            !remoteStream
+              .getTracks()
+              .some(
+                existing =>
+                  existing.id ===
+                  track.id
+              )
+          ) {
+
+            remoteStream.addTrack(
+              track
+            );
+
+          }
+
+        });
+
+      if (remoteVideo) {
+
+        remoteVideo.srcObject =
+          remoteStream;
+
+      }
+
+    };
+
+  peerConnection.onconnectionstatechange =
+    () => {
+
+      const state =
+        peerConnection
+          ?.connectionState;
+
+      if (activeCallStatus) {
+
+        if (
+          state ===
+          "connected"
+        ) {
+
+          activeCallStatus.textContent =
+            "Connected";
+
+        } else if (
+          state ===
+          "connecting"
+        ) {
+
+          activeCallStatus.textContent =
+            "Connecting...";
+
+        } else if (
+          state ===
+          "disconnected"
+        ) {
+
+          activeCallStatus.textContent =
+            "Disconnected";
+
+        }
+
+      }
+
+    };
+
+  return peerConnection;
+
+}
+
+
+// ============================================================
+// 25. GET LOCAL MEDIA
+// ============================================================
+
+async function getLocalMedia(
+  callType
+) {
+
+  const video =
+    callType ===
+    "video";
+
+  try {
+
+    localStream =
+      await navigator
+        .mediaDevices
+        .getUserMedia({
+
+          audio: true,
+
+          video
+
+        });
+
+    localStream
+      .getTracks()
+      .forEach(track => {
+
+        peerConnection?.addTrack(
+          track,
+          localStream
+        );
+
+      });
+
+    if (localVideo) {
+
+      localVideo.srcObject =
+        video
+          ? localStream
+          : null;
+
+    }
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Media permission error:",
+      error
+    );
+
+    alert(
+      video
+        ? "Camera and microphone permission is required for video calls."
+        : "Microphone permission is required for voice calls."
+    );
+
+    return false;
+
+  }
+
+}
+
+
+// ============================================================
+// 26. CALL UI
+// ============================================================
+
+function showActiveCallUI(
+  user,
+  callType
+) {
+
+  activeCallOverlay?.classList.remove(
+    "hidden"
+  );
+
+  if (activeCallName) {
+
+    activeCallName.textContent =
+      getDisplayName(user);
+
+  }
+
+  if (activeCallAvatar) {
+
+    const avatar =
+      getAvatar(user);
+
+    if (avatar) {
+
+      activeCallAvatar.innerHTML =
+        `<img src="${escapeHtml(
+          avatar
+        )}" alt="">`;
+
+    } else {
+
+      activeCallAvatar.textContent =
+        getInitial(
+          getDisplayName(user)
+        );
+
+    }
+
+  }
+
+  if (activeCallStatus) {
+
+    activeCallStatus.textContent =
+      "Connecting...";
+
+  }
+
+  if (cameraCallBtn) {
+
+    cameraCallBtn.style.display =
+      callType === "video"
+        ? ""
+        : "none";
+
+  }
+
+}
+
+
+function hideIncomingCall() {
+
+  incomingCallOverlay?.classList.add(
+    "hidden"
+  );
+
+  incomingCallData =
+    null;
+
+}
+
+
+function showIncomingCall(
+  data
+) {
+
+  incomingCallData =
+    data;
+
+  incomingCallOverlay?.classList.remove(
+    "hidden"
+  );
+
+  if (incomingCallName) {
+
+    incomingCallName.textContent =
+      data.callerName ||
+      "QEVIRA User";
+
+  }
+
+  if (incomingCallType) {
+
+    incomingCallType.textContent =
+      data.callType === "video"
+        ? "Incoming video call"
+        : "Incoming voice call";
+
+  }
+
+}
+
+
+// ============================================================
+// 27. CALL SIGNALING CHANNEL
+// ============================================================
+
+async function setupCallInbox() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  if (callInboxChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          callInboxChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  callInboxChannel =
+    supabaseClient
+      .channel(
+        getCallInboxName(
+          currentUser.id
+        )
+      )
+      .on(
+        "broadcast",
+        {
+          event:
+            "call-signal"
+        },
+        payload => {
+
+          handleCallSignal(
+            payload?.payload
+          );
+
+        }
+      )
+      .subscribe();
+
+}
+
+
+async function setupCallPairChannel(
+  peerId
+) {
+
+  if (!currentUser || !peerId) {
+    return;
+  }
+
+  if (callPairChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          callPairChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  callPairChannel =
+    supabaseClient
+      .channel(
+        getCallPairName(
+          currentUser.id,
+          peerId
+        )
+      )
+      .on(
+        "broadcast",
+        {
+          event:
+            "call-signal"
+        },
+        payload => {
+
+          handleCallSignal(
+            payload?.payload
+          );
+
+        }
+      )
+      .subscribe();
+
+}
+
+
+async function sendCallSignal(
+  peerId,
+  payload
+) {
+
+  if (
+    !currentUser ||
+    !peerId
+  ) {
+    return;
+  }
+
+  const channelName =
+    getCallInboxName(
+      peerId
+    );
+
+  const channel =
+    supabaseClient
+      .channel(
+        channelName
+      );
+
+  try {
+
+    await channel.subscribe();
+
+    await channel.send({
+
+      type:
+        "broadcast",
+
+      event:
+        "call-signal",
+
+      payload: {
+
+        ...payload,
+
+        from:
+          currentUser.id,
+
+        to:
+          peerId
+
+      }
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Call signal error:",
+      error
+    );
+
+  } finally {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          channel
+        );
+
+    } catch (_) {}
+
+  }
+
+}
+
+
+// ============================================================
+// 28. START CALL
+// ============================================================
+
+async function startCall(
+  callType
+) {
+
+  if (
+    !currentUser ||
+    !currentChatUser
+  ) {
+    return;
+  }
+
+  if (
+    activeCallPeerId
+  ) {
+
+    return;
+  }
+
+  activeCallPeerId =
+    currentChatUser.id;
+
+  activeCallRole =
+    "caller";
+
+  activeCallType =
+    callType;
+
+  activeCallAccepted =
+    false;
+
+  isMuted =
+    false;
+
+  isCameraOff =
+    false;
+
+  createPeerConnection(
+    activeCallPeerId
+  );
+
+  const mediaReady =
+    await getLocalMedia(
+      callType
+    );
+
+  if (!mediaReady) {
+
+    await cleanupCall();
+
+    return;
+  }
+
+  await setupCallPairChannel(
+    activeCallPeerId
+  );
+
+  showActiveCallUI(
+    currentChatUser,
+    callType
+  );
+
+  try {
+
+    const offer =
+      await peerConnection
+        .createOffer();
+
+    await peerConnection
+      .setLocalDescription(
+        offer
+      );
+
+    await sendCallSignal(
+      activeCallPeerId,
+      {
+
+        type:
+          "incoming-call",
+
+        callerName:
+          getDisplayName(
+            currentProfile
+          ),
+
+        callerAvatar:
+          getAvatar(
+            currentProfile
+          ),
+
+        callType
+
+      }
+    );
+
+    await sendCallSignal(
+      activeCallPeerId,
+      {
+
+        type:
+          "call-offer",
+
+        offer,
+
+        callType
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Start call:",
+      error
+    );
+
+    await cleanupCall();
+
+  }
+
+}
+
+
+safeClick(
+  voiceCallBtn,
+  () =>
+    startCall("voice")
+);
+
+
+safeClick(
+  videoCallBtn,
+  () =>
+    startCall("video")
+);
+
+
+// ============================================================
+// 29. HANDLE CALL SIGNAL
+// ============================================================
+
+async function handleCallSignal(
+  payload
+) {
+
+  if (
+    !payload ||
+    !currentUser
+  ) {
+    return;
+  }
+
+  if (
+    payload.to &&
+    payload.to !==
+      currentUser.id
+  ) {
+    return;
+  }
+
+  const from =
+    payload.from;
+
+  if (!from) {
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // Incoming call
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "incoming-call"
+  ) {
+
+    incomingCallData = {
+
+      from,
+
+      callerName:
+        payload.callerName ||
+        "QEVIRA User",
+
+      callerAvatar:
+        payload.callerAvatar ||
+        "",
+
+      callType:
+        payload.callType ||
+        "voice"
+
+    };
+
+    showIncomingCall(
+      incomingCallData
+    );
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // Offer
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "call-offer"
+  ) {
+
+    activeCallPeerId =
+      from;
+
+    activeCallRole =
+      "receiver";
+
+    activeCallType =
+      payload.callType ||
+      "voice";
+
+    await setupCallPairChannel(
+      from
+    );
+
+    if (!peerConnection) {
+
+      createPeerConnection(
+        from
+      );
+
+    }
+
+    if (!localStream) {
+
+      const ready =
+        await getLocalMedia(
+          activeCallType
+        );
+
+      if (!ready) {
+        return;
+      }
+
+    }
+
+    try {
+
+      await peerConnection
+        .setRemoteDescription(
+          new RTCSessionDescription(
+            payload.offer
+          )
+        );
+
+      await processPendingIce();
+
+    } catch (error) {
+
+      console.error(
+        "Set remote offer:",
+        error
+      );
+
+    }
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // Answer
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "call-answer"
+  ) {
+
+    if (
+      !peerConnection
+    ) {
+      return;
+    }
+
+    try {
+
+      await peerConnection
+        .setRemoteDescription(
+          new RTCSessionDescription(
+            payload.answer
+          )
+        );
+
+      activeCallAccepted =
+        true;
+
+      await processPendingIce();
+
+    } catch (error) {
+
+      console.error(
+        "Set answer:",
+        error
+      );
+
+    }
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // ICE candidate
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "ice-candidate"
+  ) {
+
+    const candidate =
+      payload.candidate;
+
+    if (
+      peerConnection &&
+      peerConnection
+        .remoteDescription
+    ) {
+
+      try {
+
+        await peerConnection
+          .addIceCandidate(
+            new RTCIceCandidate(
+              candidate
+            )
+          );
+
+      } catch (error) {
+
+        console.error(
+          "ICE candidate:",
+          error
+        );
+
+      }
+
+    } else {
+
+      pendingIceCandidates.push(
+        candidate
+      );
+
+    }
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // Hang up
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "call-hangup"
+  ) {
+
+    await cleanupCall(
+      false
+    );
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // Declined
+  // ----------------------------------------------------------
+
+  if (
+    payload.type ===
+    "call-decline"
+  ) {
+
+    alert(
+      "Call declined."
+    );
+
+    await cleanupCall(
+      false
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// 30. PROCESS ICE
+// ============================================================
+
+async function processPendingIce() {
+
+  if (
+    !peerConnection ||
+    !peerConnection
+      .remoteDescription
+  ) {
+    return;
+  }
+
+  while (
+    pendingIceCandidates.length
+  ) {
+
+    const candidate =
+      pendingIceCandidates.shift();
+
+    try {
+
+      await peerConnection
+        .addIceCandidate(
+          new RTCIceCandidate(
+            candidate
+          )
+        );
+
+    } catch (error) {
+
+      console.error(
+        "Pending ICE:",
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+// ============================================================
+// 31. ACCEPT CALL
+// ============================================================
+
+acceptCallBtn?.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      !incomingCallData
+    ) {
+      return;
+    }
+
+    const data =
+      incomingCallData;
+
+    hideIncomingCall();
+
+    activeCallPeerId =
+      data.from;
+
+    activeCallRole =
+      "receiver";
+
+    activeCallType =
+      data.callType ||
+      "voice";
+
+    activeCallAccepted =
+      true;
+
+    createPeerConnection(
+      activeCallPeerId
+    );
+
+    const ready =
+      await getLocalMedia(
+        activeCallType
+      );
+
+    if (!ready) {
+
+      await cleanupCall();
+
+      return;
+    }
+
+    await setupCallPairChannel(
+      activeCallPeerId
+    );
+
+    showActiveCallUI(
+      {
+        display_name:
+          data.callerName,
+
+        avatar_url:
+          data.callerAvatar
+
+      },
+      activeCallType
+    );
+
+    // The offer is received through
+    // the pair channel after this point.
+
+  }
+);
+
+
+// ============================================================
+// 32. DECLINE CALL
+// ============================================================
+
+declineCallBtn?.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      incomingCallData?.from
+    ) {
+
+      await sendCallSignal(
+        incomingCallData.from,
+        {
+          type:
+            "call-decline"
+        }
+      );
+
+    }
+
+    hideIncomingCall();
+
+  }
+);
+
+
+// ============================================================
+// 33. END CALL
+// ============================================================
+
+endCallBtn?.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      activeCallPeerId
+    ) {
+
+      await sendCallSignal(
+        activeCallPeerId,
+        {
+          type:
+            "call-hangup"
+        }
+      );
+
+    }
+
+    await cleanupCall();
+
+  }
+);
+
+
+// ============================================================
+// 34. MUTE
+// ============================================================
+
+muteCallBtn?.addEventListener(
+  "click",
+  () => {
+
+    if (!localStream) {
+      return;
+    }
+
+    const audioTracks =
+      localStream.getAudioTracks();
+
+    if (!audioTracks.length) {
+      return;
+    }
+
+    isMuted =
+      !isMuted;
+
+    audioTracks.forEach(
+      track => {
+
+        track.enabled =
+          !isMuted;
+
+      }
+    );
+
+    muteCallBtn.textContent =
+      isMuted
+        ? "🔇"
+        : "🎙️";
+
+  }
+);
+
+
+// ============================================================
+// 35. CAMERA
+// ============================================================
+
+cameraCallBtn?.addEventListener(
+  "click",
+  () => {
+
+    if (!localStream) {
+      return;
+    }
+
+    const videoTracks =
+      localStream.getVideoTracks();
+
+    if (!videoTracks.length) {
+      return;
+    }
+
+    isCameraOff =
+      !isCameraOff;
+
+    videoTracks.forEach(
+      track => {
+
+        track.enabled =
+          !isCameraOff;
+
+      }
+    );
+
+    cameraCallBtn.textContent =
+      isCameraOff
+        ? "📷"
+        : "🎥";
+
+  }
+);
+
+
+// ============================================================
+// 36. CLEANUP CALL
+// ============================================================
+
+async function cleanupCall(
+  notifyPeer = false
+) {
+
+  if (
+    notifyPeer &&
+    activeCallPeerId
+  ) {
+
+    await sendCallSignal(
+      activeCallPeerId,
+      {
+        type:
+          "call-hangup"
+      }
+    );
+
+  }
+
+  try {
+
+    peerConnection
+      ?.getSenders()
+      ?.forEach(
+        sender => {
+
+          try {
+
+            sender.track?.stop();
+
+          } catch (_) {}
+
+        }
+      );
+
+  } catch (_) {}
+
+  if (localStream) {
+
+    localStream
+      .getTracks()
+      .forEach(
+        track => {
+
+          try {
+
+            track.stop();
+
+          } catch (_) {}
+
+        }
+      );
+
+  }
+
+  if (remoteStream) {
+
+    remoteStream
+      .getTracks()
+      .forEach(
+        track => {
+
+          try {
+
+            track.stop();
+
+          } catch (_) {}
+
+        }
+      );
+
+  }
+
+  if (peerConnection) {
+
+    try {
+
+      peerConnection.close();
+
+    } catch (_) {}
+
+  }
+
+  if (callPairChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          callPairChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  peerConnection =
+    null;
+
+  localStream =
+    null;
+
+  remoteStream =
+    null;
+
+  callPairChannel =
+    null;
+
+  activeCallPeerId =
+    null;
+
+  activeCallRole =
+    null;
+
+  activeCallType =
+    null;
+
+  activeCallAccepted =
+    false;
+
+  pendingIceCandidates =
+    [];
+
+  isMuted =
+    false;
+
+  isCameraOff =
+    false;
+
+  if (remoteVideo) {
+
+    remoteVideo.srcObject =
+      null;
+
+  }
+
+  if (localVideo) {
+
+    localVideo.srcObject =
+      null;
+
+  }
+
+  activeCallOverlay?.classList.add(
+    "hidden"
+  );
+
+  incomingCallOverlay?.classList.add(
+    "hidden"
+  );
+
+}
+
+
+// ============================================================
+// 37. PROFILE REALTIME
+// ============================================================
+
+async function setupProfileRealtime() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  if (profileChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          profileChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  profileChannel =
+    supabaseClient
+      .channel(
+        `qevira-profile-${currentUser.id}`
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter:
+            `id=eq.${currentUser.id}`
+        },
+        payload => {
+
+          if (payload?.new) {
+
+            currentProfile =
+              payload.new;
+
+            renderProfile();
+
+          }
+
+        }
+      )
+      .subscribe();
+
+}
+
+
+// ============================================================
+// 38. LOGOUT
+// ============================================================
+
+logoutBtn?.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      !confirm(
+        "Log out of QEVIRA?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      await cleanupApp();
+
+      const {
+        error
+      } =
+        await supabaseClient.auth
+          .signOut();
+
+      if (error) {
+        throw error;
+      }
+
+      currentUser =
+        null;
+
+      currentProfile =
+        null;
+
+      showAuth();
+
+    } catch (error) {
+
+      console.error(
+        "Logout:",
+        error
+      );
+
+      alert(
+        error?.message ||
+        "Logout failed."
+      );
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// 39. CLEANUP APP
+// ============================================================
+
+async function cleanupApp() {
+
+  await cleanupCall(
+    false
+  );
+
+  if (messagesChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          messagesChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  if (profileChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          profileChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  if (callInboxChannel) {
+
+    try {
+
+      await supabaseClient
+        .removeChannel(
+          callInboxChannel
+        );
+
+    } catch (_) {}
+
+  }
+
+  messagesChannel =
+    null;
+
+  profileChannel =
+    null;
+
+  callInboxChannel =
+    null;
+
+  currentChatUser =
+    null;
+
+}
+
+
+// ============================================================
+// 40. START APPLICATION
+// ============================================================
+
+async function startApp(
+  user
+) {
+
+  if (!user) {
+
+    showAuth();
+
+    return;
+  }
+
+  currentUser =
+    user;
+
+  showApp();
+
+  try {
+
+    await ensureProfile();
+
+  } catch (error) {
+
+    console.error(
+      "ensureProfile:",
+      error
+    );
+
+  }
+
+  try {
+
+    await loadProfile();
+
+  } catch (error) {
+
+    console.error(
+      "loadProfile:",
+      error
+    );
+
+  }
+
+  try {
+
+    await loadContacts();
+
+  } catch (error) {
+
+    console.error(
+      "loadContacts:",
+      error
+    );
+
+  }
+
+  try {
+
+    await loadChats();
+
+  } catch (error) {
+
+    console.error(
+      "loadChats:",
+      error
+    );
+
+  }
+
+  try {
+
+    await setupRealtimeMessages();
+
+  } catch (error) {
+
+    console.error(
+      "Realtime messages:",
+      error
+    );
+
+  }
+
+  try {
+
+    await setupCallInbox();
+
+  } catch (error) {
+
+    console.error(
+      "Call inbox:",
+      error
+    );
+
+  }
+
+  try {
+
+    await setupProfileRealtime();
+
+  } catch (error) {
+
+    console.error(
+      "Profile realtime:",
+      error
+    );
+
+  }
+
+  loadTheme();
+
+  showPage(
+    "chats"
+  );
+
+  renderDaily(
+    currentDailyCategory
+  );
+
+}
+
+
+// ============================================================
+// 41. INITIALIZE QEVIRA
+// ============================================================
+
+async function initializeQevira() {
+
+  console.log(
+    "🔥 QEVIRA initializing..."
+  );
+
+  try {
+
+    await setupAuthListener();
+
+  } catch (error) {
+
+    console.error(
+      "Auth listener:",
+      error
+    );
+
+  }
+
+  await restoreSession();
+
+  console.log(
+    "🔥 QEVIRA ready."
+  );
+
+}
+
+
+// ============================================================
+// 42. START
+// ============================================================
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeQevira
+  );
+
+} else {
+
+  initializeQevira();
+
+                      }
