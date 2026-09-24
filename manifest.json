@@ -1,14 +1,21 @@
 {
-  "name": "QEVIRA",
+  "name": "QEVIRA — Real-Time Messaging",
   "short_name": "QEVIRA",
   "id": "/QEVIRA/",
   "start_url": "/QEVIRA/",
   "scope": "/QEVIRA/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f6f7ff",
   "theme_color": "#6c5ce7",
   "orientation": "portrait-primary",
-  "description": "QEVIRA real-time messaging app",
+  "description": "QEVIRA real-time messaging, voice and video calling app.",
+  "categories": [
+    "social",
+    "communication"
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/QEVIRA/icons/icon-192.png",
