@@ -5,20 +5,53 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   >
 
-  <meta
-    name="theme-color"
-    content="#6c5ce7"
-  >
+  <meta name="theme-color" content="#6c5ce7">
 
   <meta
     name="description"
     content="QEVIRA real-time messaging app"
   >
 
+  <meta
+    name="mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="default"
+  >
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="QEVIRA"
+  >
+
   <title>QEVIRA</title>
+
+  <link
+    rel="icon"
+    href="./icons/icon-192.png"
+    type="image/png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="./icons/icon-192.png"
+  >
+
+  <link
+    rel="manifest"
+    href="./manifest.json"
+  >
 
   <link
     rel="stylesheet"
@@ -32,16 +65,11 @@
        AUTH SCREEN
        ===================================================== -->
 
-  <section
-    id="authScreen"
-    class="auth-screen"
-  >
+  <section id="authScreen" class="auth-screen">
 
     <div class="auth-card">
 
-      <!-- LOGO -->
-
-      <div class="auth-logo">
+      <div class="auth-logo" aria-label="QEVIRA logo">
         Q
       </div>
 
@@ -51,37 +79,37 @@
         Connect. Chat. Discover.
       </p>
 
+      <!-- LOGIN -->
 
-      <!-- =================================================
-           LOGIN FORM
-           ================================================= -->
+      <form id="loginForm" autocomplete="on">
 
-      <form
-        id="loginForm"
-        class="auth-form"
-      >
+        <div class="input-group">
+          <label for="loginEmail">Email</label>
 
-        <h2>Welcome Back 👋</h2>
+          <input
+            id="loginEmail"
+            type="email"
+            placeholder="Enter your email"
+            autocomplete="email"
+            required
+          >
+        </div>
 
-        <input
-          id="loginEmail"
-          type="email"
-          placeholder="Email"
-          autocomplete="email"
-          required
-        >
+        <div class="input-group">
+          <label for="loginPassword">Password</label>
 
-        <input
-          id="loginPassword"
-          type="password"
-          placeholder="Password"
-          autocomplete="current-password"
-          required
-        >
+          <input
+            id="loginPassword"
+            type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+        </div>
 
         <button
           id="loginBtn"
-          type="button"
+          type="submit"
           class="primary-btn"
         >
           Login
@@ -90,36 +118,42 @@
       </form>
 
 
-      <!-- =================================================
-           SIGNUP FORM
-           ================================================= -->
+      <!-- SIGNUP -->
 
       <form
         id="signupForm"
-        class="auth-form hidden"
+        class="hidden"
+        autocomplete="on"
       >
 
-        <h2>Create Account 🚀</h2>
+        <div class="input-group">
+          <label for="signupEmail">Email</label>
 
-        <input
-          id="signupEmail"
-          type="email"
-          placeholder="Email"
-          autocomplete="email"
-          required
-        >
+          <input
+            id="signupEmail"
+            type="email"
+            placeholder="Enter your email"
+            autocomplete="email"
+            required
+          >
+        </div>
 
-        <input
-          id="signupPassword"
-          type="password"
-          placeholder="Password"
-          autocomplete="new-password"
-          required
-        >
+        <div class="input-group">
+          <label for="signupPassword">Password</label>
+
+          <input
+            id="signupPassword"
+            type="password"
+            placeholder="Create a password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          >
+        </div>
 
         <button
           id="signupBtn"
-          type="button"
+          type="submit"
           class="primary-btn"
         >
           Create Account
@@ -128,15 +162,13 @@
       </form>
 
 
-      <!-- AUTH MESSAGE -->
-
       <div
         id="authMessage"
         class="auth-message"
+        role="status"
+        aria-live="polite"
       ></div>
 
-
-      <!-- SWITCH LOGIN / SIGNUP -->
 
       <button
         id="switchAuthBtn"
@@ -152,14 +184,10 @@
 
 
   <!-- =====================================================
-       MAIN APP
+       MAIN APPLICATION
        ===================================================== -->
 
-  <main
-    id="app"
-    class="app hidden"
-  >
-
+  <main id="app" class="app hidden">
 
     <!-- ===================================================
          TOP BAR
@@ -173,9 +201,8 @@
           Q
         </div>
 
-        <div>
-          <h1>QEVIRA</h1>
-          <span>Connect better</span>
+        <div class="brand-name">
+          QEVIRA
         </div>
 
       </div>
@@ -186,6 +213,7 @@
         type="button"
         class="icon-btn"
         aria-label="Toggle dark mode"
+        title="Dark mode"
       >
         🌙
       </button>
@@ -194,7 +222,7 @@
 
 
     <!-- ===================================================
-         PAGE CONTAINER
+         PAGE CONTENT
          =================================================== -->
 
     <div class="page-container">
@@ -214,25 +242,33 @@
           <div>
             <h2>Chats</h2>
 
-            <p>
+            <p class="page-subtitle">
               Your conversations
             </p>
           </div>
 
+
           <button
             id="newChatBtn"
             type="button"
-            class="small-primary-btn"
+            class="round-btn"
+            onclick="startNewChat()"
+            aria-label="Start new chat"
+            title="New chat"
           >
-            + New
+            +
           </button>
 
         </div>
 
 
-        <!-- CHAT SEARCH -->
+        <!-- SEARCH -->
 
         <div class="search-box">
+
+          <span class="search-icon">
+            🔎
+          </span>
 
           <input
             id="searchInput"
@@ -248,15 +284,15 @@
 
         <div
           id="chatList"
-          class="chat-list"
+          class="list"
         ></div>
 
 
-        <!-- EMPTY CHAT STATE -->
+        <!-- EMPTY STATE -->
 
         <div
           id="chatEmpty"
-          class="empty-state"
+          class="empty-state hidden"
         >
 
           <div class="empty-icon">
@@ -266,20 +302,21 @@
           <h3>No chats yet</h3>
 
           <p>
-            Start a conversation with someone.
+            Start a conversation with someone on QEVIRA.
           </p>
 
           <button
             type="button"
-            class="primary-btn"
+            class="primary-btn small-btn"
             onclick="startNewChat()"
           >
-            Start New Chat
+            Start a new chat
           </button>
 
         </div>
 
       </section>
+
 
 
       <!-- =================================================
@@ -296,7 +333,7 @@
           <div>
             <h2>Contacts</h2>
 
-            <p>
+            <p class="page-subtitle">
               Find people on QEVIRA
             </p>
           </div>
@@ -307,6 +344,10 @@
         <!-- CONTACT SEARCH -->
 
         <div class="search-box">
+
+          <span class="search-icon">
+            🔎
+          </span>
 
           <input
             id="contactsSearchInput"
@@ -322,10 +363,11 @@
 
         <div
           id="contactsList"
-          class="contacts-list"
+          class="list"
         ></div>
 
       </section>
+
 
 
       <!-- =================================================
@@ -342,7 +384,7 @@
           <div>
             <h2>Profile</h2>
 
-            <p>
+            <p class="page-subtitle">
               Your QEVIRA account
             </p>
           </div>
@@ -350,158 +392,167 @@
         </div>
 
 
-        <!-- =================================================
-             PROFILE CARD
-             ================================================= -->
+        <!-- PROFILE CARD -->
 
         <div class="profile-card">
-
-
-          <!-- PROFILE AVATAR -->
 
           <div
             id="profileAvatar"
             class="profile-avatar"
+            aria-label="Profile photo"
           >
             Q
           </div>
 
 
-          <!-- PROFILE NAME -->
+          <div class="profile-main-info">
 
-          <h2 id="profileName">
-            QEVIRA User
-          </h2>
+            <h2 id="profileName">
+              QEVIRA User
+            </h2>
 
+            <p id="profileUsername">
+              @username
+            </p>
 
-          <!-- USERNAME -->
-
-          <p id="profileUsername">
-            @user
-          </p>
-
-
-          <!-- EMAIL -->
-
-          <p
-            id="profileEmail"
-            class="profile-email"
-          ></p>
-
-
-          <!-- BIO -->
-
-          <p
-            id="profileBio"
-            class="profile-bio"
-          >
-            No bio yet.
-          </p>
-
-
-          <!-- ONLINE STATUS -->
-
-          <p
-            id="profileOnlineStatus"
-            class="profile-online-status"
-          >
-            ● Online
-          </p>
-
-
-          <!-- EDIT PROFILE BUTTON -->
-
-          <button
-            id="editProfileBtn"
-            type="button"
-            class="primary-btn"
-          >
-            ✏️ Edit Profile
-          </button>
-
-        </div>
-
-
-        <!-- =================================================
-             PROFILE EDIT AREA
-             ================================================= -->
-
-        <div
-          id="profileEdit"
-          class="profile-edit hidden"
-        >
-
-          <div class="profile-edit-header">
-
-            <h3>
-              Edit Profile
-            </h3>
-
-            <p>
-              Update your QEVIRA profile
+            <p id="profileEmail">
+              email@example.com
             </p>
 
           </div>
 
-
-          <!-- DISPLAY NAME -->
-
-          <label for="editDisplayName">
-            Display Name
-          </label>
-
-          <input
-            id="editDisplayName"
-            type="text"
-            placeholder="Your name"
-            maxlength="50"
-            autocomplete="name"
-          >
+        </div>
 
 
-          <!-- USERNAME -->
+        <!-- ONLINE STATUS -->
 
-          <label for="editUsername">
-            Username
-          </label>
+        <div class="profile-info-card">
 
-          <input
-            id="editUsername"
-            type="text"
-            placeholder="username"
-            maxlength="30"
-            autocomplete="off"
-          >
+          <div class="profile-info-icon">
+            🟢
+          </div>
 
-          <small>
-            Letters, numbers, underscore (_) and dot (.) only.
-          </small>
+          <div class="profile-info-content">
 
+            <strong>
+              Status
+            </strong>
 
-          <!-- BIO -->
+            <span id="profileOnlineStatus">
+              Offline
+            </span>
 
-          <label for="editBio">
-            Bio
-          </label>
+          </div>
 
-          <textarea
-            id="editBio"
-            placeholder="Tell people something about you..."
-            maxlength="160"
-            rows="4"
-          ></textarea>
+        </div>
 
 
-          <!-- SAVE / CANCEL -->
+        <!-- BIO -->
 
-          <div class="profile-edit-buttons">
+        <div class="profile-info-card">
+
+          <div class="profile-info-icon">
+            ✨
+          </div>
+
+          <div class="profile-info-content">
+
+            <strong>
+              Bio
+            </strong>
+
+            <span id="profileBio">
+              No bio yet.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- EDIT BUTTON -->
+
+        <button
+          id="editProfileBtn"
+          type="button"
+          class="primary-btn"
+        >
+          Edit Profile
+        </button>
+
+
+        <!-- =============================================
+             PROFILE EDITOR
+             ============================================= -->
+
+        <div
+          id="profileEdit"
+          class="profile-editor hidden"
+        >
+
+          <div class="editor-title">
+            Edit Profile
+          </div>
+
+
+          <div class="input-group">
+
+            <label for="editDisplayName">
+              Display Name
+            </label>
+
+            <input
+              id="editDisplayName"
+              type="text"
+              placeholder="Your name"
+              maxlength="50"
+              autocomplete="name"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label for="editUsername">
+              Username
+            </label>
+
+            <input
+              id="editUsername"
+              type="text"
+              placeholder="username"
+              maxlength="30"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label for="editBio">
+              Bio
+            </label>
+
+            <textarea
+              id="editBio"
+              placeholder="Tell people something about you..."
+              maxlength="160"
+              rows="4"
+            ></textarea>
+
+          </div>
+
+
+          <div class="editor-actions">
 
             <button
               id="saveProfileBtn"
               type="button"
               class="primary-btn"
             >
-              Save Profile
+              Save Changes
             </button>
 
             <button
@@ -532,23 +583,28 @@
     </div>
 
 
+
     <!-- ===================================================
          BOTTOM NAVIGATION
          =================================================== -->
 
-    <nav class="bottom-nav">
+    <nav
+      class="bottom-nav"
+      aria-label="Main navigation"
+    >
 
       <button
         id="chatsNavBtn"
         type="button"
         class="nav-btn active"
+        aria-label="Chats"
       >
 
         <span class="nav-icon">
           💬
         </span>
 
-        <span>
+        <span class="nav-label">
           Chats
         </span>
 
@@ -559,13 +615,14 @@
         id="contactsNavBtn"
         type="button"
         class="nav-btn"
+        aria-label="Contacts"
       >
 
         <span class="nav-icon">
           👥
         </span>
 
-        <span>
+        <span class="nav-label">
           Contacts
         </span>
 
@@ -576,13 +633,14 @@
         id="profileNavBtn"
         type="button"
         class="nav-btn"
+        aria-label="Profile"
       >
 
         <span class="nav-icon">
           👤
         </span>
 
-        <span>
+        <span class="nav-label">
           Profile
         </span>
 
@@ -593,6 +651,7 @@
   </main>
 
 
+
   <!-- =====================================================
        CHAT MODAL
        ===================================================== -->
@@ -600,6 +659,9 @@
   <div
     id="chatModal"
     class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="chatTitle"
   >
 
     <div class="chat-window">
@@ -607,39 +669,47 @@
 
       <!-- CHAT HEADER -->
 
-      <div class="chat-header">
+      <header class="chat-header">
 
-        <div class="chat-header-left">
+        <button
+          id="closeChatModal"
+          type="button"
+          class="icon-btn"
+          aria-label="Close chat"
+        >
+          ←
+        </button>
 
-          <div
-            id="chatAvatar"
-            class="chat-avatar"
-          >
-            Q
-          </div>
 
-          <div>
+        <div
+          id="chatAvatar"
+          class="chat-avatar"
+        >
+          Q
+        </div>
 
-            <h3 id="chatTitle">
-              QEVIRA User
-            </h3>
 
-            <p id="chatStatus">
-              Offline
-            </p>
+        <div class="chat-header-info">
 
-          </div>
+          <h3 id="chatTitle">
+            Chat
+          </h3>
+
+          <span id="chatStatus">
+            Offline
+          </span>
 
         </div>
 
 
-        <div class="chat-header-actions">
+        <div class="chat-actions">
 
           <button
             id="voiceCallBtn"
             type="button"
             class="icon-btn"
             aria-label="Voice call"
+            title="Voice call"
           >
             📞
           </button>
@@ -649,22 +719,15 @@
             type="button"
             class="icon-btn"
             aria-label="Video call"
+            title="Video call"
           >
             📹
           </button>
 
-          <button
-            id="closeChatModal"
-            type="button"
-            class="icon-btn"
-            aria-label="Close chat"
-          >
-            ✕
-          </button>
-
         </div>
 
-      </div>
+      </header>
+
 
 
       <!-- MESSAGES -->
@@ -672,7 +735,9 @@
       <div
         id="messages"
         class="messages"
+        aria-live="polite"
       ></div>
+
 
 
       <!-- MESSAGE FORM -->
@@ -680,14 +745,16 @@
       <form
         id="messageForm"
         class="message-form"
+        autocomplete="off"
       >
 
         <input
           id="messageInput"
           type="text"
           placeholder="Type a message..."
+          maxlength="5000"
           autocomplete="off"
-          maxlength="2000"
+          aria-label="Message"
         >
 
         <button
@@ -695,6 +762,7 @@
           type="submit"
           class="send-btn"
           aria-label="Send message"
+          title="Send message"
         >
           ➤
         </button>
@@ -706,6 +774,7 @@
   </div>
 
 
+
   <!-- =====================================================
        INCOMING CALL OVERLAY
        ===================================================== -->
@@ -713,38 +782,53 @@
   <div
     id="incomingCallOverlay"
     class="call-overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="incomingCallName"
   >
 
-    <div class="call-card">
+    <div class="incoming-call-card">
 
-      <div class="call-icon">
-        📞
+      <div class="call-pulse">
+
+        <div
+          id="incomingCallAvatar"
+          class="call-avatar"
+        >
+          Q
+        </div>
+
       </div>
 
-      <h2>
+
+      <h2 id="incomingCallName">
         Incoming Call
       </h2>
 
-      <p id="incomingCallName">
-        Someone is calling...
+
+      <p>
+        Incoming QEVIRA call...
       </p>
 
-      <div class="call-buttons">
+
+      <div class="call-actions">
 
         <button
           id="acceptCallBtn"
           type="button"
-          class="primary-btn"
+          class="accept-call-btn"
+          aria-label="Accept call"
         >
-          Accept
+          📞
         </button>
 
         <button
           id="declineCallBtn"
           type="button"
-          class="danger-btn"
+          class="decline-call-btn"
+          aria-label="Decline call"
         >
-          Decline
+          ✕
         </button>
 
       </div>
@@ -754,6 +838,7 @@
   </div>
 
 
+
   <!-- =====================================================
        ACTIVE CALL OVERLAY
        ===================================================== -->
@@ -761,24 +846,12 @@
   <div
     id="activeCallOverlay"
     class="call-overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="activeCallName"
   >
 
-    <div class="active-call-card">
-
-      <div
-        id="activeCallAvatar"
-        class="profile-avatar"
-      >
-        Q
-      </div>
-
-      <h2 id="activeCallName">
-        QEVIRA User
-      </h2>
-
-      <p id="activeCallStatus">
-        Calling...
-      </p>
+    <div class="active-call-screen">
 
 
       <!-- REMOTE VIDEO -->
@@ -802,34 +875,62 @@
       ></video>
 
 
+      <!-- CALL INFORMATION -->
+
+      <div class="active-call-info">
+
+        <div
+          id="activeCallAvatar"
+          class="call-avatar"
+        >
+          Q
+        </div>
+
+        <h2 id="activeCallName">
+          Calling...
+        </h2>
+
+        <p id="activeCallStatus">
+          Connecting...
+        </p>
+
+      </div>
+
+
       <!-- CALL CONTROLS -->
 
-      <div class="call-controls">
+      <div class="active-call-controls">
 
         <button
           id="muteCallBtn"
           type="button"
-          class="icon-btn"
-          aria-label="Mute"
+          class="call-control-btn"
+          aria-label="Mute microphone"
+          title="Mute microphone"
         >
-          🎤
+          🎙️
         </button>
+
 
         <button
           id="cameraCallBtn"
           type="button"
-          class="icon-btn"
-          aria-label="Camera"
+          class="call-control-btn"
+          aria-label="Toggle camera"
+          title="Toggle camera"
         >
-          📷
+          📹
         </button>
+
 
         <button
           id="endCallBtn"
           type="button"
-          class="danger-btn"
+          class="end-call-btn"
+          aria-label="End call"
+          title="End call"
         >
-          End Call
+          ☎️
         </button>
 
       </div>
@@ -837,6 +938,7 @@
     </div>
 
   </div>
+
 
 
   <!-- =====================================================
@@ -849,10 +951,12 @@
 
 
   <!-- =====================================================
-       QEVIRA JAVASCRIPT
+       QEVIRA APP
        ===================================================== -->
 
-  <script src="./app.js"></script>
+  <script
+    src="./app.js"
+  ></script>
 
 
   <!-- =====================================================
@@ -863,30 +967,25 @@
 
     if ("serviceWorker" in navigator) {
 
-      window.addEventListener(
-        "load",
-        () => {
+      window.addEventListener("load", () => {
 
-          navigator.serviceWorker
-            .register("./sw.js")
-            .then(() => {
-              console.log(
-                "QEVIRA Service Worker registered."
-              );
-            })
-            .catch(error => {
-              console.error(
-                "Service Worker registration failed:",
-                error
-              );
-            });
+        navigator.serviceWorker
+          .register("./sw.js")
+          .then(() => {
+            console.log("QEVIRA Service Worker registered");
+          })
+          .catch((error) => {
+            console.warn(
+              "QEVIRA Service Worker registration failed:",
+              error
+            );
+          });
 
-        }
-      );
+      });
 
     }
 
   </script>
 
 </body>
-</html>
+  </html>
