@@ -1,273 +1,160 @@
+
 // ============================================================
-// QEVIRA
-// FILE 3 — app.js
-// ============================================================
-// REAL SUPABASE AUTH
-// REAL PROFILES
-// REAL 1-TO-1 REALTIME MESSAGING
-// REAL WEBRTC VOICE + VIDEO CALLING
-// SEARCH
-// DARK MODE
-// STATUS
-// DAILY FOUNDATION
-// QUIZ ENGINE FOUNDATION
-// NOTIFICATIONS
+// QEVIRA — REAL WEBRTC CALL ENGINE
+// GitHub Pages + Supabase Realtime signaling
+// Voice + Video
 // ============================================================
 
 
 // ============================================================
-// 1. SUPABASE CONFIG
+// WEBRTC CONFIG
 // ============================================================
 
-const SUPABASE_URL =
-  "https://wcdywnkxtuexjbjgerzd.supabase.co";
-
-const SUPABASE_ANON_KEY =
-  "sb_publishable_bD3ajWNbZPoUw4uUwYhK3w_P-iZIAhw";
-
-const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+const QEVIRA_ICE_SERVERS = [
+  {
+    urls: "stun:stun.l.google.com:19302"
+  },
+  {
+    urls: "stun:stun1.l.google.com:19302"
+  }
+];
 
 
 // ============================================================
-// 2. GLOBAL STATE
+// CALL STATE
 // ============================================================
-
-let currentUser = null;
-let currentProfile = null;
-let currentChatUser = null;
-
-let authSubscription = null;
-
-let messagesChannel = null;
-let profileChannel = null;
-
-let callInboxChannel = null;
-let callPairChannel = null;
 
 let peerConnection = null;
 
 let localStream = null;
 let remoteStream = null;
 
-let pendingIceCandidates = [];
+let callInboxChannel = null;
 
 let activeCallPeerId = null;
+let activeCallId = null;
+
 let activeCallRole = null;
 let activeCallType = null;
 
-let incomingCallData = null;
+let activeCallStartedAt = null;
+let activeCallConnectedAt = null;
+
+let pendingIncomingCall = null;
+let pendingOffer = null;
+
+let pendingIceCandidates = [];
 
 let activeCallAccepted = false;
+let activeCallConnected = false;
+let callHistorySaved = false;
 
 let isMuted = false;
 let isCameraOff = false;
 
-let allContacts = [];
-let allChats = [];
 
-let currentMessages = [];
+// ============================================================
+// ELEMENTS
+// ============================================================
 
-let currentDailyCategory = "india";
+const incomingCallOverlay =
+  document.getElementById("incomingCallOverlay");
 
-let quizMode = null;
-let quizClass = null;
-let quizSubject = null;
+const incomingCallAvatar =
+  document.getElementById("incomingCallAvatar");
 
-let darkModeEnabled = false;
+const incomingCallName =
+  document.getElementById("incomingCallName");
 
-let currentQuizQuestions = [];
-let currentQuizIndex = 0;
-let currentQuizCorrect = 0;
-let quizBusy = false;
+const incomingCallType =
+  document.getElementById("incomingCallType");
+
+const acceptCallBtn =
+  document.getElementById("acceptCallBtn");
+
+const declineCallBtn =
+  document.getElementById("declineCallBtn");
+
+
+const activeCallOverlay =
+  document.getElementById("activeCallOverlay");
+
+const remoteVideo =
+  document.getElementById("remoteVideo");
+
+const localVideo =
+  document.getElementById("localVideo");
+
+const activeCallAvatar =
+  document.getElementById("activeCallAvatar");
+
+const activeCallName =
+  document.getElementById("activeCallName");
+
+const activeCallStatus =
+  document.getElementById("activeCallStatus");
+
+const muteCallBtn =
+  document.getElementById("muteCallBtn");
+
+const cameraCallBtn =
+  document.getElementById("cameraCallBtn");
+
+const endCallBtn =
+  document.getElementById("endCallBtn");
 
 
 // ============================================================
-// 3. WEBRTC CONFIGURATION
+// RANDOM CALL ID
 // ============================================================
 
-const rtcConfiguration = {
+function createCallId() {
 
-  iceServers: [
-
-    {
-      urls: "stun:stun.l.google.com:19302"
-    },
-
-    {
-      urls: "stun:stun1.l.google.com:19302"
-    }
-
-  ]
-
-};
-
-
-// ============================================================
-// 4. DOM HELPERS
-// ============================================================
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-
-const authScreen = $("authScreen");
-const app = $("app");
-
-const signupForm = $("signupForm");
-const loginForm = $("loginForm");
-
-const signupEmail = $("signupEmail");
-const signupPassword = $("signupPassword");
-
-const loginEmail = $("loginEmail");
-const loginPassword = $("loginPassword");
-
-const signupBtn = $("signupBtn");
-const loginBtn = $("loginBtn");
-
-const switchAuthBtn = $("switchAuthBtn");
-const authMessage = $("authMessage");
-
-const notificationBtn = $("notificationBtn");
-const darkModeBtn = $("darkModeBtn");
-
-const notificationPanel = $("notificationPanel");
-const notificationTitle = $("notificationTitle");
-const closeNotificationBtn = $("closeNotificationBtn");
-const notificationList = $("notificationList");
-
-const chatsPage = $("chatsPage");
-const contactsPage = $("contactsPage");
-const statusPage = $("statusPage");
-const dailyPage = $("dailyPage");
-const quizPage = $("quizPage");
-const profilePage = $("profilePage");
-
-const chatsNavBtn = $("chatsNavBtn");
-const statusNavBtn = $("statusNavBtn");
-const contactsNavBtn = $("contactsNavBtn");
-const dailyNavBtn = $("dailyNavBtn");
-const profileNavBtn = $("profileNavBtn");
-
-const newChatBtn = $("newChatBtn");
-const searchInput = $("searchInput");
-
-const chatList = $("chatList");
-const chatEmpty = $("chatEmpty");
-
-const contactsSearchInput = $("contactsSearchInput");
-const contactsList = $("contactsList");
-
-const createStatusBtn = $("createStatusBtn");
-const myStatus = $("myStatus");
-const statusList = $("statusList");
-
-const dailyCategories = $("dailyCategories");
-const dailyList = $("dailyList");
-
-const quizStart = $("quizStart");
-const quizContent = $("quizContent");
-
-const profileAvatar = $("profileAvatar");
-const profileName = $("profileName");
-const profileUsername = $("profileUsername");
-const profileEmail = $("profileEmail");
-const profileOnlineStatus = $("profileOnlineStatus");
-const profileBio = $("profileBio");
-const referralCode = $("referralCode");
-
-const editProfileBtn = $("editProfileBtn");
-const profileEdit = $("profileEdit");
-
-const editDisplayName = $("editDisplayName");
-const editUsername = $("editUsername");
-const editBio = $("editBio");
-const editAvatarUrl = $("editAvatarUrl");
-
-const saveProfileBtn = $("saveProfileBtn");
-const cancelProfileEditBtn = $("cancelProfileEditBtn");
-
-const logoutBtn = $("logoutBtn");
-
-const chatModal = $("chatModal");
-const closeChatModal = $("closeChatModal");
-
-const chatAvatar = $("chatAvatar");
-const chatTitle = $("chatTitle");
-const chatStatus = $("chatStatus");
-
-const voiceCallBtn = $("voiceCallBtn");
-const videoCallBtn = $("videoCallBtn");
-
-const messagesBox = $("messages");
-
-const messageForm = $("messageForm");
-const messageInput = $("messageInput");
-const sendMessageBtn = $("sendMessageBtn");
-
-const incomingCallOverlay = $("incomingCallOverlay");
-const incomingCallAvatar = $("incomingCallAvatar");
-const incomingCallName = $("incomingCallName");
-const incomingCallType = $("incomingCallType");
-
-const acceptCallBtn = $("acceptCallBtn");
-const declineCallBtn = $("declineCallBtn");
-
-const activeCallOverlay = $("activeCallOverlay");
-const remoteVideo = $("remoteVideo");
-const localVideo = $("localVideo");
-
-const activeCallAvatar = $("activeCallAvatar");
-const activeCallName = $("activeCallName");
-const activeCallStatus = $("activeCallStatus");
-
-const muteCallBtn = $("muteCallBtn");
-const cameraCallBtn = $("cameraCallBtn");
-const endCallBtn = $("endCallBtn");
-
-
-// ============================================================
-// 5. BASIC HELPERS
-// ============================================================
-
-function escapeHtml(value) {
-
-  if (
-    value === null ||
-    value === undefined
-  ) {
-    return "";
+  if (window.crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
 
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2)
+  );
 }
 
 
-function getInitial(name) {
+// ============================================================
+// GET USER NAME
+// ============================================================
 
-  const text =
-    String(name || "Q").trim();
+function getCurrentUserDisplayName() {
+
+  if (
+    typeof currentProfile !== "undefined" &&
+    currentProfile
+  ) {
+
+    return (
+      currentProfile.display_name ||
+      currentProfile.full_name ||
+      currentProfile.username ||
+      currentUser?.email?.split("@")[0] ||
+      "QEVIRA User"
+    );
+
+  }
 
   return (
-    text.charAt(0).toUpperCase() ||
-    "Q"
+    currentUser?.email?.split("@")[0] ||
+    "QEVIRA User"
   );
-
 }
 
 
-function getDisplayName(profile) {
+// ============================================================
+// GET PROFILE NAME
+// ============================================================
+
+function getProfileDisplayName(profile) {
 
   if (!profile) {
     return "QEVIRA User";
@@ -279,3906 +166,105 @@ function getDisplayName(profile) {
     profile.username ||
     "QEVIRA User"
   );
-
-}
-
-
-function getUsername(profile) {
-
-  if (!profile) {
-    return "";
-  }
-
-  return profile.username
-    ? `@${profile.username}`
-    : "";
-
-}
-
-
-function getAvatar(profile) {
-
-  if (!profile) {
-    return "";
-  }
-
-  return (
-    profile.avatar_url ||
-    profile.photo_url ||
-    ""
-  );
-
-}
-
-
-function formatTime(dateValue) {
-
-  if (!dateValue) {
-    return "";
-  }
-
-  const date =
-    new Date(dateValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleTimeString(
-    [],
-    {
-      hour: "2-digit",
-      minute: "2-digit"
-    }
-  );
-
-}
-
-
-function formatDate(dateValue) {
-
-  if (!dateValue) {
-    return "";
-  }
-
-  const date =
-    new Date(dateValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleDateString(
-    [],
-    {
-      day: "2-digit",
-      month: "short"
-    }
-  );
-
-}
-
-
-function getPairId(userA, userB) {
-
-  return [
-    String(userA),
-    String(userB)
-  ]
-    .sort()
-    .join("-");
-
-}
-
-
-function getCallInboxName(userId) {
-
-  return `qevira-call-inbox-${userId}`;
-
-}
-
-
-function getCallPairName(userA, userB) {
-
-  return `qevira-call-${getPairId(
-    userA,
-    userB
-  )}`;
-
-}
-
-
-function setAuthMessage(
-  message,
-  isError = false
-) {
-
-  if (!authMessage) {
-    return;
-  }
-
-  authMessage.textContent =
-    message || "";
-
-  authMessage.style.color =
-    isError
-      ? "#e74c3c"
-      : "#00b894";
-
-}
-
-
-function showApp() {
-
-  authScreen?.classList.add("hidden");
-  app?.classList.remove("hidden");
-
-}
-
-
-function showAuth() {
-
-  app?.classList.add("hidden");
-  authScreen?.classList.remove("hidden");
-
-}
-
-
-function safeClick(
-  element,
-  callback
-) {
-
-  if (!element) {
-    return;
-  }
-
-  element.addEventListener(
-    "click",
-    callback
-  );
-
-}
-
-
-function sleep(ms) {
-
-  return new Promise(
-    resolve =>
-      setTimeout(resolve, ms)
-  );
-
-}
-
-
-function makeReferralCode(userId) {
-
-  if (!userId) {
-    return "QEVIRA";
-  }
-
-  return (
-    "QEV-" +
-    userId
-      .replace(/-/g, "")
-      .slice(0, 8)
-      .toUpperCase()
-  );
-
 }
 
 
 // ============================================================
-// 6. AUTH MODE SWITCH
+// SHOW / HIDE ELEMENT
 // ============================================================
 
-safeClick(
-  switchAuthBtn,
-  () => {
+function showCallElement(element) {
 
-    signupForm?.classList.toggle(
-      "hidden"
-    );
+  if (!element) return;
 
-    loginForm?.classList.toggle(
-      "hidden"
-    );
-
-    setAuthMessage("");
-
-    if (
-      loginForm &&
-      !loginForm.classList.contains(
-        "hidden"
-      )
-    ) {
-
-      switchAuthBtn.textContent =
-        "Don't have an account? Sign up";
-
-    } else {
-
-      switchAuthBtn.textContent =
-        "Already have an account? Login";
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 7. SIGN UP
-// ============================================================
-
-signupForm?.addEventListener(
-  "submit",
-  async event => {
-
-    event.preventDefault();
-
-    const email =
-      signupEmail?.value
-        ?.trim();
-
-    const password =
-      signupPassword?.value || "";
-
-    if (!email || !password) {
-
-      setAuthMessage(
-        "Please enter email and password.",
-        true
-      );
-
-      return;
-    }
-
-    if (password.length < 6) {
-
-      setAuthMessage(
-        "Password must be at least 6 characters.",
-        true
-      );
-
-      return;
-    }
-
-    if (signupBtn) {
-
-      signupBtn.disabled = true;
-
-      signupBtn.textContent =
-        "Creating account...";
-
-    }
-
-    setAuthMessage("");
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth.signUp({
-          email,
-          password
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      signupPassword.value = "";
-
-      if (
-        data?.session &&
-        data?.user
-      ) {
-
-        await startApp(
-          data.user
-        );
-
-        return;
-      }
-
-      setAuthMessage(
-        "Account created! Check your email, confirm your account, then login."
-      );
-
-      signupForm?.classList.add(
-        "hidden"
-      );
-
-      loginForm?.classList.remove(
-        "hidden"
-      );
-
-      if (switchAuthBtn) {
-
-        switchAuthBtn.textContent =
-          "Don't have an account? Sign up";
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "QEVIRA signup error:",
-        error
-      );
-
-      setAuthMessage(
-        error?.message ||
-        "Signup failed.",
-        true
-      );
-
-    } finally {
-
-      if (signupBtn) {
-
-        signupBtn.disabled = false;
-
-        signupBtn.textContent =
-          "Create Account";
-
-      }
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 8. LOGIN
-// ============================================================
-
-loginForm?.addEventListener(
-  "submit",
-  async event => {
-
-    event.preventDefault();
-
-    const email =
-      loginEmail?.value
-        ?.trim();
-
-    const password =
-      loginPassword?.value || "";
-
-    if (!email || !password) {
-
-      setAuthMessage(
-        "Please enter email and password.",
-        true
-      );
-
-      return;
-    }
-
-    if (loginBtn) {
-
-      loginBtn.disabled = true;
-
-      loginBtn.textContent =
-        "Logging in...";
-
-    }
-
-    setAuthMessage("");
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email,
-            password
-          });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data?.user) {
-
-        throw new Error(
-          "No user returned from Supabase."
-        );
-
-      }
-
-      await startApp(
-        data.user
-      );
-
-    } catch (error) {
-
-      console.error(
-        "QEVIRA login error:",
-        error
-      );
-
-      setAuthMessage(
-        error?.message ||
-        "Login failed.",
-        true
-      );
-
-    } finally {
-
-      if (loginBtn) {
-
-        loginBtn.disabled = false;
-
-        loginBtn.textContent =
-          "Login";
-
-      }
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 9. AUTH SESSION
-// ============================================================
-
-async function restoreSession() {
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth
-        .getSession();
-
-    if (error) {
-      throw error;
-    }
-
-    if (data?.session?.user) {
-
-      await startApp(
-        data.session.user
-      );
-
-    } else {
-
-      showAuth();
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Session restore error:",
-      error
-    );
-
-    showAuth();
-
-  }
-
+  element.style.display = "flex";
 }
 
 
-async function setupAuthListener() {
+function hideCallElement(element) {
 
-  const result =
-    await supabaseClient.auth
-      .onAuthStateChange(
-        async (
-          event,
-          session
-        ) => {
+  if (!element) return;
 
-          console.log(
-            "QEVIRA AUTH EVENT:",
-            event
-          );
-
-          if (
-            event === "SIGNED_IN" &&
-            session?.user
-          ) {
-
-            if (
-              !currentUser ||
-              currentUser.id !==
-                session.user.id
-            ) {
-
-              await startApp(
-                session.user
-              );
-
-            }
-
-          }
-
-          if (
-            event === "SIGNED_OUT"
-          ) {
-
-            await cleanupApp();
-
-            currentUser = null;
-            currentProfile = null;
-
-            showAuth();
-
-          }
-
-        }
-      );
-
-  authSubscription =
-    result?.data?.subscription ||
-    null;
-
+  element.style.display = "none";
 }
 
 
 // ============================================================
-// 10. PROFILE
+// SET CALL STATUS
 // ============================================================
 
-async function ensureProfile() {
+function setCallStatus(text) {
 
-  if (!currentUser) {
-    return null;
+  if (activeCallStatus) {
+    activeCallStatus.textContent = text;
   }
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-  if (error) {
-
-    console.error(
-      "Profile lookup error:",
-      error
-    );
-
-    return null;
-  }
-
-  if (data) {
-
-    currentProfile = data;
-
-    return data;
-
-  }
-
-  const usernameBase =
-    (
-      currentUser.email
-        ?.split("@")[0] ||
-      "user"
-    )
-      .toLowerCase()
-      .replace(
-        /[^a-z0-9_]/g,
-        ""
-      )
-      .slice(0, 20);
-
-  const username =
-    usernameBase ||
-    `user${Date.now()
-      .toString()
-      .slice(-6)}`;
-
-  const newProfile = {
-
-    id:
-      currentUser.id,
-
-    display_name:
-      usernameBase ||
-      "QEVIRA User",
-
-    full_name:
-      usernameBase ||
-      "QEVIRA User",
-
-    username,
-
-    bio: "",
-
-    avatar_url: "",
-
-    last_seen:
-      new Date().toISOString(),
-
-    is_online: true,
-
-    updated_at:
-      new Date().toISOString()
-
-  };
-
-  const {
-    data: created,
-    error: createError
-  } =
-    await supabaseClient
-      .from("profiles")
-      .insert(newProfile)
-      .select("*")
-      .single();
-
-  if (createError) {
-
-    console.error(
-      "Profile creation error:",
-      createError
-    );
-
-    return null;
-
-  }
-
-  currentProfile =
-    created;
-
-  return created;
-
-}
-
-
-async function loadProfile() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-  if (error) {
-
-    console.error(
-      "loadProfile:",
-      error
-    );
-
-    return;
-
-  }
-
-  if (data) {
-
-    currentProfile =
-      data;
-
-    renderProfile();
-
-  }
-
-}
-
-
-function renderProfile() {
-
-  const profile =
-    currentProfile;
-
-  if (!profile) {
-    return;
-  }
-
-  const name =
-    getDisplayName(profile);
-
-  const username =
-    getUsername(profile);
-
-  const avatar =
-    getAvatar(profile);
-
-  if (profileName) {
-
-    profileName.textContent =
-      name;
-
-  }
-
-  if (profileUsername) {
-
-    profileUsername.textContent =
-      username;
-
-  }
-
-  if (profileEmail) {
-
-    profileEmail.textContent =
-      currentUser?.email || "";
-
-  }
-
-  if (profileBio) {
-
-    profileBio.textContent =
-      profile.bio ||
-      "No bio added yet.";
-
-  }
-
-  if (profileOnlineStatus) {
-
-    profileOnlineStatus.textContent =
-      profile.is_online === false
-        ? "● Offline"
-        : "● Online";
-
-  }
-
-  if (profileAvatar) {
-
-    if (avatar) {
-
-      profileAvatar.innerHTML =
-        `<img src="${escapeHtml(
-          avatar
-        )}" alt="Profile photo">`;
-
-    } else {
-
-      profileAvatar.textContent =
-        getInitial(name);
-
-    }
-
-  }
-
-  if (referralCode) {
-
-    referralCode.textContent =
-      profile.referral_code ||
-      makeReferralCode(
-        currentUser?.id
-      );
-
-  }
-
-}
-
-
-async function markUserOnline() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("profiles")
-      .update({
-
-        is_online:
-          true,
-
-        last_seen:
-          new Date().toISOString(),
-
-        updated_at:
-          new Date().toISOString()
-
-      })
-      .eq(
-        "id",
-        currentUser.id
-      );
-
-  if (error) {
-
-    console.warn(
-      "Could not mark online:",
-      error.message
-    );
-
-  }
-
-}
-
-
-async function markUserOffline() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("profiles")
-      .update({
-
-        is_online:
-          false,
-
-        last_seen:
-          new Date().toISOString(),
-
-        updated_at:
-          new Date().toISOString()
-
-      })
-      .eq(
-        "id",
-        currentUser.id
-      );
-
-  if (error) {
-
-    console.warn(
-      "Could not mark offline:",
-      error.message
-    );
-
-  }
-
-}
-
-
-function getOnlineText(profile) {
-
-  if (
-    profile?.is_online === true
-  ) {
-
-    return "Online";
-
-  }
-
-  if (profile?.last_seen) {
-
-    return `Last seen ${formatTime(
-      profile.last_seen
-    )}`;
-
-  }
-
-  return "Offline";
-
-}
-
-
-async function updateProfile() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  const displayName =
-    editDisplayName?.value
-      ?.trim() || "";
-
-  const username =
-    editUsername?.value
-      ?.trim()
-      .toLowerCase() || "";
-
-  const bio =
-    editBio?.value
-      ?.trim() || "";
-
-  const avatarUrl =
-    editAvatarUrl?.value
-      ?.trim() || "";
-
-  if (!displayName) {
-
-    alert(
-      "Please enter a display name."
-    );
-
-    return;
-  }
-
-  const updates = {
-
-    display_name:
-      displayName,
-
-    full_name:
-      displayName,
-
-    username:
-      username || null,
-
-    bio,
-
-    avatar_url:
-      avatarUrl,
-
-    updated_at:
-      new Date().toISOString()
-
-  };
-
-  if (saveProfileBtn) {
-
-    saveProfileBtn.disabled =
-      true;
-
-    saveProfileBtn.textContent =
-      "Saving...";
-
-  }
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("profiles")
-        .update(updates)
-        .eq(
-          "id",
-          currentUser.id
-        )
-        .select("*")
-        .single();
-
-    if (error) {
-      throw error;
-    }
-
-    currentProfile =
-      data;
-
-    renderProfile();
-
-    profileEdit?.classList.add(
-      "hidden"
-    );
-
-    await loadContacts();
-    await loadChats();
-
-  } catch (error) {
-
-    console.error(
-      "Profile update:",
-      error
-    );
-
-    alert(
-      error?.message ||
-      "Could not update profile."
-    );
-
-  } finally {
-
-    if (saveProfileBtn) {
-
-      saveProfileBtn.disabled =
-        false;
-
-      saveProfileBtn.textContent =
-        "Save Profile";
-
-    }
-
-  }
-
-}
-
-
-safeClick(
-  editProfileBtn,
-  () => {
-
-    if (!currentProfile) {
-      return;
-    }
-
-    profileEdit?.classList.remove(
-      "hidden"
-    );
-
-    if (editDisplayName) {
-
-      editDisplayName.value =
-        currentProfile.display_name ||
-        currentProfile.full_name ||
-        "";
-
-    }
-
-    if (editUsername) {
-
-      editUsername.value =
-        currentProfile.username ||
-        "";
-
-    }
-
-    if (editBio) {
-
-      editBio.value =
-        currentProfile.bio ||
-        "";
-
-    }
-
-    if (editAvatarUrl) {
-
-      editAvatarUrl.value =
-        currentProfile.avatar_url ||
-        "";
-
-    }
-
-  }
-);
-
-
-safeClick(
-  cancelProfileEditBtn,
-  () => {
-
-    profileEdit?.classList.add(
-      "hidden"
-    );
-
-  }
-);
-
-
-safeClick(
-  saveProfileBtn,
-  updateProfile
-);
-
-
-// ============================================================
-// 11. CONTACTS
-// ============================================================
-
-async function loadContacts() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .neq(
-        "id",
-        currentUser.id
-      )
-      .order(
-        "display_name",
-        {
-          ascending: true
-        }
-      );
-
-  if (error) {
-
-    console.error(
-      "Contacts error:",
-      error
-    );
-
-    renderContacts([]);
-
-    return;
-
-  }
-
-  allContacts =
-    data || [];
-
-  renderContacts(
-    allContacts
-  );
-
-}
-
-
-function renderContacts(
-  contacts
-) {
-
-  if (!contactsList) {
-    return;
-  }
-
-  if (!contacts.length) {
-
-    contactsList.innerHTML =
-      `<div class="empty-state">
-        No users found yet.
-      </div>`;
-
-    return;
-
-  }
-
-  contactsList.innerHTML =
-    contacts
-      .map(user => {
-
-        const name =
-          getDisplayName(user);
-
-        const avatar =
-          getAvatar(user);
-
-        const avatarHtml =
-          avatar
-            ? `<img src="${escapeHtml(
-                avatar
-              )}" alt="">`
-            : escapeHtml(
-                getInitial(name)
-              );
-
-        const online =
-          user.is_online === true;
-
-        return `
-          <button
-            class="contact-item"
-            data-user-id="${escapeHtml(
-              user.id
-            )}"
-          >
-
-            <div class="avatar">
-              ${avatarHtml}
-            </div>
-
-            <div class="contact-info">
-
-              <strong>
-                ${escapeHtml(name)}
-              </strong>
-
-              <span>
-                ${escapeHtml(
-                  getUsername(user)
-                )}
-              </span>
-
-              <small>
-                ${online ? "Online" : "Offline"}
-              </small>
-
-            </div>
-
-            <span class="online-dot">
-              ${online ? "●" : ""}
-            </span>
-
-          </button>
-        `;
-
-      })
-      .join("");
-
-  contactsList
-    .querySelectorAll(
-      "[data-user-id]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        async () => {
-
-          const user =
-            allContacts.find(
-              item =>
-                item.id ===
-                button.dataset.userId
-            );
-
-          if (user) {
-
-            await openChat(
-              user
-            );
-
-          }
-
-        }
-      );
-
-    });
-
-}
-
-
-contactsSearchInput?.addEventListener(
-  "input",
-  () => {
-
-    const query =
-      contactsSearchInput.value
-        .trim()
-        .toLowerCase();
-
-    const filtered =
-      allContacts.filter(
-        user => {
-
-          const name =
-            String(
-              user.display_name ||
-              user.full_name ||
-              ""
-            ).toLowerCase();
-
-          const username =
-            String(
-              user.username ||
-              ""
-            ).toLowerCase();
-
-          return (
-            name.includes(query) ||
-            username.includes(query)
-          );
-
-        }
-      );
-
-    renderContacts(
-      filtered
-    );
-
-  }
-);
-
-
-// ============================================================
-// 12. CHATS
-// ============================================================
-
-async function loadChats() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("messages")
-        .select("*")
-        .or(
-          `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
-    if (error) {
-      throw error;
-    }
-
-    const map =
-      new Map();
-
-    for (
-      const message of data || []
-    ) {
-
-      const otherId =
-        message.sender_id ===
-        currentUser.id
-          ? message.receiver_id
-          : message.sender_id;
-
-      if (
-        otherId &&
-        !map.has(otherId)
-      ) {
-
-        map.set(
-          otherId,
-          message
-        );
-
-      }
-
-    }
-
-    const ids =
-      [...map.keys()];
-
-    if (!ids.length) {
-
-      allChats = [];
-
-      renderChats([]);
-
-      return;
-
-    }
-
-    const {
-      data: profiles,
-      error: profilesError
-    } =
-      await supabaseClient
-        .from("profiles")
-        .select("*")
-        .in(
-          "id",
-          ids
-        );
-
-    if (profilesError) {
-      throw profilesError;
-    }
-
-    const profileMap =
-      new Map(
-        (profiles || [])
-          .map(
-            profile =>
-              [
-                profile.id,
-                profile
-              ]
-          )
-      );
-
-    allChats =
-      ids
-        .map(id => {
-
-          const profile =
-            profileMap.get(id);
-
-          const last =
-            map.get(id);
-
-          if (!profile) {
-            return null;
-          }
-
-          return {
-
-            ...profile,
-
-            last_message:
-              last?.body ||
-              last?.content ||
-              "",
-
-            last_message_at:
-              last?.created_at ||
-              ""
-
-          };
-
-        })
-        .filter(Boolean);
-
-    renderChats(
-      allChats
-    );
-
-  } catch (error) {
-
-    console.error(
-      "loadChats:",
-      error
-    );
-
-    renderChats([]);
-
-  }
-
-}
-
-
-function renderChats(
-  chats
-) {
-
-  if (!chatList) {
-    return;
-  }
-
-  if (!chats.length) {
-
-    chatList.innerHTML = "";
-
-    chatEmpty?.classList.remove(
-      "hidden"
-    );
-
-    return;
-
-  }
-
-  chatEmpty?.classList.add(
-    "hidden"
-  );
-
-  chatList.innerHTML =
-    chats
-      .map(user => {
-
-        const name =
-          getDisplayName(user);
-
-        const avatar =
-          getAvatar(user);
-
-        const avatarHtml =
-          avatar
-            ? `<img src="${escapeHtml(
-                avatar
-              )}" alt="">`
-            : escapeHtml(
-                getInitial(name)
-              );
-
-        return `
-          <button
-            class="chat-item"
-            data-chat-user-id="${escapeHtml(
-              user.id
-            )}"
-          >
-
-            <div class="avatar">
-              ${avatarHtml}
-            </div>
-
-            <div class="chat-item-info">
-
-              <div class="chat-item-top">
-
-                <strong>
-                  ${escapeHtml(name)}
-                </strong>
-
-                <span>
-                  ${escapeHtml(
-                    formatTime(
-                      user.last_message_at
-                    )
-                  )}
-                </span>
-
-              </div>
-
-              <div class="chat-item-bottom">
-
-                <span>
-                  ${escapeHtml(
-                    user.last_message ||
-                    "Start chatting"
-                  )}
-                </span>
-
-              </div>
-
-            </div>
-
-          </button>
-        `;
-
-      })
-      .join("");
-
-  chatList
-    .querySelectorAll(
-      "[data-chat-user-id]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        async () => {
-
-          const user =
-            allChats.find(
-              item =>
-                item.id ===
-                button.dataset.chatUserId
-            );
-
-          if (user) {
-
-            await openChat(
-              user
-            );
-
-          }
-
-        }
-      );
-
-    });
-
-}
-
-
-searchInput?.addEventListener(
-  "input",
-  () => {
-
-    const query =
-      searchInput.value
-        .trim()
-        .toLowerCase();
-
-    const filtered =
-      allChats.filter(
-        user => {
-
-          const name =
-            String(
-              user.display_name ||
-              user.full_name ||
-              ""
-            ).toLowerCase();
-
-          const username =
-            String(
-              user.username ||
-              ""
-            ).toLowerCase();
-
-          return (
-            name.includes(query) ||
-            username.includes(query)
-          );
-
-        }
-      );
-
-    renderChats(
-      filtered
-    );
-
-  }
-);
-
-
-// ============================================================
-// 13. OPEN CHAT
-// ============================================================
-
-async function openChat(user) {
-
-  if (!user || !currentUser) {
-    return;
-  }
-
-  currentChatUser =
-    user;
-
-  if (chatTitle) {
-
-    chatTitle.textContent =
-      getDisplayName(user);
-
-  }
-
-  if (chatStatus) {
-
-    chatStatus.textContent =
-      getOnlineText(user);
-
-  }
-
-  if (chatAvatar) {
-
-    const avatar =
-      getAvatar(user);
-
-    if (avatar) {
-
-      chatAvatar.innerHTML =
-        `<img src="${escapeHtml(
-          avatar
-        )}" alt="">`;
-
-    } else {
-
-      chatAvatar.textContent =
-        getInitial(
-          getDisplayName(user)
-        );
-
-    }
-
-  }
-
-  chatModal?.classList.remove(
-    "hidden"
-  );
-
-  await loadMessages(
-    user.id
-  );
-
-  messageInput?.focus();
-
-}
-
-
-safeClick(
-  closeChatModal,
-  () => {
-
-    chatModal?.classList.add(
-      "hidden"
-    );
-
-    currentChatUser = null;
-
-  }
-);
-
-
-// ============================================================
-// 14. LOAD MESSAGES
-// ============================================================
-
-async function loadMessages(
-  otherUserId
-) {
-
-  if (
-    !currentUser ||
-    !otherUserId
-  ) {
-    return;
-  }
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`
-        )
-        .order(
-          "created_at",
-          {
-            ascending: true
-          }
-        );
-
-    if (error) {
-      throw error;
-    }
-
-    currentMessages =
-      data || [];
-
-    renderMessages(
-      currentMessages
-    );
-
-  } catch (error) {
-
-    console.error(
-      "loadMessages:",
-      error
-    );
-
-    if (messagesBox) {
-
-      messagesBox.innerHTML =
-        `<div class="empty-state">
-          Unable to load messages.
-        </div>`;
-
-    }
-
-  }
-
-}
-
-
-function renderMessages(
-  list
-) {
-
-  if (!messagesBox) {
-    return;
-  }
-
-  if (!list.length) {
-
-    messagesBox.innerHTML =
-      `<div class="empty-state">
-        No messages yet. Say hello 👋
-      </div>`;
-
-    return;
-
-  }
-
-  messagesBox.innerHTML =
-    list
-      .map(message => {
-
-        const mine =
-          message.sender_id ===
-          currentUser?.id;
-
-        const body =
-          message.body ??
-          message.content ??
-          "";
-
-        return `
-          <div
-            class="message-row ${
-              mine
-                ? "sent"
-                : "received"
-            }"
-          >
-
-            <div class="message-bubble">
-
-              <div class="message-text">
-                ${escapeHtml(body)}
-              </div>
-
-              <div class="message-time">
-                ${escapeHtml(
-                  formatTime(
-                    message.created_at
-                  )
-                )}
-              </div>
-
-            </div>
-
-          </div>
-        `;
-
-      })
-      .join("");
-
-  messagesBox.scrollTop =
-    messagesBox.scrollHeight;
-
 }
 
 
 // ============================================================
-// 15. SEND MESSAGE
+// OPEN ACTIVE CALL UI
 // ============================================================
 
-messageForm?.addEventListener(
-  "submit",
-  async event => {
-
-    event.preventDefault();
-
-    if (
-      !currentUser ||
-      !currentChatUser
-    ) {
-      return;
-    }
-
-    const body =
-      messageInput?.value
-        ?.trim();
-
-    if (!body) {
-      return;
-    }
-
-    if (sendMessageBtn) {
-
-      sendMessageBtn.disabled =
-        true;
-
-    }
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient
-          .from("messages")
-          .insert({
-
-            sender_id:
-              currentUser.id,
-
-            receiver_id:
-              currentChatUser.id,
-
-            body
-
-          })
-          .select("*")
-          .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-
-        currentMessages.push(
-          data
-        );
-
-        renderMessages(
-          currentMessages
-        );
-
-      }
-
-      messageInput.value =
-        "";
-
-      await loadChats();
-
-    } catch (error) {
-
-      console.error(
-        "Send message:",
-        error
-      );
-
-      alert(
-        error?.message ||
-        "Message could not be sent."
-      );
-
-    } finally {
-
-      if (sendMessageBtn) {
-
-        sendMessageBtn.disabled =
-          false;
-
-      }
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 16. REALTIME MESSAGES
-// ============================================================
-
-async function setupRealtimeMessages() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  if (messagesChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          messagesChannel
-        );
-
-    } catch (_) {}
-
-  }
-
-  messagesChannel =
-    supabaseClient
-      .channel(
-        `qevira-messages-${currentUser.id}`
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages"
-        },
-        async payload => {
-
-          const message =
-            payload?.new;
-
-          if (!message) {
-            return;
-          }
-
-          const relevant =
-            message.sender_id ===
-              currentUser.id ||
-            message.receiver_id ===
-              currentUser.id;
-
-          if (!relevant) {
-            return;
-          }
-
-          if (
-            currentChatUser &&
-            (
-              (
-                message.sender_id ===
-                  currentChatUser.id &&
-                message.receiver_id ===
-                  currentUser.id
-              ) ||
-              (
-                message.sender_id ===
-                  currentUser.id &&
-                message.receiver_id ===
-                  currentChatUser.id
-              )
-            )
-          ) {
-
-            const exists =
-              currentMessages.some(
-                item =>
-                  item.id ===
-                  message.id
-              );
-
-            if (!exists) {
-
-              currentMessages.push(
-                message
-              );
-
-              currentMessages.sort(
-                (
-                  a,
-                  b
-                ) =>
-                  new Date(
-                    a.created_at
-                  ) -
-                  new Date(
-                    b.created_at
-                  )
-              );
-
-              renderMessages(
-                currentMessages
-              );
-
-            }
-
-          }
-
-          await loadChats();
-
-          if (
-            message.sender_id !==
-            currentUser.id
-          ) {
-
-            showNotification(
-              "New message",
-              "You received a new message."
-            );
-
-          }
-
-        }
-      )
-      .subscribe(
-        (status, error) => {
-
-          if (
-            status ===
-              "CHANNEL_ERROR" ||
-            status ===
-              "TIMED_OUT"
-          ) {
-
-            console.error(
-              "Message realtime:",
-              status,
-              error
-            );
-
-          }
-
-        }
-      );
-
-}
-
-
-// ============================================================
-// 17. DARK MODE
-// ============================================================
-
-function loadTheme() {
-
-  try {
-
-    darkModeEnabled =
-      localStorage.getItem(
-        "qevira-dark-mode"
-      ) === "true";
-
-  } catch (_) {
-
-    darkModeEnabled =
-      false;
-
-  }
-
-  applyTheme();
-
-}
-
-
-function applyTheme() {
-
-  document.body.classList.toggle(
-    "dark-mode",
-    darkModeEnabled
-  );
-
-  if (darkModeBtn) {
-
-    darkModeBtn.textContent =
-      darkModeEnabled
-        ? "☀️"
-        : "🌙";
-
-  }
-
-}
-
-
-safeClick(
-  darkModeBtn,
-  () => {
-
-    darkModeEnabled =
-      !darkModeEnabled;
-
-    try {
-
-      localStorage.setItem(
-        "qevira-dark-mode",
-        String(
-          darkModeEnabled
-        )
-      );
-
-    } catch (_) {}
-
-    applyTheme();
-
-  }
-);
-
-
-// ============================================================
-// 18. PAGE NAVIGATION
-// ============================================================
-
-const pages = {
-
-  chats:
-    chatsPage,
-
-  status:
-    statusPage,
-
-  contacts:
-    contactsPage,
-
-  daily:
-    dailyPage,
-
-  profile:
-    profilePage,
-
-  quiz:
-    quizPage
-
-};
-
-
-function showPage(
-  pageName
-) {
-
-  Object.values(pages)
-    .forEach(page => {
-
-      page?.classList.add(
-        "hidden"
-      );
-
-    });
-
-  pages[
-    pageName
-  ]?.classList.remove(
-    "hidden"
-  );
-
-  document
-    .querySelectorAll(
-      ".bottom-nav button"
-    )
-    .forEach(button => {
-
-      button.classList.remove(
-        "active"
-      );
-
-    });
-
-  const activeButton = {
-
-    chats:
-      chatsNavBtn,
-
-    status:
-      statusNavBtn,
-
-    contacts:
-      contactsNavBtn,
-
-    daily:
-      dailyNavBtn,
-
-    profile:
-      profileNavBtn
-
-  }[pageName];
-
-  activeButton?.classList.add(
-    "active"
-  );
-
-}
-
-
-safeClick(
-  chatsNavBtn,
-  () => showPage("chats")
-);
-
-safeClick(
-  statusNavBtn,
-  async () => {
-
-    showPage("status");
-
-    await loadStatuses();
-
-  }
-);
-
-safeClick(
-  contactsNavBtn,
-  () => showPage("contacts")
-);
-
-safeClick(
-  dailyNavBtn,
-  () => showPage("daily")
-);
-
-safeClick(
-  profileNavBtn,
-  () => {
-
-    renderProfile();
-
-    showPage("profile");
-
-  }
-);
-
-
-// ============================================================
-// 19. NEW CHAT
-// ============================================================
-
-safeClick(
-  newChatBtn,
-  () => {
-
-    showPage(
-      "contacts"
-    );
-
-    contactsSearchInput?.focus();
-
-  }
-);
-
-
-// ============================================================
-// 20. NOTIFICATIONS
-// ============================================================
-
-function showNotification(
-  title,
-  body
-) {
-
-  if (notificationTitle) {
-
-    notificationTitle.textContent =
-      title || "Notifications";
-
-  }
-
-  if (notificationList) {
-
-    const item =
-      document.createElement(
-        "div"
-      );
-
-    item.className =
-      "notification-item";
-
-    item.innerHTML = `
-      <strong>
-        ${escapeHtml(title)}
-      </strong>
-
-      <p>
-        ${escapeHtml(body)}
-      </p>
-
-      <small>
-        ${escapeHtml(
-          formatTime(
-            new Date()
-          )
-        )}
-      </small>
-    `;
-
-    notificationList.prepend(
-      item
-    );
-
-  }
-
-}
-
-
-safeClick(
-  notificationBtn,
-  () => {
-
-    notificationPanel?.classList.toggle(
-      "hidden"
-    );
-
-  }
-);
-
-
-safeClick(
-  closeNotificationBtn,
-  () => {
-
-    notificationPanel?.classList.add(
-      "hidden"
-    );
-
-  }
-);
-
-
-// ============================================================
-// 21. REAL STATUS
-// ============================================================
-
-async function createRealStatus(
-  text
-) {
-
-  if (
-    !currentUser ||
-    !text
-  ) {
-    return;
-  }
-
-  const now =
-    new Date();
-
-  const expires =
-    new Date(
-      now.getTime() +
-      24 * 60 * 60 * 1000
-    );
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("statuses")
-      .insert({
-
-        user_id:
-          currentUser.id,
-
-        content:
-          text,
-
-        created_at:
-          now.toISOString(),
-
-        expires_at:
-          expires.toISOString()
-
-      });
-
-  if (error) {
-    throw error;
-  }
-
-}
-
-
-async function loadStatuses() {
-
-  if (!statusList) {
-    return;
-  }
-
-  try {
-
-    const now =
-      new Date().toISOString();
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("statuses")
-        .select("*")
-        .gt(
-          "expires_at",
-          now
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
-    if (error) {
-      throw error;
-    }
-
-    const statuses =
-      data || [];
-
-    const mine =
-      statuses.filter(
-        status =>
-          status.user_id ===
-          currentUser?.id
-      );
-
-    const others =
-      statuses.filter(
-        status =>
-          status.user_id !==
-          currentUser?.id
-      );
-
-    if (myStatus) {
-
-      if (mine.length) {
-
-        myStatus.innerHTML =
-          mine
-            .map(status => `
-              <div class="status-card">
-
-                <strong>
-                  Your status
-                </strong>
-
-                <p>
-                  ${escapeHtml(
-                    status.content || ""
-                  )}
-                </p>
-
-                <small>
-                  ${escapeHtml(
-                    formatDate(
-                      status.created_at
-                    )
-                  )}
-                </small>
-
-              </div>
-            `)
-            .join("");
-
-      } else {
-
-        myStatus.innerHTML =
-          `<div class="empty-state">
-            You haven't posted a status yet.
-          </div>`;
-
-      }
-
-    }
-
-    if (!others.length) {
-
-      statusList.innerHTML =
-        `<div class="empty-state">
-          No recent statuses.
-        </div>`;
-
-      return;
-
-    }
-
-    let userMap =
-      new Map();
-
-    const ids =
-      [
-        ...new Set(
-          others.map(
-            status =>
-              status.user_id
-          )
-        )
-      ];
-
-    if (ids.length) {
-
-      const {
-        data: users
-      } =
-        await supabaseClient
-          .from("profiles")
-          .select("*")
-          .in(
-            "id",
-            ids
-          );
-
-      userMap =
-        new Map(
-          (users || [])
-            .map(
-              user =>
-                [
-                  user.id,
-                  user
-                ]
-            )
-        );
-
-    }
-
-    statusList.innerHTML =
-      others
-        .map(status => {
-
-          const user =
-            userMap.get(
-              status.user_id
-            );
-
-          const name =
-            getDisplayName(user);
-
-          const avatar =
-            getAvatar(user);
-
-          const avatarHtml =
-            avatar
-              ? `<img src="${escapeHtml(
-                  avatar
-                )}" alt="">`
-              : escapeHtml(
-                  getInitial(name)
-                );
-
-          return `
-            <div class="status-card">
-
-              <div class="status-user">
-
-                <div class="avatar">
-                  ${avatarHtml}
-                </div>
-
-                <div>
-                  <strong>
-                    ${escapeHtml(name)}
-                  </strong>
-
-                  <small>
-                    ${escapeHtml(
-                      formatDate(
-                        status.created_at
-                      )
-                    )}
-                  </small>
-                </div>
-
-              </div>
-
-              <p>
-                ${escapeHtml(
-                  status.content || ""
-                )}
-              </p>
-
-            </div>
-          `;
-
-        })
-        .join("");
-
-  } catch (error) {
-
-    console.error(
-      "loadStatuses:",
-      error
-    );
-
-    statusList.innerHTML =
-      `<div class="empty-state">
-        Unable to load statuses.
-      </div>`;
-
-  }
-
-}
-
-
-safeClick(
-  createStatusBtn,
-  async () => {
-
-    const text =
-      prompt(
-        "Enter your status:"
-      );
-
-    if (!text?.trim()) {
-      return;
-    }
-
-    try {
-
-      await createRealStatus(
-        text.trim()
-      );
-
-      await loadStatuses();
-
-      showNotification(
-        "Status posted",
-        "Your status is now live for 24 hours."
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Create status:",
-        error
-      );
-
-      alert(
-        error?.message ||
-        "Could not create status."
-      );
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 22. QEVIRA DAILY
-// ============================================================
-
-const dailySampleData = {
-
-  india: [
-    {
-      title:
-        "QEVIRA Daily — India",
-      text:
-        "Daily India stories will appear here."
-    }
-  ],
-
-  world: [
-    {
-      title:
-        "QEVIRA Daily — World",
-      text:
-        "Daily world stories will appear here."
-    }
-  ],
-
-  technology: [
-    {
-      title:
-        "QEVIRA Daily — Technology",
-      text:
-        "Daily technology stories will appear here."
-    }
-  ],
-
-  sports: [
-    {
-      title:
-        "QEVIRA Daily — Sports",
-      text:
-        "Daily sports stories will appear here."
-    }
-  ],
-
-  trending: [
-    {
-      title:
-        "QEVIRA Daily — Trending",
-      text:
-        "Trending stories will appear here."
-    }
-  ]
-
-};
-
-
-function renderDaily(
-  category
-) {
-
-  if (!dailyList) {
-    return;
-  }
-
-  const items =
-    dailySampleData[
-      category
-    ] || [];
-
-  dailyList.innerHTML =
-    items
-      .map(item => `
-        <article class="daily-card">
-
-          <h3>
-            ${escapeHtml(
-              item.title
-            )}
-          </h3>
-
-          <p>
-            ${escapeHtml(
-              item.text
-            )}
-          </p>
-
-        </article>
-      `)
-      .join("");
-
-}
-
-
-if (dailyCategories) {
-
-  dailyCategories
-    .querySelectorAll(
-      "[data-category]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          currentDailyCategory =
-            button.dataset.category;
-
-          dailyCategories
-            .querySelectorAll(
-              "[data-category]"
-            )
-            .forEach(item => {
-
-              item.classList.remove(
-                "active"
-              );
-
-            });
-
-          button.classList.add(
-            "active"
-          );
-
-          renderDaily(
-            currentDailyCategory
-          );
-
-        }
-      );
-
-    });
-
-}
-
-
-// ============================================================
-// 23. QUIZ ENGINE
-// ============================================================
-
-const quizSubjects = {
-
-  foundation: [
-    "Mathematics",
-    "Science",
-    "English"
-  ],
-
-  jee: [
-    "Physics",
-    "Chemistry",
-    "Mathematics"
-  ],
-
-  neet: [
-    "Physics",
-    "Chemistry",
-    "Biology"
-  ]
-
-};
-
-
-function renderQuizStart() {
-
-  if (!quizContent) {
-    return;
-  }
-
-  quizContent.innerHTML = `
-
-    <div class="quiz-container">
-
-      <h3>
-        Choose your preparation
-      </h3>
-
-      <div class="quiz-options">
-
-        <button
-          class="quiz-option"
-          data-quiz-mode="foundation"
-        >
-          📚 Foundation
-        </button>
-
-        <button
-          class="quiz-option"
-          data-quiz-mode="jee"
-        >
-          🧪 JEE
-        </button>
-
-        <button
-          class="quiz-option"
-          data-quiz-mode="neet"
-        >
-          🧬 NEET
-        </button>
-
-      </div>
-
-    </div>
-
-  `;
-
-  quizContent
-    .querySelectorAll(
-      "[data-quiz-mode]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          quizMode =
-            button.dataset.quizMode;
-
-          quizClass = null;
-          quizSubject = null;
-
-          renderQuizSubjects();
-
-        }
-      );
-
-    });
-
-}
-
-
-function renderQuizSubjects() {
-
-  if (!quizContent) {
-    return;
-  }
-
-  const subjects =
-    quizSubjects[
-      quizMode
-    ] || [];
-
-  quizContent.innerHTML = `
-
-    <div class="quiz-container">
-
-      <h3>
-        Choose a subject
-      </h3>
-
-      <div class="quiz-options">
-
-        ${
-          subjects
-            .map(
-              subject => `
-                <button
-                  class="quiz-option"
-                  data-subject="${escapeHtml(
-                    subject
-                  )}"
-                >
-                  ${escapeHtml(
-                    subject
-                  )}
-                </button>
-              `
-            )
-            .join("")
-        }
-
-      </div>
-
-      <button
-        class="secondary-btn"
-        id="quizBackBtn"
-      >
-        ← Back
-      </button>
-
-    </div>
-
-  `;
-
-  quizContent
-    .querySelectorAll(
-      "[data-subject]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          quizSubject =
-            button.dataset.subject;
-
-          renderQuizMessage();
-
-        }
-      );
-
-    });
-
-  $("quizBackBtn")
-    ?.addEventListener(
-      "click",
-      renderQuizStart
-    );
-
-}
-
-
-async function loadQuizQuestions() {
-
-  if (
-    !currentUser ||
-    !quizMode ||
-    !quizSubject
-  ) {
-    return [];
-  }
-
-  let query =
-    supabaseClient
-      .from("qevira_quiz_questions")
-      .select("*")
-      .eq(
-        "active",
-        true
-      )
-      .eq(
-        "category",
-        quizMode
-      )
-      .eq(
-        "subject",
-        quizSubject
-      )
-      .limit(20);
-
-  const {
-    data,
-    error
-  } =
-    await query;
-
-  if (error) {
-
-    console.error(
-      "Quiz question error:",
-      error
-    );
-
-    throw error;
-
-  }
-
-  return shuffleArray(
-    data || []
-  ).slice(
-    0,
-    10
-  );
-
-}
-
-
-function shuffleArray(
-  array
-) {
-
-  const result =
-    [...array];
-
-  for (
-    let i =
-      result.length - 1;
-    i > 0;
-    i--
-  ) {
-
-    const j =
-      Math.floor(
-        Math.random() *
-        (i + 1)
-      );
-
-    [
-      result[i],
-      result[j]
-    ] =
-      [
-        result[j],
-        result[i]
-      ];
-
-  }
-
-  return result;
-
-}
-
-
-function renderQuizMessage() {
-
-  if (!quizContent) {
-    return;
-  }
-
-  quizContent.innerHTML = `
-
-    <div class="quiz-container">
-
-      <h3>
-        ${escapeHtml(
-          quizMode?.toUpperCase() ||
-          ""
-        )}
-        — ${escapeHtml(
-          quizSubject ||
-          ""
-        )}
-      </h3>
-
-      <p>
-        Ready for your QEVIRA quiz?
-      </p>
-
-      <button
-        class="primary-btn"
-        id="startActualQuizBtn"
-      >
-        Start Quiz
-      </button>
-
-      <button
-        class="secondary-btn"
-        id="quizSubjectBackBtn"
-      >
-        ← Back
-      </button>
-
-    </div>
-
-  `;
-
-  $("startActualQuizBtn")
-    ?.addEventListener(
-      "click",
-      startActualQuiz
-    );
-
-  $("quizSubjectBackBtn")
-    ?.addEventListener(
-      "click",
-      renderQuizSubjects
-    );
-
-}
-
-
-async function startActualQuiz() {
-
-  if (quizBusy) {
-    return;
-  }
-
-  quizBusy = true;
-
-  try {
-
-    if (quizContent) {
-
-      quizContent.innerHTML = `
-        <div class="quiz-container">
-          <h3>Loading quiz...</h3>
-          <p>Please wait.</p>
-        </div>
-      `;
-
-    }
-
-    currentQuizQuestions =
-      await loadQuizQuestions();
-
-    if (!currentQuizQuestions.length) {
-
-      quizContent.innerHTML = `
-        <div class="quiz-container">
-
-          <h3>
-            Questions coming soon 🚀
-          </h3>
-
-          <p>
-            There are no active questions for this subject yet.
-          </p>
-
-          <button
-            class="secondary-btn"
-            id="quizNoQuestionsBack"
-          >
-            ← Back
-          </button>
-
-        </div>
-      `;
-
-      $("quizNoQuestionsBack")
-        ?.addEventListener(
-          "click",
-          renderQuizSubjects
-        );
-
-      return;
-
-    }
-
-    currentQuizIndex = 0;
-    currentQuizCorrect = 0;
-
-    renderCurrentQuizQuestion();
-
-  } catch (error) {
-
-    console.error(
-      "Start quiz:",
-      error
-    );
-
-    quizContent.innerHTML = `
-      <div class="quiz-container">
-
-        <h3>
-          Quiz error
-        </h3>
-
-        <p>
-          ${escapeHtml(
-            error?.message ||
-            "Unable to load questions."
-          )}
-        </p>
-
-        <button
-          class="secondary-btn"
-          id="quizErrorBack"
-        >
-          ← Back
-        </button>
-
-      </div>
-    `;
-
-    $("quizErrorBack")
-      ?.addEventListener(
-        "click",
-        renderQuizSubjects
-      );
-
-  } finally {
-
-    quizBusy = false;
-
-  }
-
-}
-
-
-function renderCurrentQuizQuestion() {
-
-  if (!quizContent) {
-    return;
-  }
-
-  const question =
-    currentQuizQuestions[
-      currentQuizIndex
-    ];
-
-  if (!question) {
-
-    finishQuiz();
-
-    return;
-
-  }
-
-  let options =
-    question.options;
-
-  if (
-    typeof options ===
-    "string"
-  ) {
-
-    try {
-
-      options =
-        JSON.parse(options);
-
-    } catch (_) {
-
-      options = [];
-
-    }
-
-  }
-
-  if (
-    !Array.isArray(options)
-  ) {
-
-    options =
-      Object.values(
-        options || {}
-      );
-
-  }
-
-  quizContent.innerHTML = `
-
-    <div class="quiz-container">
-
-      <div class="quiz-progress">
-        Question ${
-          currentQuizIndex + 1
-        } / ${
-          currentQuizQuestions.length
-        }
-      </div>
-
-      <h3>
-        ${escapeHtml(
-          question.question
-        )}
-      </h3>
-
-      <div class="quiz-options">
-
-        ${
-          options
-            .map(
-              option => `
-                <button
-                  class="quiz-option"
-                  data-answer="${escapeHtml(
-                    String(option)
-                  )}"
-                >
-                  ${escapeHtml(
-                    String(option)
-                  )}
-                </button>
-              `
-            )
-            .join("")
-        }
-
-      </div>
-
-    </div>
-
-  `;
-
-  quizContent
-    .querySelectorAll(
-      "[data-answer]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          handleQuizAnswer(
-            button.dataset.answer,
-            question.correct_answer
-          );
-
-        }
-      );
-
-    });
-
-}
-
-
-async function handleQuizAnswer(
-  selected,
-  correct
-) {
-
-  const normalizedSelected =
-    String(selected)
-      .trim()
-      .toLowerCase();
-
-  const normalizedCorrect =
-    String(correct)
-      .trim()
-      .toLowerCase();
-
-  if (
-    normalizedSelected ===
-    normalizedCorrect
-  ) {
-
-    currentQuizCorrect++;
-
-  }
-
-  currentQuizIndex++;
-
-  if (
-    currentQuizIndex >=
-    currentQuizQuestions.length
-  ) {
-
-    await finishQuiz();
-
-  } else {
-
-    renderCurrentQuizQuestion();
-
-  }
-
-}
-
-
-async function finishQuiz() {
-
-  const total =
-    currentQuizQuestions.length;
-
-  const correct =
-    currentQuizCorrect;
-
-  const coins =
-    correct;
-
-  if (currentUser) {
-
-    try {
-
-      await supabaseClient
-        .from("qevira_quiz_attempts")
-        .insert({
-
-          user_id:
-            currentUser.id,
-
-          category:
-            quizMode,
-
-          subject:
-            quizSubject,
-
-          question_count:
-            total,
-
-          correct_count:
-            correct,
-
-          coins_earned:
-            coins
-
-        });
-
-    } catch (error) {
-
-      console.warn(
-        "Quiz attempt save failed:",
-        error
-      );
-
-    }
-
-  }
-
-  quizContent.innerHTML = `
-
-    <div class="quiz-container">
-
-      <h3>
-        Quiz Complete 🎉
-      </h3>
-
-      <p>
-        Score:
-        <strong>
-          ${correct} / ${total}
-        </strong>
-      </p>
-
-      <p>
-        Coins earned:
-        <strong>
-          ${coins}
-        </strong>
-      </p>
-
-      <button
-        class="primary-btn"
-        id="quizAgainBtn"
-      >
-        Try Again
-      </button>
-
-      <button
-        class="secondary-btn"
-        id="quizDoneBtn"
-      >
-        Choose Another Subject
-      </button>
-
-    </div>
-
-  `;
-
-  $("quizAgainBtn")
-    ?.addEventListener(
-      "click",
-      startActualQuiz
-    );
-
-  $("quizDoneBtn")
-    ?.addEventListener(
-      "click",
-      renderQuizSubjects
-    );
-
-}
-
-
-safeClick(
-  quizStart,
-  () => {
-
-    showPage(
-      "quiz"
-    );
-
-    renderQuizStart();
-
-  }
-);
-
-
-// ============================================================
-// 24. WEBRTC — CREATE PEER
-// ============================================================
-
-function createPeerConnection(
-  peerId
-) {
-
-  if (peerConnection) {
-
-    try {
-
-      peerConnection.close();
-
-    } catch (_) {}
-
-  }
-
-  pendingIceCandidates = [];
-
-  remoteStream =
-    new MediaStream();
-
-  peerConnection =
-    new RTCPeerConnection(
-      rtcConfiguration
-    );
-
-  peerConnection.onicecandidate =
-    async event => {
-
-      if (
-        !event.candidate ||
-        !activeCallPeerId
-      ) {
-        return;
-      }
-
-      await sendCallSignal(
-        activeCallPeerId,
-        {
-
-          type:
-            "ice-candidate",
-
-          candidate:
-            event.candidate
-
-        }
-      );
-
-    };
-
-  peerConnection.ontrack =
-    event => {
-
-      const incomingStream =
-        event.streams?.[0];
-
-      if (incomingStream) {
-
-        incomingStream
-          .getTracks()
-          .forEach(track => {
-
-            if (
-              !remoteStream
-                .getTracks()
-                .some(
-                  existing =>
-                    existing.id ===
-                    track.id
-                )
-            ) {
-
-              remoteStream.addTrack(
-                track
-              );
-
-            }
-
-          });
-
-      } else {
-
-        if (
-          !remoteStream
-            .getTracks()
-            .some(
-              existing =>
-                existing.id ===
-                event.track.id
-            )
-        ) {
-
-          remoteStream.addTrack(
-            event.track
-          );
-
-        }
-
-      }
-
-      if (remoteVideo) {
-
-        remoteVideo.srcObject =
-          remoteStream;
-
-        remoteVideo
-          .play()
-          .catch(() => {});
-
-      }
-
-    };
-
-  peerConnection.onconnectionstatechange =
-    () => {
-
-      const state =
-        peerConnection
-          ?.connectionState;
-
-      console.log(
-        "WebRTC connection:",
-        state
-      );
-
-      if (activeCallStatus) {
-
-        if (
-          state ===
-          "connected"
-        ) {
-
-          activeCallStatus.textContent =
-            "Connected";
-
-          activeCallAccepted =
-            true;
-
-        } else if (
-          state ===
-          "connecting"
-        ) {
-
-          activeCallStatus.textContent =
-            "Connecting...";
-
-        } else if (
-          state ===
-          "disconnected"
-        ) {
-
-          activeCallStatus.textContent =
-            "Disconnected";
-
-        } else if (
-          state ===
-          "failed"
-        ) {
-
-          activeCallStatus.textContent =
-            "Connection failed";
-
-        } else if (
-          state ===
-          "closed"
-        ) {
-
-          activeCallStatus.textContent =
-            "Call ended";
-
-        }
-
-      }
-
-    };
-
-  peerConnection.oniceconnectionstatechange =
-    () => {
-
-      console.log(
-        "ICE state:",
-        peerConnection
-          ?.iceConnectionState
-      );
-
-    };
-
-  return peerConnection;
-
-}
-
-
-// ============================================================
-// 25. GET LOCAL MEDIA
-// ============================================================
-
-async function getLocalMedia(
-  callType
-) {
-
-  const video =
-    callType ===
-    "video";
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    alert(
-      "Your browser does not support camera/microphone access."
-    );
-
-    return false;
-
-  }
-
-  try {
-
-    localStream =
-      await navigator
-        .mediaDevices
-        .getUserMedia({
-
-          audio: true,
-
-          video
-
-        });
-
-    if (!peerConnection) {
-
-      throw new Error(
-        "Peer connection is not ready."
-      );
-
-    }
-
-    localStream
-      .getTracks()
-      .forEach(track => {
-
-        peerConnection.addTrack(
-          track,
-          localStream
-        );
-
-      });
-
-    if (localVideo) {
-
-      localVideo.srcObject =
-        video
-          ? localStream
-          : null;
-
-      if (video) {
-
-        localVideo
-          .play()
-          .catch(() => {});
-
-      }
-
-    }
-
-    return true;
-
-  } catch (error) {
-
-    console.error(
-      "Media permission error:",
-      error
-    );
-
-    alert(
-      video
-        ? "Camera and microphone permission is required for video calls."
-        : "Microphone permission is required for voice calls."
-    );
-
-    return false;
-
-  }
-
-}
-
-
-// ============================================================
-// 26. CALL UI
-// ============================================================
-
-function showActiveCallUI(
-  user,
-  callType
-) {
-
-  activeCallOverlay?.classList.remove(
-    "hidden"
-  );
+function openActiveCallUI(profile, type, status = "Calling...") {
 
   if (activeCallName) {
-
     activeCallName.textContent =
-      getDisplayName(user);
-
+      getProfileDisplayName(profile);
   }
 
   if (activeCallAvatar) {
 
     const avatar =
-      getAvatar(user);
+      profile?.avatar_url ||
+      "";
 
     if (avatar) {
 
-      activeCallAvatar.innerHTML =
-        `<img src="${escapeHtml(
-          avatar
-        )}" alt="">`;
+      activeCallAvatar.src = avatar;
 
     } else {
 
-      activeCallAvatar.textContent =
-        getInitial(
-          getDisplayName(user)
+      activeCallAvatar.src =
+        "https://ui-avatars.com/api/?name=" +
+        encodeURIComponent(
+          getProfileDisplayName(profile)
         );
 
     }
-
   }
 
-  if (activeCallStatus) {
+  setCallStatus(status);
 
-    activeCallStatus.textContent =
-      "Connecting...";
-
-  }
-
-  if (cameraCallBtn) {
-
-    cameraCallBtn.style.display =
-      callType === "video"
-        ? ""
-        : "none";
-
-  }
+  showCallElement(activeCallOverlay);
 
 }
 
 
-function hideIncomingCall() {
+// ============================================================
+// CLOSE INCOMING CALL UI
+// ============================================================
 
-  incomingCallOverlay?.classList.add(
-    "hidden"
-  );
+function closeIncomingCallUI() {
+
+  hideCallElement(incomingCallOverlay);
 
 }
 
 
-function showIncomingCall(
-  data
-) {
+// ============================================================
+// SHOW INCOMING CALL
+// ============================================================
 
-  incomingCallData =
-    data;
+function showIncomingCallUI(callData) {
 
-  incomingCallOverlay?.classList.remove(
-    "hidden"
-  );
+  if (!callData) return;
+
+  pendingIncomingCall = callData;
 
   if (incomingCallName) {
 
     incomingCallName.textContent =
-      data.callerName ||
+      callData.callerName ||
       "QEVIRA User";
 
   }
@@ -4186,194 +272,344 @@ function showIncomingCall(
   if (incomingCallType) {
 
     incomingCallType.textContent =
-      data.callType === "video"
-        ? "Incoming video call"
-        : "Incoming voice call";
+      callData.callType === "video"
+        ? "Incoming Video Call"
+        : "Incoming Voice Call";
 
   }
 
   if (incomingCallAvatar) {
 
-    if (data.callerAvatar) {
+    if (callData.callerAvatar) {
 
-      incomingCallAvatar.innerHTML =
-        `<img src="${escapeHtml(
-          data.callerAvatar
-        )}" alt="">`;
+      incomingCallAvatar.src =
+        callData.callerAvatar;
 
     } else {
 
-      incomingCallAvatar.textContent =
-        getInitial(
-          data.callerName
+      incomingCallAvatar.src =
+        "https://ui-avatars.com/api/?name=" +
+        encodeURIComponent(
+          callData.callerName ||
+          "QEVIRA User"
         );
 
     }
-
   }
+
+  showCallElement(incomingCallOverlay);
 
 }
 
 
 // ============================================================
-// 27. CALL SIGNALING
+// CREATE WEBRTC PEER
 // ============================================================
 
-async function setupCallInbox() {
+function createPeerConnection(peerId) {
 
-  if (!currentUser) {
-    return;
-  }
-
-  if (callInboxChannel) {
+  if (peerConnection) {
 
     try {
-
-      await supabaseClient
-        .removeChannel(
-          callInboxChannel
-        );
-
-    } catch (_) {}
+      peerConnection.close();
+    } catch (error) {}
 
   }
 
-  callInboxChannel =
-    supabaseClient
-      .channel(
-        getCallInboxName(
-          currentUser.id
-        )
-      )
-      .on(
-        "broadcast",
-        {
-          event:
-            "call-signal"
-        },
-        payload => {
+  peerConnection =
+    new RTCPeerConnection({
+      iceServers: QEVIRA_ICE_SERVERS
+    });
 
-          handleCallSignal(
-            payload?.payload
-          );
+
+  remoteStream =
+    new MediaStream();
+
+
+  if (remoteVideo) {
+
+    remoteVideo.srcObject =
+      remoteStream;
+
+  }
+
+
+  peerConnection.ontrack = function(event) {
+
+    console.log(
+      "[QEVIRA] Remote track received"
+    );
+
+    event.streams[0]
+      .getTracks()
+      .forEach(track => {
+
+        if (
+          !remoteStream
+            .getTracks()
+            .some(existing =>
+              existing.id === track.id
+            )
+        ) {
+
+          remoteStream.addTrack(track);
 
         }
-      )
-      .subscribe(
-        (status, error) => {
 
-          console.log(
-            "Call inbox:",
-            status
-          );
+      });
 
-          if (
-            status ===
-              "CHANNEL_ERROR" ||
-            status ===
-              "TIMED_OUT"
-          ) {
 
-            console.error(
-              "Call inbox error:",
-              error
-            );
+    if (remoteVideo) {
 
-          }
+      remoteVideo.srcObject =
+        remoteStream;
 
+      remoteVideo.play()
+        .catch(() => {});
+
+    }
+
+  };
+
+
+  peerConnection.onicecandidate =
+    async function(event) {
+
+      if (!event.candidate) {
+        return;
+      }
+
+      if (!activeCallPeerId) {
+        return;
+      }
+
+      await sendCallSignal(
+        activeCallPeerId,
+        {
+          type: "ice-candidate",
+
+          callId:
+            activeCallId,
+
+          candidate:
+            event.candidate
         }
       );
 
+    };
+
+
+  peerConnection.onconnectionstatechange =
+    function() {
+
+      const state =
+        peerConnection?.connectionState;
+
+      console.log(
+        "[QEVIRA] Connection state:",
+        state
+      );
+
+
+      if (state === "connected") {
+
+        activeCallConnected = true;
+
+        activeCallConnectedAt =
+          Date.now();
+
+        setCallStatus(
+          "Connected"
+        );
+
+      }
+
+
+      if (
+        state === "failed" ||
+        state === "disconnected"
+      ) {
+
+        setCallStatus(
+          "Connection problem..."
+        );
+
+      }
+
+
+      if (state === "closed") {
+
+        setCallStatus(
+          "Call ended"
+        );
+
+      }
+
+    };
+
+
+  peerConnection.oniceconnectionstatechange =
+    function() {
+
+      console.log(
+        "[QEVIRA] ICE state:",
+        peerConnection?.iceConnectionState
+      );
+
+    };
+
+
+  return peerConnection;
+
 }
 
 
-async function setupCallPairChannel(
-  peerId
+// ============================================================
+// GET MEDIA
+// ============================================================
+
+async function getCallMedia(type) {
+
+  if (!navigator.mediaDevices) {
+
+    throw new Error(
+      "Your browser does not support media devices."
+    );
+
+  }
+
+
+  const constraints = {
+
+    audio: true,
+
+    video:
+      type === "video"
+        ? {
+            facingMode: "user"
+          }
+        : false
+
+  };
+
+
+  const stream =
+    await navigator.mediaDevices
+      .getUserMedia(constraints);
+
+
+  localStream = stream;
+
+
+  if (localVideo) {
+
+    localVideo.srcObject =
+      localStream;
+
+    localVideo.muted = true;
+
+    localVideo.playsInline = true;
+
+    localVideo.play()
+      .catch(() => {});
+
+  }
+
+
+  return stream;
+
+}
+
+
+// ============================================================
+// ADD LOCAL TRACKS
+// ============================================================
+
+function addLocalTracks() {
+
+  if (!peerConnection) {
+    return;
+  }
+
+  if (!localStream) {
+    return;
+  }
+
+
+  const senders =
+    peerConnection.getSenders();
+
+
+  localStream
+    .getTracks()
+    .forEach(track => {
+
+      const alreadyAdded =
+        senders.some(
+          sender =>
+            sender.track &&
+            sender.track.id === track.id
+        );
+
+
+      if (!alreadyAdded) {
+
+        peerConnection.addTrack(
+          track,
+          localStream
+        );
+
+      }
+
+    });
+
+}
+
+
+// ============================================================
+// SIGNALING CHANNEL
+// ============================================================
+
+async function sendCallSignal(
+  receiverId,
+  payload
 ) {
+
+  if (!receiverId) {
+    return;
+  }
 
   if (
-    !currentUser ||
-    !peerId
+    typeof supabaseClient ===
+    "undefined"
   ) {
+
+    console.error(
+      "[QEVIRA] Supabase client missing."
+    );
+
     return;
-  }
-
-  if (callPairChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          callPairChannel
-        );
-
-    } catch (_) {}
 
   }
 
-  callPairChannel =
-    supabaseClient
-      .channel(
-        getCallPairName(
-          currentUser.id,
-          peerId
-        )
-      )
-      .on(
-        "broadcast",
-        {
-          event:
-            "call-signal"
-        },
-        payload => {
 
-          handleCallSignal(
-            payload?.payload
-          );
-
-        }
-      )
-      .subscribe(
-        (status, error) => {
-
-          console.log(
-            "Call pair:",
-            status
-          );
-
-          if (
-            status ===
-              "CHANNEL_ERROR" ||
-            status ===
-              "TIMED_OUT"
-          ) {
-
-            console.error(
-              "Call pair error:",
-              error
-            );
-
-          }
-
-        }
-      );
-
-  await waitForChannelSubscribed(
-    callPairChannel
-  );
-
-}
+  const channelName =
+    `qevira-call-inbox-${receiverId}`;
 
 
-function waitForChannelSubscribed(
-  channel
-) {
+  const channel =
+    supabaseClient.channel(
+      channelName +
+      "-sender-" +
+      createCallId()
+    );
+
 
   return new Promise(
-    resolve => {
+    async resolve => {
 
-      let finished =
-        false;
+      let finished = false;
+
 
       const finish = () => {
 
@@ -4382,47 +618,81 @@ function waitForChannelSubscribed(
         }
 
         finished = true;
+
+        try {
+          supabaseClient.removeChannel(
+            channel
+          );
+        } catch (error) {}
+
         resolve();
 
       };
 
-      const timer =
-        setTimeout(
-          finish,
-          3000
-        );
 
-      const original =
-        channel.__qeviraSubscribeCallback;
+      channel.subscribe(
+        async status => {
 
-      channel.__qeviraSubscribeCallback =
-        status => {
+          console.log(
+            "[QEVIRA] Signal channel:",
+            status
+          );
 
-          if (
-            status ===
-            "SUBSCRIBED"
-          ) {
 
-            clearTimeout(timer);
-            finish();
+          if (status === "SUBSCRIBED") {
 
-          }
+            try {
 
-          if (
-            original
-          ) {
+              await channel.send({
 
-            original(
-              status
+                type: "broadcast",
+
+                event: "call-signal",
+
+                payload
+
+              });
+
+            } catch (error) {
+
+              console.error(
+                "[QEVIRA] Signal send error:",
+                error
+              );
+
+            }
+
+
+            setTimeout(
+              finish,
+              100
             );
 
           }
 
-        };
 
-      setTimeout(
-        finish,
-        2500
+          if (status === "CHANNEL_ERROR") {
+
+            console.error(
+              "[QEVIRA] Signal channel error"
+            );
+
+            finish();
+
+          }
+
+
+          if (status === "TIMED_OUT") {
+
+            console.error(
+              "[QEVIRA] Signal timeout"
+            );
+
+            finish();
+
+          }
+
+        }
       );
 
     }
@@ -4431,575 +701,285 @@ function waitForChannelSubscribed(
 }
 
 
-async function sendCallSignal(
-  peerId,
-  payload
-) {
-
-  if (
-    !currentUser ||
-    !peerId
-  ) {
-    return false;
-  }
-
-  const channel =
-    supabaseClient
-      .channel(
-        getCallInboxName(
-          peerId
-        )
-      );
-
-  try {
-
-    const status =
-      await new Promise(
-        async resolve => {
-
-          let done = false;
-
-          const finish =
-            value => {
-
-              if (done) {
-                return;
-              }
-
-              done = true;
-              resolve(value);
-
-            };
-
-          channel.subscribe(
-            status => {
-
-              if (
-                status ===
-                "SUBSCRIBED"
-              ) {
-
-                channel
-                  .send({
-
-                    type:
-                      "broadcast",
-
-                    event:
-                      "call-signal",
-
-                    payload: {
-
-                      ...payload,
-
-                      from:
-                        currentUser.id,
-
-                      to:
-                        peerId
-
-                    }
-
-                  })
-                  .then(
-                    result => {
-
-                      if (result) {
-
-                        finish(
-                          true
-                        );
-
-                      } else {
-
-                        finish(
-                          false
-                        );
-
-                      }
-
-                    }
-                  )
-                  .catch(
-                    error => {
-
-                      console.error(
-                        "Call send:",
-                        error
-                      );
-
-                      finish(
-                        false
-                      );
-
-                    }
-                  );
-
-              }
-
-              if (
-                status ===
-                  "CHANNEL_ERROR" ||
-                status ===
-                  "TIMED_OUT"
-              ) {
-
-                finish(
-                  false
-                );
-
-              }
-
-            }
-          );
-
-          setTimeout(
-            () => finish(false),
-            5000
-          );
-
-        }
-      );
-
-    return status;
-
-  } catch (error) {
-
-    console.error(
-      "Call signal error:",
-      error
-    );
-
-    return false;
-
-  } finally {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          channel
-        );
-
-    } catch (_) {}
-
-  }
-
-}
-
-
 // ============================================================
-// 28. START CALL
+// SETUP CALL INBOX
 // ============================================================
 
-async function startCall(
-  callType
-) {
+async function setupCallInbox() {
 
   if (
-    !currentUser ||
-    !currentChatUser
+    typeof supabaseClient ===
+    "undefined"
   ) {
     return;
   }
 
-  if (
-    activeCallPeerId
-  ) {
-
-    return;
-
-  }
-
-  activeCallPeerId =
-    currentChatUser.id;
-
-  activeCallRole =
-    "caller";
-
-  activeCallType =
-    callType;
-
-  activeCallAccepted =
-    false;
-
-  isMuted =
-    false;
-
-  isCameraOff =
-    false;
-
-  createPeerConnection(
-    activeCallPeerId
-  );
-
-  const mediaReady =
-    await getLocalMedia(
-      callType
-    );
-
-  if (!mediaReady) {
-
-    await cleanupCall();
-
-    return;
-
-  }
-
-  showActiveCallUI(
-    currentChatUser,
-    callType
-  );
-
-  try {
-
-    await setupCallPairChannel(
-      activeCallPeerId
-    );
-
-    const offer =
-      await peerConnection
-        .createOffer();
-
-    await peerConnection
-      .setLocalDescription(
-        offer
-      );
-
-    // First notify receiver.
-    await sendCallSignal(
-      activeCallPeerId,
-      {
-
-        type:
-          "incoming-call",
-
-        callerName:
-          getDisplayName(
-            currentProfile
-          ),
-
-        callerAvatar:
-          getAvatar(
-            currentProfile
-          ),
-
-        callType
-
-      }
-    );
-
-    // Then send the WebRTC offer.
-    await sendCallSignal(
-      activeCallPeerId,
-      {
-
-        type:
-          "call-offer",
-
-        offer:
-
-          peerConnection
-            .localDescription,
-
-        callType
-
-      }
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Start call:",
-      error
-    );
-
-    alert(
-      "Could not start the call."
-    );
-
-    await cleanupCall();
-
-  }
-
-}
-
-
-safeClick(
-  voiceCallBtn,
-  () =>
-    startCall("voice")
-);
-
-
-safeClick(
-  videoCallBtn,
-  () =>
-    startCall("video")
-);
-
-
-// ============================================================
-// 29. HANDLE CALL SIGNAL
-// ============================================================
-
-async function handleCallSignal(
-  payload
-) {
 
   if (
-    !payload ||
+    typeof currentUser ===
+    "undefined" ||
     !currentUser
   ) {
     return;
   }
 
-  if (
-    payload.to &&
-    payload.to !==
-      currentUser.id
-  ) {
+
+  if (callInboxChannel) {
+
+    try {
+
+      await supabaseClient.removeChannel(
+        callInboxChannel
+      );
+
+    } catch (error) {}
+
+  }
+
+
+  const channelName =
+    `qevira-call-inbox-${currentUser.id}`;
+
+
+  callInboxChannel =
+    supabaseClient.channel(
+      channelName
+    );
+
+
+  callInboxChannel.on(
+
+    "broadcast",
+
+    {
+      event: "call-signal"
+    },
+
+    async ({ payload }) => {
+
+      try {
+
+        await handleCallSignal(
+          payload
+        );
+
+      } catch (error) {
+
+        console.error(
+          "[QEVIRA] Signal handling error:",
+          error
+        );
+
+      }
+
+    }
+
+  );
+
+
+  callInboxChannel.subscribe(
+    status => {
+
+      console.log(
+        "[QEVIRA] Call inbox:",
+        status
+      );
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// HANDLE SIGNAL
+// ============================================================
+
+async function handleCallSignal(data) {
+
+  if (!data) {
     return;
   }
 
-  const from =
-    payload.from;
 
-  if (!from) {
+  const type =
+    data.type;
+
+
+  console.log(
+    "[QEVIRA] Incoming signal:",
+    type
+  );
+
+
+  // ----------------------------------------------------------
+  // INCOMING CALL
+  // ----------------------------------------------------------
+
+  if (type === "incoming-call") {
+
+    pendingIncomingCall =
+      data;
+
+
+    activeCallPeerId =
+      data.callerId;
+
+
+    activeCallId =
+      data.callId;
+
+
+    activeCallType =
+      data.callType;
+
+
+    showIncomingCallUI(
+      data
+    );
+
+
     return;
   }
 
+
   // ----------------------------------------------------------
-  // Incoming call notification
+  // CALL OFFER
   // ----------------------------------------------------------
 
-  if (
-    payload.type ===
-    "incoming-call"
-  ) {
+  if (type === "call-offer") {
 
-    // Don't overwrite an already active call.
+    console.log(
+      "[QEVIRA] Offer received"
+    );
+
+
     if (
-      activeCallPeerId &&
-      activeCallPeerId !==
-        from
+      activeCallId &&
+      data.callId &&
+      activeCallId !== data.callId
     ) {
 
-      await sendCallSignal(
-        from,
-        {
-          type:
-            "call-decline"
-        }
+      console.log(
+        "[QEVIRA] Ignoring offer from another call."
       );
 
       return;
 
     }
 
-    incomingCallData = {
 
-      from,
+    pendingOffer =
+      data.offer;
 
-      callerName:
-        payload.callerName ||
-        "QEVIRA User",
 
-      callerAvatar:
-        payload.callerAvatar ||
-        "",
+    if (
+      data.callId
+    ) {
 
-      callType:
-        payload.callType ||
-        "voice"
+      activeCallId =
+        data.callId;
 
-    };
+    }
 
-    showIncomingCall(
-      incomingCallData
-    );
+
+    if (
+      data.senderId
+    ) {
+
+      activeCallPeerId =
+        data.senderId;
+
+    }
+
+
+    /*
+     * IMPORTANT:
+     *
+     * We don't immediately create an answer here
+     * unless the user has accepted the call.
+     *
+     * The offer is saved so ACCEPT can process it.
+     */
+
+
+    if (
+      activeCallAccepted &&
+      activeCallRole === "receiver"
+    ) {
+
+      await processPendingOffer();
+
+    }
+
 
     return;
   }
 
 
   // ----------------------------------------------------------
-  // OFFER
+  // CALL ANSWER
   // ----------------------------------------------------------
 
-  if (
-    payload.type ===
-    "call-offer"
-  ) {
+  if (type === "call-answer") {
 
-    activeCallPeerId =
-      from;
+    console.log(
+      "[QEVIRA] Answer received"
+    );
 
-    activeCallRole =
-      "receiver";
-
-    activeCallType =
-      payload.callType ||
-      "voice";
 
     if (!peerConnection) {
 
-      createPeerConnection(
-        from
+      console.warn(
+        "[QEVIRA] No peer connection for answer."
       );
+
+      return;
 
     }
 
-    if (!localStream) {
-
-      const ready =
-        await getLocalMedia(
-          activeCallType
-        );
-
-      if (!ready) {
-
-        await sendCallSignal(
-          from,
-          {
-            type:
-              "call-decline"
-          }
-        );
-
-        return;
-
-      }
-
-    }
-
-    try {
-
-      await peerConnection
-        .setRemoteDescription(
-          new RTCSessionDescription(
-            payload.offer
-          )
-        );
-
-      await processPendingIce();
-
-      // ======================================================
-      // IMPORTANT FIX:
-      // RECEIVER CREATES ANSWER
-      // ======================================================
-
-      const answer =
-        await peerConnection
-          .createAnswer();
-
-      await peerConnection
-        .setLocalDescription(
-          answer
-        );
-
-      activeCallAccepted =
-        true;
-
-      // Send answer back to caller.
-      await sendCallSignal(
-        from,
-        {
-
-          type:
-            "call-answer",
-
-          answer:
-            peerConnection
-              .localDescription,
-
-          callType:
-            activeCallType
-
-        }
-      );
-
-      showActiveCallUI(
-        {
-          display_name:
-            incomingCallData
-              ?.callerName ||
-            "QEVIRA User",
-
-          avatar_url:
-            incomingCallData
-              ?.callerAvatar ||
-            ""
-
-        },
-        activeCallType
-      );
-
-      hideIncomingCall();
-
-    } catch (error) {
-
-      console.error(
-        "Handle offer:",
-        error
-      );
-
-      alert(
-        "Could not accept the call."
-      );
-
-      await cleanupCall();
-
-    }
-
-    return;
-  }
-
-
-  // ----------------------------------------------------------
-  // ANSWER
-  // ----------------------------------------------------------
-
-  if (
-    payload.type ===
-    "call-answer"
-  ) {
 
     if (
-      !peerConnection
+      activeCallId &&
+      data.callId &&
+      activeCallId !== data.callId
     ) {
+
       return;
+
     }
+
 
     try {
 
-      await peerConnection
-        .setRemoteDescription(
-          new RTCSessionDescription(
-            payload.answer
-          )
-        );
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(
+          data.answer
+        )
+      );
 
-      activeCallAccepted =
-        true;
 
-      await processPendingIce();
+      console.log(
+        "[QEVIRA] Remote answer applied."
+      );
 
-      if (activeCallStatus) {
 
-        activeCallStatus.textContent =
-          "Connecting...";
+      await flushPendingIceCandidates();
 
-      }
+
+      setCallStatus(
+        "Connecting..."
+      );
 
     } catch (error) {
 
       console.error(
-        "Set answer:",
+        "[QEVIRA] Failed to apply answer:",
         error
       );
 
     }
+
 
     return;
   }
@@ -5009,86 +989,243 @@ async function handleCallSignal(
   // ICE CANDIDATE
   // ----------------------------------------------------------
 
-  if (
-    payload.type ===
-    "ice-candidate"
-  ) {
+  if (type === "ice-candidate") {
 
-    const candidate =
-      payload.candidate;
-
-    if (!candidate) {
+    if (!data.candidate) {
       return;
     }
 
+
+    /*
+     * ICE can arrive BEFORE remoteDescription.
+     *
+     * Therefore queue it.
+     */
+
     if (
-      peerConnection &&
-      peerConnection
-        .remoteDescription
+      !peerConnection ||
+      !peerConnection.remoteDescription
     ) {
 
-      try {
-
-        await peerConnection
-          .addIceCandidate(
-            new RTCIceCandidate(
-              candidate
-            )
-          );
-
-      } catch (error) {
-
-        console.error(
-          "ICE candidate:",
-          error
-        );
-
-      }
-
-    } else {
-
       pendingIceCandidates.push(
-        candidate
+        data.candidate
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      await peerConnection.addIceCandidate(
+        new RTCIceCandidate(
+          data.candidate
+        )
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[QEVIRA] ICE candidate error:",
+        error
       );
 
     }
 
-    return;
-  }
-
-
-  // ----------------------------------------------------------
-  // HANG UP
-  // ----------------------------------------------------------
-
-  if (
-    payload.type ===
-    "call-hangup"
-  ) {
-
-    await cleanupCall(
-      false
-    );
 
     return;
   }
 
 
   // ----------------------------------------------------------
-  // DECLINED
+  // CALL DECLINED
   // ----------------------------------------------------------
 
-  if (
-    payload.type ===
-    "call-decline"
-  ) {
+  if (type === "call-decline") {
 
-    alert(
-      "Call declined."
+    if (
+      activeCallId &&
+      data.callId &&
+      activeCallId !== data.callId
+    ) {
+
+      return;
+
+    }
+
+
+    setCallStatus(
+      "Call declined"
     );
 
-    await cleanupCall(
-      false
+
+    await saveOutgoingCallHistory(
+      "declined"
+    );
+
+
+    setTimeout(
+      () => cleanupCall(false),
+      700
+    );
+
+
+    return;
+  }
+
+
+  // ----------------------------------------------------------
+  // CALL HANGUP
+  // ----------------------------------------------------------
+
+  if (type === "call-hangup") {
+
+    if (
+      activeCallId &&
+      data.callId &&
+      activeCallId !== data.callId
+    ) {
+
+      return;
+
+    }
+
+
+    setCallStatus(
+      "Call ended"
+    );
+
+
+    await saveOutgoingCallHistory(
+      activeCallConnected
+        ? "completed"
+        : "cancelled"
+    );
+
+
+    setTimeout(
+      () => cleanupCall(false),
+      500
+    );
+
+
+    return;
+  }
+
+}
+
+
+// ============================================================
+// PROCESS OFFER
+// ============================================================
+
+async function processPendingOffer() {
+
+  if (!pendingOffer) {
+    return;
+  }
+
+
+  if (
+    !peerConnection
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !activeCallAccepted
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    console.log(
+      "[QEVIRA] Processing offer..."
+    );
+
+
+    await peerConnection.setRemoteDescription(
+
+      new RTCSessionDescription(
+        pendingOffer
+      )
+
+    );
+
+
+    console.log(
+      "[QEVIRA] Remote offer applied."
+    );
+
+
+    await flushPendingIceCandidates();
+
+
+    const answer =
+      await peerConnection.createAnswer();
+
+
+    await peerConnection.setLocalDescription(
+      answer
+    );
+
+
+    console.log(
+      "[QEVIRA] Answer created."
+    );
+
+
+    await sendCallSignal(
+      activeCallPeerId,
+      {
+
+        type:
+          "call-answer",
+
+        senderId:
+          currentUser.id,
+
+        callId:
+          activeCallId,
+
+        answer:
+          peerConnection.localDescription
+
+      }
+    );
+
+
+    console.log(
+      "[QEVIRA] Answer sent."
+    );
+
+
+    pendingOffer =
+      null;
+
+
+    setCallStatus(
+      "Connecting..."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[QEVIRA] Failed to process offer:",
+      error
+    );
+
+
+    setCallStatus(
+      "Call connection failed"
     );
 
   }
@@ -5097,39 +1234,55 @@ async function handleCallSignal(
 
 
 // ============================================================
-// 30. PROCESS ICE
+// FLUSH ICE
 // ============================================================
 
-async function processPendingIce() {
+async function flushPendingIceCandidates() {
 
   if (
     !peerConnection ||
-    !peerConnection
-      .remoteDescription
+    !peerConnection.remoteDescription
   ) {
+
     return;
+
   }
 
-  while (
-    pendingIceCandidates.length
+
+  if (
+    pendingIceCandidates.length === 0
   ) {
 
-    const candidate =
-      pendingIceCandidates.shift();
+    return;
+
+  }
+
+
+  const candidates =
+    [...pendingIceCandidates];
+
+
+  pendingIceCandidates =
+    [];
+
+
+  for (
+    const candidate
+    of candidates
+  ) {
 
     try {
 
-      await peerConnection
-        .addIceCandidate(
-          new RTCIceCandidate(
-            candidate
-          )
-        );
+      await peerConnection.addIceCandidate(
+        new RTCIceCandidate(
+          candidate
+        )
+      );
 
     } catch (error) {
 
       console.error(
-        "Pending ICE:",
+        "[QEVIRA] Queued ICE error:",
         error
       );
 
@@ -5141,185 +1294,751 @@ async function processPendingIce() {
 
 
 // ============================================================
-// 31. ACCEPT CALL
+// START OUTGOING CALL
 // ============================================================
 
-acceptCallBtn?.addEventListener(
-  "click",
-  async () => {
+async function startQeviraCall(
+  peerId,
+  type = "voice",
+  profile = null
+) {
 
-    if (
-      !incomingCallData
-    ) {
-      return;
-    }
+  if (!currentUser) {
 
-    const data =
-      incomingCallData;
+    alert(
+      "Please login to QEVIRA first."
+    );
+
+    return;
+
+  }
+
+
+  if (!peerId) {
+
+    console.error(
+      "[QEVIRA] No peer ID."
+    );
+
+    return;
+
+  }
+
+
+  if (peerId === currentUser.id) {
+
+    alert(
+      "You cannot call yourself."
+    );
+
+    return;
+
+  }
+
+
+  if (peerConnection) {
+
+    console.warn(
+      "[QEVIRA] Already in a call."
+    );
+
+    return;
+
+  }
+
+
+  try {
 
     activeCallPeerId =
-      data.from;
+      peerId;
+
+    activeCallId =
+      createCallId();
+
+    activeCallRole =
+      "caller";
+
+    activeCallType =
+      type;
+
+    activeCallAccepted =
+      true;
+
+    activeCallConnected =
+      false;
+
+    activeCallStartedAt =
+      Date.now();
+
+    activeCallConnectedAt =
+      null;
+
+    callHistorySaved =
+      false;
+
+
+    openActiveCallUI(
+      profile,
+      type,
+      "Calling..."
+    );
+
+
+    /*
+     * STEP 1
+     * Get microphone/camera.
+     */
+
+    await getCallMedia(
+      type
+    );
+
+
+    /*
+     * STEP 2
+     * Create PeerConnection.
+     */
+
+    createPeerConnection(
+      peerId
+    );
+
+
+    /*
+     * STEP 3
+     * Add local audio/video.
+     */
+
+    addLocalTracks();
+
+
+    /*
+     * STEP 4
+     * Create WebRTC offer.
+     */
+
+    const offer =
+      await peerConnection.createOffer();
+
+
+    /*
+     * STEP 5
+     * Set local description.
+     */
+
+    await peerConnection.setLocalDescription(
+      offer
+    );
+
+
+    /*
+     * STEP 6
+     * Tell receiver that a call is coming.
+     */
+
+    await sendCallSignal(
+      peerId,
+      {
+
+        type:
+          "incoming-call",
+
+        callerId:
+          currentUser.id,
+
+        callerName:
+          getCurrentUserDisplayName(),
+
+        callerAvatar:
+          currentProfile?.avatar_url ||
+          null,
+
+        callType:
+          type,
+
+        callId:
+          activeCallId
+
+      }
+    );
+
+
+    /*
+     * Small delay helps ensure the receiver
+     * has already processed the incoming-call event.
+     */
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          200
+        )
+    );
+
+
+    /*
+     * STEP 7
+     * Send actual WebRTC offer.
+     */
+
+    await sendCallSignal(
+      peerId,
+      {
+
+        type:
+          "call-offer",
+
+        senderId:
+          currentUser.id,
+
+        callId:
+          activeCallId,
+
+        offer:
+          peerConnection.localDescription
+
+      }
+    );
+
+
+    /*
+     * Send offer one more time shortly afterward.
+     *
+     * This helps when mobile network timing causes
+     * the first broadcast to arrive too early.
+     */
+
+    setTimeout(
+      async () => {
+
+        if (
+          peerConnection &&
+          activeCallPeerId === peerId &&
+          activeCallId
+        ) {
+
+          try {
+
+            await sendCallSignal(
+              peerId,
+              {
+
+                type:
+                  "call-offer",
+
+                senderId:
+                  currentUser.id,
+
+                callId:
+                  activeCallId,
+
+                offer:
+                  peerConnection.localDescription
+
+              }
+            );
+
+          } catch (error) {
+
+            console.error(
+              "[QEVIRA] Offer retry failed:",
+              error
+            );
+
+          }
+
+        }
+
+      },
+      1000
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "[QEVIRA] Call failed:",
+      error
+    );
+
+
+    alert(
+      "Unable to start the call.\n\n" +
+      "Please allow microphone/camera permission and try again."
+    );
+
+
+    cleanupCall(
+      false
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// ACCEPT INCOMING CALL
+// ============================================================
+
+async function acceptQeviraCall() {
+
+  if (
+    !pendingIncomingCall
+  ) {
+
+    return;
+
+  }
+
+
+  const call =
+    pendingIncomingCall;
+
+
+  try {
+
+    closeIncomingCallUI();
+
+
+    activeCallPeerId =
+      call.callerId;
+
+    activeCallId =
+      call.callId;
 
     activeCallRole =
       "receiver";
 
     activeCallType =
-      data.callType ||
+      call.callType ||
       "voice";
 
     activeCallAccepted =
+      true;
+
+    activeCallConnected =
       false;
 
-    hideIncomingCall();
+    activeCallStartedAt =
+      Date.now();
 
-    try {
+    activeCallConnectedAt =
+      null;
 
-      createPeerConnection(
-        activeCallPeerId
+    callHistorySaved =
+      false;
+
+
+    openActiveCallUI(
+      {
+        display_name:
+          call.callerName,
+
+        full_name:
+          call.callerName,
+
+        avatar_url:
+          call.callerAvatar
+
+      },
+
+      activeCallType,
+
+      "Connecting..."
+    );
+
+
+    /*
+     * STEP 1
+     * Get receiver's microphone/camera.
+     */
+
+    await getCallMedia(
+      activeCallType
+    );
+
+
+    /*
+     * STEP 2
+     * Create peer connection.
+     */
+
+    createPeerConnection(
+      activeCallPeerId
+    );
+
+
+    /*
+     * STEP 3
+     * Add local tracks.
+     */
+
+    addLocalTracks();
+
+
+    /*
+     * The caller's offer may have already arrived.
+     *
+     * If it has, createAnswer().
+     */
+
+    if (pendingOffer) {
+
+      await processPendingOffer();
+
+    } else {
+
+      setCallStatus(
+        "Waiting for caller..."
       );
-
-      const ready =
-        await getLocalMedia(
-          activeCallType
-        );
-
-      if (!ready) {
-
-        await cleanupCall();
-
-        return;
-
-      }
-
-      await setupCallPairChannel(
-        activeCallPeerId
-      );
-
-      showActiveCallUI(
-        {
-          display_name:
-            data.callerName,
-
-          avatar_url:
-            data.callerAvatar
-
-        },
-        activeCallType
-      );
-
-      // The actual offer will arrive through
-      // the inbox and the handler will create
-      // the answer automatically.
-
-    } catch (error) {
-
-      console.error(
-        "Accept call:",
-        error
-      );
-
-      alert(
-        "Could not accept the call."
-      );
-
-      await cleanupCall();
 
     }
 
+
+  } catch (error) {
+
+    console.error(
+      "[QEVIRA] Accept call failed:",
+      error
+    );
+
+
+    await sendCallSignal(
+      call.callerId,
+      {
+
+        type:
+          "call-decline",
+
+        senderId:
+          currentUser.id,
+
+        callId:
+          call.callId
+
+      }
+    );
+
+
+    cleanupCall(
+      false
+    );
+
+
+    alert(
+      "Microphone/camera permission is required for calls."
+    );
+
   }
-);
+
+
+  pendingIncomingCall =
+    null;
+
+}
 
 
 // ============================================================
-// 32. DECLINE CALL
+// DECLINE INCOMING CALL
 // ============================================================
 
-declineCallBtn?.addEventListener(
-  "click",
-  async () => {
+async function declineQeviraCall() {
 
-    const peerId =
-      incomingCallData?.from;
+  const call =
+    pendingIncomingCall;
 
-    if (peerId) {
+
+  if (!call) {
+
+    closeIncomingCallUI();
+
+    return;
+
+  }
+
+
+  try {
+
+    await sendCallSignal(
+      call.callerId,
+      {
+
+        type:
+          "call-decline",
+
+        senderId:
+          currentUser.id,
+
+        callId:
+          call.callId
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[QEVIRA] Decline error:",
+      error
+    );
+
+  }
+
+
+  pendingIncomingCall =
+    null;
+
+  pendingOffer =
+    null;
+
+  closeIncomingCallUI();
+
+}
+
+
+// ============================================================
+// END CALL
+// ============================================================
+
+async function endQeviraCall() {
+
+  const peerId =
+    activeCallPeerId;
+
+  const callId =
+    activeCallId;
+
+
+  if (
+    peerId &&
+    callId
+  ) {
+
+    try {
 
       await sendCallSignal(
         peerId,
         {
+
           type:
-            "call-decline"
+            "call-hangup",
+
+          senderId:
+            currentUser.id,
+
+          callId
+
         }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[QEVIRA] Hangup signal error:",
+        error
       );
 
     }
 
-    hideIncomingCall();
+  }
 
-    incomingCallData =
-      null;
+
+  await saveOutgoingCallHistory(
+    activeCallConnected
+      ? "completed"
+      : "cancelled"
+  );
+
+
+  cleanupCall(
+    false
+  );
+
+}
+
+
+// ============================================================
+// SAVE OUTGOING CALL HISTORY
+// ============================================================
+
+async function saveOutgoingCallHistory(
+  status
+) {
+
+  if (callHistorySaved) {
+    return;
+  }
+
+
+  if (
+    typeof supabaseClient ===
+    "undefined"
+  ) {
+
+    return;
 
   }
-);
 
 
-// ============================================================
-// 33. END CALL
-// ============================================================
+  if (!currentUser) {
+    return;
+  }
 
-endCallBtn?.addEventListener(
-  "click",
-  async () => {
 
-    if (
-      activeCallPeerId
-    ) {
+  if (
+    !activeCallPeerId ||
+    !activeCallType
+  ) {
 
-      await sendCallSignal(
-        activeCallPeerId,
-        {
-          type:
-            "call-hangup"
-        }
+    return;
+
+  }
+
+
+  /*
+   * Your call_history table allows the caller
+   * to insert the record.
+   */
+
+  if (
+    activeCallRole !== "caller"
+  ) {
+
+    return;
+
+  }
+
+
+  callHistorySaved =
+    true;
+
+
+  const endedAt =
+    new Date();
+
+
+  const startedAt =
+    activeCallStartedAt
+      ? new Date(activeCallStartedAt)
+      : endedAt;
+
+
+  const durationSeconds =
+    activeCallConnectedAt
+      ? Math.max(
+          0,
+          Math.floor(
+            (
+              Date.now() -
+              activeCallConnectedAt
+            ) /
+            1000
+          )
+        )
+      : 0;
+
+
+  try {
+
+    const { error } =
+      await supabaseClient
+        .from("call_history")
+        .insert({
+
+          caller_id:
+            currentUser.id,
+
+          receiver_id:
+            activeCallPeerId,
+
+          call_type:
+            activeCallType,
+
+          direction:
+            "outgoing",
+
+          status:
+            status,
+
+          started_at:
+            startedAt.toISOString(),
+
+          ended_at:
+            endedAt.toISOString(),
+
+          duration_seconds:
+            durationSeconds
+
+        });
+
+
+    if (error) {
+
+      /*
+       * History failure must NOT break
+       * the actual call.
+       */
+
+      console.warn(
+        "[QEVIRA] Call history:",
+        error.message
       );
 
     }
 
-    await cleanupCall();
+  } catch (error) {
 
-  }
-);
-
-
-// ============================================================
-// 34. MUTE
-// ============================================================
-
-muteCallBtn?.addEventListener(
-  "click",
-  () => {
-
-    if (!localStream) {
-      return;
-    }
-
-    const audioTracks =
-      localStream.getAudioTracks();
-
-    if (!audioTracks.length) {
-      return;
-    }
-
-    isMuted =
-      !isMuted;
-
-    audioTracks.forEach(
-      track => {
-
-        track.enabled =
-          !isMuted;
-
-      }
+    console.warn(
+      "[QEVIRA] Call history exception:",
+      error
     );
+
+  }
+
+}
+
+
+// ============================================================
+// MUTE / UNMUTE
+// ============================================================
+
+function toggleQeviraMute() {
+
+  if (!localStream) {
+    return;
+  }
+
+
+  const audioTracks =
+    localStream.getAudioTracks();
+
+
+  if (
+    audioTracks.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  isMuted =
+    !isMuted;
+
+
+  audioTracks.forEach(
+    track => {
+
+      track.enabled =
+        !isMuted;
+
+    }
+  );
+
+
+  if (muteCallBtn) {
 
     muteCallBtn.textContent =
       isMuted
@@ -5327,39 +2046,58 @@ muteCallBtn?.addEventListener(
         : "🎙️";
 
   }
-);
+
+
+  setCallStatus(
+    isMuted
+      ? "Muted"
+      : activeCallConnected
+        ? "Connected"
+        : "Connecting..."
+  );
+
+}
 
 
 // ============================================================
-// 35. CAMERA
+// CAMERA ON/OFF
 // ============================================================
 
-cameraCallBtn?.addEventListener(
-  "click",
-  () => {
+function toggleQeviraCamera() {
 
-    if (!localStream) {
-      return;
+  if (!localStream) {
+    return;
+  }
+
+
+  const videoTracks =
+    localStream.getVideoTracks();
+
+
+  if (
+    videoTracks.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  isCameraOff =
+    !isCameraOff;
+
+
+  videoTracks.forEach(
+    track => {
+
+      track.enabled =
+        !isCameraOff;
+
     }
+  );
 
-    const videoTracks =
-      localStream.getVideoTracks();
 
-    if (!videoTracks.length) {
-      return;
-    }
-
-    isCameraOff =
-      !isCameraOff;
-
-    videoTracks.forEach(
-      track => {
-
-        track.enabled =
-          !isCameraOff;
-
-      }
-    );
+  if (cameraCallBtn) {
 
     cameraCallBtn.textContent =
       isCameraOff
@@ -5367,52 +2105,35 @@ cameraCallBtn?.addEventListener(
         : "🎥";
 
   }
-);
+
+}
 
 
 // ============================================================
-// 36. CLEANUP CALL
+// CLEANUP CALL
 // ============================================================
 
 async function cleanupCall(
-  notifyPeer = false
+  saveHistory = true
 ) {
 
-  const peerId =
-    activeCallPeerId;
-
   if (
-    notifyPeer &&
-    peerId
+    saveHistory &&
+    activeCallRole === "caller"
   ) {
 
-    await sendCallSignal(
-      peerId,
-      {
-        type:
-          "call-hangup"
-      }
+    await saveOutgoingCallHistory(
+      activeCallConnected
+        ? "completed"
+        : "cancelled"
     );
 
   }
 
-  try {
 
-    peerConnection
-      ?.getSenders()
-      ?.forEach(
-        sender => {
-
-          try {
-
-            sender.track?.stop();
-
-          } catch (_) {}
-
-        }
-      );
-
-  } catch (_) {}
+  /*
+   * Stop local microphone/camera.
+   */
 
   if (localStream) {
 
@@ -5422,15 +2143,18 @@ async function cleanupCall(
         track => {
 
           try {
-
             track.stop();
-
-          } catch (_) {}
+          } catch (error) {}
 
         }
       );
 
   }
+
+
+  /*
+   * Stop remote tracks.
+   */
 
   if (remoteStream) {
 
@@ -5440,81 +2164,39 @@ async function cleanupCall(
         track => {
 
           try {
-
             track.stop();
-
-          } catch (_) {}
+          } catch (error) {}
 
         }
       );
 
   }
 
+
+  /*
+   * Close PeerConnection.
+   */
+
   if (peerConnection) {
 
     try {
 
+      peerConnection.ontrack =
+        null;
+
+      peerConnection.onicecandidate =
+        null;
+
       peerConnection.close();
 
-    } catch (_) {}
+    } catch (error) {}
 
   }
 
-  if (callPairChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          callPairChannel
-        );
-
-    } catch (_) {}
-
-  }
 
   peerConnection =
     null;
 
-  localStream =
-    null;
-
-  remoteStream =
-    null;
-
-  callPairChannel =
-    null;
-
-  activeCallPeerId =
-    null;
-
-  activeCallRole =
-    null;
-
-  activeCallType =
-    null;
-
-  activeCallAccepted =
-    false;
-
-  pendingIceCandidates =
-    [];
-
-  incomingCallData =
-    null;
-
-  isMuted =
-    false;
-
-  isCameraOff =
-    false;
-
-  if (remoteVideo) {
-
-    remoteVideo.srcObject =
-      null;
-
-  }
 
   if (localVideo) {
 
@@ -5523,478 +2205,213 @@ async function cleanupCall(
 
   }
 
-  if (muteCallBtn) {
 
-    muteCallBtn.textContent =
-      "🎙️";
+  if (remoteVideo) {
 
-  }
-
-  if (cameraCallBtn) {
-
-    cameraCallBtn.textContent =
-      "🎥";
+    remoteVideo.srcObject =
+      null;
 
   }
 
-  activeCallOverlay?.classList.add(
-    "hidden"
-  );
 
-  incomingCallOverlay?.classList.add(
-    "hidden"
-  );
-
-}
-
-
-// ============================================================
-// 37. PROFILE REALTIME
-// ============================================================
-
-async function setupProfileRealtime() {
-
-  if (!currentUser) {
-    return;
-  }
-
-  if (profileChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          profileChannel
-        );
-
-    } catch (_) {}
-
-  }
-
-  profileChannel =
-    supabaseClient
-      .channel(
-        `qevira-profile-${currentUser.id}`
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "profiles",
-          filter:
-            `id=eq.${currentUser.id}`
-        },
-        payload => {
-
-          if (payload?.new) {
-
-            currentProfile =
-              payload.new;
-
-            renderProfile();
-
-          }
-
-        }
-      )
-      .subscribe(
-        (status, error) => {
-
-          if (
-            status ===
-              "CHANNEL_ERROR" ||
-            status ===
-              "TIMED_OUT"
-          ) {
-
-            console.error(
-              "Profile realtime:",
-              status,
-              error
-            );
-
-          }
-
-        }
-      );
-
-}
-
-
-// ============================================================
-// 38. LOGOUT
-// ============================================================
-
-logoutBtn?.addEventListener(
-  "click",
-  async () => {
-
-    if (
-      !confirm(
-        "Log out of QEVIRA?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-
-      await markUserOffline();
-
-      await cleanupApp();
-
-      const {
-        error
-      } =
-        await supabaseClient.auth
-          .signOut();
-
-      if (error) {
-        throw error;
-      }
-
-      currentUser =
-        null;
-
-      currentProfile =
-        null;
-
-      showAuth();
-
-    } catch (error) {
-
-      console.error(
-        "Logout:",
-        error
-      );
-
-      alert(
-        error?.message ||
-        "Logout failed."
-      );
-
-    }
-
-  }
-);
-
-
-// ============================================================
-// 39. CLEANUP APP
-// ============================================================
-
-async function cleanupApp() {
-
-  try {
-
-    await cleanupCall(
-      false
-    );
-
-  } catch (error) {
-
-    console.warn(
-      "Call cleanup:",
-      error
-    );
-
-  }
-
-  if (messagesChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          messagesChannel
-        );
-
-    } catch (_) {}
-
-  }
-
-  if (profileChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          profileChannel
-        );
-
-    } catch (_) {}
-
-  }
-
-  if (callInboxChannel) {
-
-    try {
-
-      await supabaseClient
-        .removeChannel(
-          callInboxChannel
-        );
-
-    } catch (_) {}
-
-  }
-
-  messagesChannel =
+  localStream =
     null;
 
-  profileChannel =
+  remoteStream =
     null;
 
-  callInboxChannel =
-    null;
 
-  currentChatUser =
-    null;
-
-  currentMessages =
+  pendingIceCandidates =
     [];
 
+  pendingOffer =
+    null;
+
+  pendingIncomingCall =
+    null;
+
+
+  activeCallPeerId =
+    null;
+
+  activeCallId =
+    null;
+
+  activeCallRole =
+    null;
+
+  activeCallType =
+    null;
+
+  activeCallStartedAt =
+    null;
+
+  activeCallConnectedAt =
+    null;
+
+
+  activeCallAccepted =
+    false;
+
+  activeCallConnected =
+    false;
+
+  callHistorySaved =
+    false;
+
+
+  isMuted =
+    false;
+
+  isCameraOff =
+    false;
+
+
+  closeIncomingCallUI();
+
+
+  hideCallElement(
+    activeCallOverlay
+  );
+
+
 }
 
 
 // ============================================================
-// 40. START APPLICATION
+// BUTTON EVENTS
 // ============================================================
 
-async function startApp(
-  user
-) {
+if (acceptCallBtn) {
 
-  if (!user) {
+  acceptCallBtn.addEventListener(
+    "click",
+    acceptQeviraCall
+  );
 
-    showAuth();
+}
 
-    return;
 
-  }
+if (declineCallBtn) {
+
+  declineCallBtn.addEventListener(
+    "click",
+    declineQeviraCall
+  );
+
+}
+
+
+if (endCallBtn) {
+
+  endCallBtn.addEventListener(
+    "click",
+    endQeviraCall
+  );
+
+}
+
+
+if (muteCallBtn) {
+
+  muteCallBtn.addEventListener(
+    "click",
+    toggleQeviraMute
+  );
+
+}
+
+
+if (cameraCallBtn) {
+
+  cameraCallBtn.addEventListener(
+    "click",
+    toggleQeviraCamera
+  );
+
+}
+
+
+// ============================================================
+// CONNECT YOUR EXISTING CHAT CALL BUTTONS
+// ============================================================
+
+/*
+ * Your existing chat UI should call:
+ *
+ * startQeviraCall(userId, "voice", profile)
+ *
+ * or:
+ *
+ * startQeviraCall(userId, "video", profile)
+ *
+ *
+ * If your existing functions are named:
+ *
+ * startVoiceCall()
+ * startVideoCall()
+ *
+ * connect them to the engine below.
+ */
+
+
+window.startQeviraCall =
+  startQeviraCall;
+
+
+window.acceptQeviraCall =
+  acceptQeviraCall;
+
+
+window.declineQeviraCall =
+  declineQeviraCall;
+
+
+window.endQeviraCall =
+  endQeviraCall;
+
+
+// ============================================================
+// RESTART CALL INBOX WHEN USER LOGS IN
+// ============================================================
+
+async function initializeQeviraCalling() {
 
   if (
-    currentUser &&
-    currentUser.id ===
-      user.id
+    typeof currentUser ===
+    "undefined" ||
+    !currentUser
   ) {
-
-    showApp();
 
     return;
 
   }
 
-  currentUser =
-    user;
 
-  showApp();
-
-  loadTheme();
-
-  try {
-
-    await ensureProfile();
-
-  } catch (error) {
-
-    console.error(
-      "ensureProfile:",
-      error
-    );
-
-  }
-
-  try {
-
-    await loadProfile();
-
-  } catch (error) {
-
-    console.error(
-      "loadProfile:",
-      error
-    );
-
-  }
-
-  try {
-
-    await markUserOnline();
-
-  } catch (error) {
-
-    console.error(
-      "markUserOnline:",
-      error
-    );
-
-  }
-
-  try {
-
-    await loadContacts();
-
-  } catch (error) {
-
-    console.error(
-      "loadContacts:",
-      error
-    );
-
-  }
-
-  try {
-
-    await loadChats();
-
-  } catch (error) {
-
-    console.error(
-      "loadChats:",
-      error
-    );
-
-  }
-
-  try {
-
-    await setupRealtimeMessages();
-
-  } catch (error) {
-
-    console.error(
-      "Realtime messages:",
-      error
-    );
-
-  }
-
-  try {
-
-    await setupCallInbox();
-
-  } catch (error) {
-
-    console.error(
-      "Call inbox:",
-      error
-    );
-
-  }
-
-  try {
-
-    await setupProfileRealtime();
-
-  } catch (error) {
-
-    console.error(
-      "Profile realtime:",
-      error
-    );
-
-  }
-
-  showPage(
-    "chats"
+  console.log(
+    "[QEVIRA] Initializing real WebRTC calling..."
   );
 
-  renderDaily(
-    currentDailyCategory
+
+  await setupCallInbox();
+
+
+  console.log(
+    "[QEVIRA] WebRTC calling ready."
   );
 
 }
 
 
 // ============================================================
-// 41. PAGE VISIBILITY / ONLINE STATE
+// EXPORT
 // ============================================================
 
-document.addEventListener(
-  "visibilitychange",
-  async () => {
-
-    if (
-      !currentUser
-    ) {
-      return;
-    }
-
-    if (
-      document.visibilityState ===
-      "visible"
-    ) {
-
-      await markUserOnline();
-
-    }
-
-  }
-);
-
-
-window.addEventListener(
-  "beforeunload",
-  () => {
-
-    // Best effort only.
-    // Browsers may not wait for async database calls here.
-    markUserOffline();
-
-  }
-);
+window.initializeQeviraCalling =
+  initializeQeviraCalling;
 
 
 // ============================================================
-// 42. INITIALIZE QEVIRA
+// IMPORTANT:
+// CALL initializeQeviraCalling() AFTER LOGIN
 // ============================================================
-
-async function initializeQevira() {
-
-  console.log(
-    "🔥 QEVIRA initializing..."
-  );
-
-  try {
-
-    await setupAuthListener();
-
-  } catch (error) {
-
-    console.error(
-      "Auth listener:",
-      error
-    );
-
-  }
-
-  await restoreSession();
-
-  console.log(
-    "🔥 QEVIRA ready."
-  );
-
-}
-
-
-// ============================================================
-// 43. START
-// ============================================================
-
-if (
-  document.readyState ===
-  "loading"
-) {
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeQevira
-  );
-
-} else {
-
-  initializeQevira();
-
-  }
