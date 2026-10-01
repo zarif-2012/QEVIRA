@@ -8,7 +8,9 @@
 // REAL WEBRTC VOICE + VIDEO CALLING
 // SEARCH
 // DARK MODE
-// STATUS / DAILY / QUIZ UI FOUNDATION
+// STATUS
+// DAILY FOUNDATION
+// QUIZ ENGINE FOUNDATION
 // NOTIFICATIONS
 // ============================================================
 
@@ -76,6 +78,11 @@ let quizClass = null;
 let quizSubject = null;
 
 let darkModeEnabled = false;
+
+let currentQuizQuestions = [];
+let currentQuizIndex = 0;
+let currentQuizCorrect = 0;
+let quizBusy = false;
 
 
 // ============================================================
@@ -268,6 +275,7 @@ function getDisplayName(profile) {
 
   return (
     profile.display_name ||
+    profile.full_name ||
     profile.username ||
     "QEVIRA User"
   );
@@ -372,7 +380,10 @@ function getCallInboxName(userId) {
 
 function getCallPairName(userA, userB) {
 
-  return `qevira-call-${getPairId(userA, userB)}`;
+  return `qevira-call-${getPairId(
+    userA,
+    userB
+  )}`;
 
 }
 
@@ -413,7 +424,10 @@ function showAuth() {
 }
 
 
-function safeClick(element, callback) {
+function safeClick(
+  element,
+  callback
+) {
 
   if (!element) {
     return;
@@ -422,6 +436,33 @@ function safeClick(element, callback) {
   element.addEventListener(
     "click",
     callback
+  );
+
+}
+
+
+function sleep(ms) {
+
+  return new Promise(
+    resolve =>
+      setTimeout(resolve, ms)
+  );
+
+}
+
+
+function makeReferralCode(userId) {
+
+  if (!userId) {
+    return "QEVIRA";
+  }
+
+  return (
+    "QEV-" +
+    userId
+      .replace(/-/g, "")
+      .slice(0, 8)
+      .toUpperCase()
   );
 
 }
@@ -773,6 +814,9 @@ async function setupAuthListener() {
 
             await cleanupApp();
 
+            currentUser = null;
+            currentProfile = null;
+
             showAuth();
 
           }
@@ -780,9 +824,9 @@ async function setupAuthListener() {
         }
       );
 
-    authSubscription =
-      result?.data?.subscription ||
-      null;
+  authSubscription =
+    result?.data?.subscription ||
+    null;
 
 }
 
@@ -822,6 +866,7 @@ async function ensureProfile() {
     currentProfile = data;
 
     return data;
+
   }
 
   const usernameBase =
@@ -845,16 +890,27 @@ async function ensureProfile() {
 
   const newProfile = {
 
-    id: currentUser.id,
+    id:
+      currentUser.id,
 
     display_name:
-      usernameBase || "QEVIRA User",
+      usernameBase ||
+      "QEVIRA User",
+
+    full_name:
+      usernameBase ||
+      "QEVIRA User",
 
     username,
 
     bio: "",
 
     avatar_url: "",
+
+    last_seen:
+      new Date().toISOString(),
+
+    is_online: true,
 
     updated_at:
       new Date().toISOString()
@@ -879,6 +935,7 @@ async function ensureProfile() {
     );
 
     return null;
+
   }
 
   currentProfile =
@@ -913,6 +970,7 @@ async function loadProfile() {
     );
 
     return;
+
   }
 
   if (data) {
@@ -977,7 +1035,9 @@ function renderProfile() {
   if (profileOnlineStatus) {
 
     profileOnlineStatus.textContent =
-      "● Online";
+      profile.is_online === false
+        ? "● Offline"
+        : "● Online";
 
   }
 
@@ -1003,7 +1063,7 @@ function renderProfile() {
 
     referralCode.textContent =
       profile.referral_code ||
-      generateReferralCode(
+      makeReferralCode(
         currentUser?.id
       );
 
@@ -1012,19 +1072,105 @@ function renderProfile() {
 }
 
 
-function generateReferralCode(userId) {
+async function markUserOnline() {
 
-  if (!userId) {
-    return "QEVIRA";
+  if (!currentUser) {
+    return;
   }
 
-  return (
-    "QEV-" +
-    userId
-      .replace(/-/g, "")
-      .slice(0, 8)
-      .toUpperCase()
-  );
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .update({
+
+        is_online:
+          true,
+
+        last_seen:
+          new Date().toISOString(),
+
+        updated_at:
+          new Date().toISOString()
+
+      })
+      .eq(
+        "id",
+        currentUser.id
+      );
+
+  if (error) {
+
+    console.warn(
+      "Could not mark online:",
+      error.message
+    );
+
+  }
+
+}
+
+
+async function markUserOffline() {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .update({
+
+        is_online:
+          false,
+
+        last_seen:
+          new Date().toISOString(),
+
+        updated_at:
+          new Date().toISOString()
+
+      })
+      .eq(
+        "id",
+        currentUser.id
+      );
+
+  if (error) {
+
+    console.warn(
+      "Could not mark offline:",
+      error.message
+    );
+
+  }
+
+}
+
+
+function getOnlineText(profile) {
+
+  if (
+    profile?.is_online === true
+  ) {
+
+    return "Online";
+
+  }
+
+  if (profile?.last_seen) {
+
+    return `Last seen ${formatTime(
+      profile.last_seen
+    )}`;
+
+  }
+
+  return "Offline";
 
 }
 
@@ -1066,6 +1212,9 @@ async function updateProfile() {
     display_name:
       displayName,
 
+    full_name:
+      displayName,
+
     username:
       username || null,
 
@@ -1098,7 +1247,10 @@ async function updateProfile() {
       await supabaseClient
         .from("profiles")
         .update(updates)
-        .eq("id", currentUser.id)
+        .eq(
+          "id",
+          currentUser.id
+        )
         .select("*")
         .single();
 
@@ -1114,6 +1266,9 @@ async function updateProfile() {
     profileEdit?.classList.add(
       "hidden"
     );
+
+    await loadContacts();
+    await loadChats();
 
   } catch (error) {
 
@@ -1160,6 +1315,7 @@ safeClick(
 
       editDisplayName.value =
         currentProfile.display_name ||
+        currentProfile.full_name ||
         "";
 
     }
@@ -1227,7 +1383,10 @@ async function loadContacts() {
     await supabaseClient
       .from("profiles")
       .select("*")
-      .neq("id", currentUser.id)
+      .neq(
+        "id",
+        currentUser.id
+      )
       .order(
         "display_name",
         {
@@ -1245,6 +1404,7 @@ async function loadContacts() {
     renderContacts([]);
 
     return;
+
   }
 
   allContacts =
@@ -1273,6 +1433,7 @@ function renderContacts(
       </div>`;
 
     return;
+
   }
 
   contactsList.innerHTML =
@@ -1294,6 +1455,9 @@ function renderContacts(
                 getInitial(name)
               );
 
+        const online =
+          user.is_online === true;
+
         return `
           <button
             class="contact-item"
@@ -1301,11 +1465,13 @@ function renderContacts(
               user.id
             )}"
           >
+
             <div class="avatar">
               ${avatarHtml}
             </div>
 
             <div class="contact-info">
+
               <strong>
                 ${escapeHtml(name)}
               </strong>
@@ -1315,11 +1481,17 @@ function renderContacts(
                   getUsername(user)
                 )}
               </span>
+
+              <small>
+                ${online ? "Online" : "Offline"}
+              </small>
+
             </div>
 
             <span class="online-dot">
-              ●
+              ${online ? "●" : ""}
             </span>
+
           </button>
         `;
 
@@ -1375,6 +1547,7 @@ contactsSearchInput?.addEventListener(
           const name =
             String(
               user.display_name ||
+              user.full_name ||
               ""
             ).toLowerCase();
 
@@ -1436,7 +1609,9 @@ async function loadChats() {
     const map =
       new Map();
 
-    for (const message of data || []) {
+    for (
+      const message of data || []
+    ) {
 
       const otherId =
         message.sender_id ===
@@ -1468,6 +1643,7 @@ async function loadChats() {
       renderChats([]);
 
       return;
+
     }
 
     const {
@@ -1517,10 +1693,13 @@ async function loadChats() {
             ...profile,
 
             last_message:
-              last?.body || "",
+              last?.body ||
+              last?.content ||
+              "",
 
             last_message_at:
-              last?.created_at || ""
+              last?.created_at ||
+              ""
 
           };
 
@@ -1562,6 +1741,7 @@ function renderChats(
     );
 
     return;
+
   }
 
   chatEmpty?.classList.add(
@@ -1602,6 +1782,7 @@ function renderChats(
             <div class="chat-item-info">
 
               <div class="chat-item-top">
+
                 <strong>
                   ${escapeHtml(name)}
                 </strong>
@@ -1613,6 +1794,7 @@ function renderChats(
                     )
                   )}
                 </span>
+
               </div>
 
               <div class="chat-item-bottom">
@@ -1683,6 +1865,7 @@ searchInput?.addEventListener(
           const name =
             String(
               user.display_name ||
+              user.full_name ||
               ""
             ).toLowerCase();
 
@@ -1731,7 +1914,7 @@ async function openChat(user) {
   if (chatStatus) {
 
     chatStatus.textContent =
-      "Online";
+      getOnlineText(user);
 
   }
 
@@ -1867,6 +2050,7 @@ function renderMessages(
       </div>`;
 
     return;
+
   }
 
   messagesBox.innerHTML =
@@ -1876,6 +2060,11 @@ function renderMessages(
         const mine =
           message.sender_id ===
           currentUser?.id;
+
+        const body =
+          message.body ??
+          message.content ??
+          "";
 
         return `
           <div
@@ -1889,9 +2078,7 @@ function renderMessages(
             <div class="message-bubble">
 
               <div class="message-text">
-                ${escapeHtml(
-                  message.body
-                )}
+                ${escapeHtml(body)}
               </div>
 
               <div class="message-time">
@@ -1951,6 +2138,7 @@ messageForm?.addEventListener(
     try {
 
       const {
+        data,
         error
       } =
         await supabaseClient
@@ -1965,18 +2153,28 @@ messageForm?.addEventListener(
 
             body
 
-          });
+          })
+          .select("*")
+          .single();
 
       if (error) {
         throw error;
       }
 
+      if (data) {
+
+        currentMessages.push(
+          data
+        );
+
+        renderMessages(
+          currentMessages
+        );
+
+      }
+
       messageInput.value =
         "";
-
-      await loadMessages(
-        currentChatUser.id
-      );
 
       await loadChats();
 
@@ -2045,7 +2243,7 @@ async function setupRealtimeMessages() {
         async payload => {
 
           const message =
-            payload.new;
+            payload?.new;
 
           if (!message) {
             return;
@@ -2079,9 +2277,37 @@ async function setupRealtimeMessages() {
             )
           ) {
 
-            await loadMessages(
-              currentChatUser.id
-            );
+            const exists =
+              currentMessages.some(
+                item =>
+                  item.id ===
+                  message.id
+              );
+
+            if (!exists) {
+
+              currentMessages.push(
+                message
+              );
+
+              currentMessages.sort(
+                (
+                  a,
+                  b
+                ) =>
+                  new Date(
+                    a.created_at
+                  ) -
+                  new Date(
+                    b.created_at
+                  )
+              );
+
+              renderMessages(
+                currentMessages
+              );
+
+            }
 
           }
 
@@ -2101,7 +2327,26 @@ async function setupRealtimeMessages() {
 
         }
       )
-      .subscribe();
+      .subscribe(
+        (status, error) => {
+
+          if (
+            status ===
+              "CHANNEL_ERROR" ||
+            status ===
+              "TIMED_OUT"
+          ) {
+
+            console.error(
+              "Message realtime:",
+              status,
+              error
+            );
+
+          }
+
+        }
+      );
 
 }
 
@@ -2265,7 +2510,13 @@ safeClick(
 
 safeClick(
   statusNavBtn,
-  () => showPage("status")
+  async () => {
+
+    showPage("status");
+
+    await loadStatuses();
+
+  }
 );
 
 safeClick(
@@ -2317,13 +2568,10 @@ function showNotification(
   body
 ) {
 
-  if (
-    notificationTitle &&
-    !notificationTitle.textContent
-  ) {
+  if (notificationTitle) {
 
     notificationTitle.textContent =
-      title;
+      title || "Notifications";
 
   }
 
@@ -2389,12 +2637,281 @@ safeClick(
 
 
 // ============================================================
-// 21. STATUS FOUNDATION
+// 21. REAL STATUS
 // ============================================================
+
+async function createRealStatus(
+  text
+) {
+
+  if (
+    !currentUser ||
+    !text
+  ) {
+    return;
+  }
+
+  const now =
+    new Date();
+
+  const expires =
+    new Date(
+      now.getTime() +
+      24 * 60 * 60 * 1000
+    );
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("statuses")
+      .insert({
+
+        user_id:
+          currentUser.id,
+
+        content:
+          text,
+
+        created_at:
+          now.toISOString(),
+
+        expires_at:
+          expires.toISOString()
+
+      });
+
+  if (error) {
+    throw error;
+  }
+
+}
+
+
+async function loadStatuses() {
+
+  if (!statusList) {
+    return;
+  }
+
+  try {
+
+    const now =
+      new Date().toISOString();
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("statuses")
+        .select("*")
+        .gt(
+          "expires_at",
+          now
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    const statuses =
+      data || [];
+
+    const mine =
+      statuses.filter(
+        status =>
+          status.user_id ===
+          currentUser?.id
+      );
+
+    const others =
+      statuses.filter(
+        status =>
+          status.user_id !==
+          currentUser?.id
+      );
+
+    if (myStatus) {
+
+      if (mine.length) {
+
+        myStatus.innerHTML =
+          mine
+            .map(status => `
+              <div class="status-card">
+
+                <strong>
+                  Your status
+                </strong>
+
+                <p>
+                  ${escapeHtml(
+                    status.content || ""
+                  )}
+                </p>
+
+                <small>
+                  ${escapeHtml(
+                    formatDate(
+                      status.created_at
+                    )
+                  )}
+                </small>
+
+              </div>
+            `)
+            .join("");
+
+      } else {
+
+        myStatus.innerHTML =
+          `<div class="empty-state">
+            You haven't posted a status yet.
+          </div>`;
+
+      }
+
+    }
+
+    if (!others.length) {
+
+      statusList.innerHTML =
+        `<div class="empty-state">
+          No recent statuses.
+        </div>`;
+
+      return;
+
+    }
+
+    let userMap =
+      new Map();
+
+    const ids =
+      [
+        ...new Set(
+          others.map(
+            status =>
+              status.user_id
+          )
+        )
+      ];
+
+    if (ids.length) {
+
+      const {
+        data: users
+      } =
+        await supabaseClient
+          .from("profiles")
+          .select("*")
+          .in(
+            "id",
+            ids
+          );
+
+      userMap =
+        new Map(
+          (users || [])
+            .map(
+              user =>
+                [
+                  user.id,
+                  user
+                ]
+            )
+        );
+
+    }
+
+    statusList.innerHTML =
+      others
+        .map(status => {
+
+          const user =
+            userMap.get(
+              status.user_id
+            );
+
+          const name =
+            getDisplayName(user);
+
+          const avatar =
+            getAvatar(user);
+
+          const avatarHtml =
+            avatar
+              ? `<img src="${escapeHtml(
+                  avatar
+                )}" alt="">`
+              : escapeHtml(
+                  getInitial(name)
+                );
+
+          return `
+            <div class="status-card">
+
+              <div class="status-user">
+
+                <div class="avatar">
+                  ${avatarHtml}
+                </div>
+
+                <div>
+                  <strong>
+                    ${escapeHtml(name)}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(
+                      formatDate(
+                        status.created_at
+                      )
+                    )}
+                  </small>
+                </div>
+
+              </div>
+
+              <p>
+                ${escapeHtml(
+                  status.content || ""
+                )}
+              </p>
+
+            </div>
+          `;
+
+        })
+        .join("");
+
+  } catch (error) {
+
+    console.error(
+      "loadStatuses:",
+      error
+    );
+
+    statusList.innerHTML =
+      `<div class="empty-state">
+        Unable to load statuses.
+      </div>`;
+
+  }
+
+}
+
 
 safeClick(
   createStatusBtn,
-  () => {
+  async () => {
 
     const text =
       prompt(
@@ -2405,25 +2922,30 @@ safeClick(
       return;
     }
 
-    if (myStatus) {
+    try {
 
-      myStatus.innerHTML = `
-        <div class="status-card">
-          <strong>
-            Your status
-          </strong>
+      await createRealStatus(
+        text.trim()
+      );
 
-          <p>
-            ${escapeHtml(
-              text.trim()
-            )}
-          </p>
+      await loadStatuses();
 
-          <small>
-            Just now
-          </small>
-        </div>
-      `;
+      showNotification(
+        "Status posted",
+        "Your status is now live for 24 hours."
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Create status:",
+        error
+      );
+
+      alert(
+        error?.message ||
+        "Could not create status."
+      );
 
     }
 
@@ -2438,58 +2960,48 @@ safeClick(
 const dailySampleData = {
 
   india: [
-
     {
       title:
         "QEVIRA Daily — India",
       text:
-        "India news will appear here when the Daily backend is connected."
+        "Daily India stories will appear here."
     }
-
   ],
 
   world: [
-
     {
       title:
         "QEVIRA Daily — World",
       text:
-        "World news will appear here."
+        "Daily world stories will appear here."
     }
-
   ],
 
   technology: [
-
     {
       title:
         "QEVIRA Daily — Technology",
       text:
-        "Technology news will appear here."
+        "Daily technology stories will appear here."
     }
-
   ],
 
   sports: [
-
     {
       title:
         "QEVIRA Daily — Sports",
       text:
-        "Sports news will appear here."
+        "Daily sports stories will appear here."
     }
-
   ],
 
   trending: [
-
     {
       title:
         "QEVIRA Daily — Trending",
       text:
         "Trending stories will appear here."
     }
-
   ]
 
 };
@@ -2576,7 +3088,7 @@ if (dailyCategories) {
 
 
 // ============================================================
-// 23. QUIZ FOUNDATION
+// 23. QUIZ ENGINE
 // ============================================================
 
 const quizSubjects = {
@@ -2657,6 +3169,9 @@ function renderQuizStart() {
 
           quizMode =
             button.dataset.quizMode;
+
+          quizClass = null;
+          quizSubject = null;
 
           renderQuizSubjects();
 
@@ -2750,6 +3265,97 @@ function renderQuizSubjects() {
 }
 
 
+async function loadQuizQuestions() {
+
+  if (
+    !currentUser ||
+    !quizMode ||
+    !quizSubject
+  ) {
+    return [];
+  }
+
+  let query =
+    supabaseClient
+      .from("qevira_quiz_questions")
+      .select("*")
+      .eq(
+        "active",
+        true
+      )
+      .eq(
+        "category",
+        quizMode
+      )
+      .eq(
+        "subject",
+        quizSubject
+      )
+      .limit(20);
+
+  const {
+    data,
+    error
+  } =
+    await query;
+
+  if (error) {
+
+    console.error(
+      "Quiz question error:",
+      error
+    );
+
+    throw error;
+
+  }
+
+  return shuffleArray(
+    data || []
+  ).slice(
+    0,
+    10
+  );
+
+}
+
+
+function shuffleArray(
+  array
+) {
+
+  const result =
+    [...array];
+
+  for (
+    let i =
+      result.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() *
+        (i + 1)
+      );
+
+    [
+      result[i],
+      result[j]
+    ] =
+      [
+        result[j],
+        result[i]
+      ];
+
+  }
+
+  return result;
+
+}
+
+
 function renderQuizMessage() {
 
   if (!quizContent) {
@@ -2772,7 +3378,7 @@ function renderQuizMessage() {
       </h3>
 
       <p>
-        Your NCERT-based quiz engine will appear here.
+        Ready for your QEVIRA quiz?
       </p>
 
       <button
@@ -2782,9 +3388,402 @@ function renderQuizMessage() {
         Start Quiz
       </button>
 
+      <button
+        class="secondary-btn"
+        id="quizSubjectBackBtn"
+      >
+        ← Back
+      </button>
+
     </div>
 
   `;
+
+  $("startActualQuizBtn")
+    ?.addEventListener(
+      "click",
+      startActualQuiz
+    );
+
+  $("quizSubjectBackBtn")
+    ?.addEventListener(
+      "click",
+      renderQuizSubjects
+    );
+
+}
+
+
+async function startActualQuiz() {
+
+  if (quizBusy) {
+    return;
+  }
+
+  quizBusy = true;
+
+  try {
+
+    if (quizContent) {
+
+      quizContent.innerHTML = `
+        <div class="quiz-container">
+          <h3>Loading quiz...</h3>
+          <p>Please wait.</p>
+        </div>
+      `;
+
+    }
+
+    currentQuizQuestions =
+      await loadQuizQuestions();
+
+    if (!currentQuizQuestions.length) {
+
+      quizContent.innerHTML = `
+        <div class="quiz-container">
+
+          <h3>
+            Questions coming soon 🚀
+          </h3>
+
+          <p>
+            There are no active questions for this subject yet.
+          </p>
+
+          <button
+            class="secondary-btn"
+            id="quizNoQuestionsBack"
+          >
+            ← Back
+          </button>
+
+        </div>
+      `;
+
+      $("quizNoQuestionsBack")
+        ?.addEventListener(
+          "click",
+          renderQuizSubjects
+        );
+
+      return;
+
+    }
+
+    currentQuizIndex = 0;
+    currentQuizCorrect = 0;
+
+    renderCurrentQuizQuestion();
+
+  } catch (error) {
+
+    console.error(
+      "Start quiz:",
+      error
+    );
+
+    quizContent.innerHTML = `
+      <div class="quiz-container">
+
+        <h3>
+          Quiz error
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            error?.message ||
+            "Unable to load questions."
+          )}
+        </p>
+
+        <button
+          class="secondary-btn"
+          id="quizErrorBack"
+        >
+          ← Back
+        </button>
+
+      </div>
+    `;
+
+    $("quizErrorBack")
+      ?.addEventListener(
+        "click",
+        renderQuizSubjects
+      );
+
+  } finally {
+
+    quizBusy = false;
+
+  }
+
+}
+
+
+function renderCurrentQuizQuestion() {
+
+  if (!quizContent) {
+    return;
+  }
+
+  const question =
+    currentQuizQuestions[
+      currentQuizIndex
+    ];
+
+  if (!question) {
+
+    finishQuiz();
+
+    return;
+
+  }
+
+  let options =
+    question.options;
+
+  if (
+    typeof options ===
+    "string"
+  ) {
+
+    try {
+
+      options =
+        JSON.parse(options);
+
+    } catch (_) {
+
+      options = [];
+
+    }
+
+  }
+
+  if (
+    !Array.isArray(options)
+  ) {
+
+    options =
+      Object.values(
+        options || {}
+      );
+
+  }
+
+  quizContent.innerHTML = `
+
+    <div class="quiz-container">
+
+      <div class="quiz-progress">
+        Question ${
+          currentQuizIndex + 1
+        } / ${
+          currentQuizQuestions.length
+        }
+      </div>
+
+      <h3>
+        ${escapeHtml(
+          question.question
+        )}
+      </h3>
+
+      <div class="quiz-options">
+
+        ${
+          options
+            .map(
+              option => `
+                <button
+                  class="quiz-option"
+                  data-answer="${escapeHtml(
+                    String(option)
+                  )}"
+                >
+                  ${escapeHtml(
+                    String(option)
+                  )}
+                </button>
+              `
+            )
+            .join("")
+        }
+
+      </div>
+
+    </div>
+
+  `;
+
+  quizContent
+    .querySelectorAll(
+      "[data-answer]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          handleQuizAnswer(
+            button.dataset.answer,
+            question.correct_answer
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+async function handleQuizAnswer(
+  selected,
+  correct
+) {
+
+  const normalizedSelected =
+    String(selected)
+      .trim()
+      .toLowerCase();
+
+  const normalizedCorrect =
+    String(correct)
+      .trim()
+      .toLowerCase();
+
+  if (
+    normalizedSelected ===
+    normalizedCorrect
+  ) {
+
+    currentQuizCorrect++;
+
+  }
+
+  currentQuizIndex++;
+
+  if (
+    currentQuizIndex >=
+    currentQuizQuestions.length
+  ) {
+
+    await finishQuiz();
+
+  } else {
+
+    renderCurrentQuizQuestion();
+
+  }
+
+}
+
+
+async function finishQuiz() {
+
+  const total =
+    currentQuizQuestions.length;
+
+  const correct =
+    currentQuizCorrect;
+
+  const coins =
+    correct;
+
+  if (currentUser) {
+
+    try {
+
+      await supabaseClient
+        .from("qevira_quiz_attempts")
+        .insert({
+
+          user_id:
+            currentUser.id,
+
+          category:
+            quizMode,
+
+          subject:
+            quizSubject,
+
+          question_count:
+            total,
+
+          correct_count:
+            correct,
+
+          coins_earned:
+            coins
+
+        });
+
+    } catch (error) {
+
+      console.warn(
+        "Quiz attempt save failed:",
+        error
+      );
+
+    }
+
+  }
+
+  quizContent.innerHTML = `
+
+    <div class="quiz-container">
+
+      <h3>
+        Quiz Complete 🎉
+      </h3>
+
+      <p>
+        Score:
+        <strong>
+          ${correct} / ${total}
+        </strong>
+      </p>
+
+      <p>
+        Coins earned:
+        <strong>
+          ${coins}
+        </strong>
+      </p>
+
+      <button
+        class="primary-btn"
+        id="quizAgainBtn"
+      >
+        Try Again
+      </button>
+
+      <button
+        class="secondary-btn"
+        id="quizDoneBtn"
+      >
+        Choose Another Subject
+      </button>
+
+    </div>
+
+  `;
+
+  $("quizAgainBtn")
+    ?.addEventListener(
+      "click",
+      startActualQuiz
+    );
+
+  $("quizDoneBtn")
+    ?.addEventListener(
+      "click",
+      renderQuizSubjects
+    );
 
 }
 
@@ -2823,6 +3822,9 @@ function createPeerConnection(
 
   pendingIceCandidates = [];
 
+  remoteStream =
+    new MediaStream();
+
   peerConnection =
     new RTCPeerConnection(
       rtcConfiguration
@@ -2841,11 +3843,13 @@ function createPeerConnection(
       await sendCallSignal(
         activeCallPeerId,
         {
+
           type:
             "ice-candidate",
 
           candidate:
             event.candidate
+
         }
       );
 
@@ -2854,41 +3858,61 @@ function createPeerConnection(
   peerConnection.ontrack =
     event => {
 
-      if (
-        !remoteStream
-      ) {
+      const incomingStream =
+        event.streams?.[0];
 
-        remoteStream =
-          new MediaStream();
+      if (incomingStream) {
+
+        incomingStream
+          .getTracks()
+          .forEach(track => {
+
+            if (
+              !remoteStream
+                .getTracks()
+                .some(
+                  existing =>
+                    existing.id ===
+                    track.id
+                )
+            ) {
+
+              remoteStream.addTrack(
+                track
+              );
+
+            }
+
+          });
+
+      } else {
+
+        if (
+          !remoteStream
+            .getTracks()
+            .some(
+              existing =>
+                existing.id ===
+                event.track.id
+            )
+        ) {
+
+          remoteStream.addTrack(
+            event.track
+          );
+
+        }
 
       }
-
-      event.streams?.[0]
-        ?.getTracks()
-        .forEach(track => {
-
-          if (
-            !remoteStream
-              .getTracks()
-              .some(
-                existing =>
-                  existing.id ===
-                  track.id
-              )
-          ) {
-
-            remoteStream.addTrack(
-              track
-            );
-
-          }
-
-        });
 
       if (remoteVideo) {
 
         remoteVideo.srcObject =
           remoteStream;
+
+        remoteVideo
+          .play()
+          .catch(() => {});
 
       }
 
@@ -2901,6 +3925,11 @@ function createPeerConnection(
         peerConnection
           ?.connectionState;
 
+      console.log(
+        "WebRTC connection:",
+        state
+      );
+
       if (activeCallStatus) {
 
         if (
@@ -2910,6 +3939,9 @@ function createPeerConnection(
 
           activeCallStatus.textContent =
             "Connected";
+
+          activeCallAccepted =
+            true;
 
         } else if (
           state ===
@@ -2927,9 +3959,36 @@ function createPeerConnection(
           activeCallStatus.textContent =
             "Disconnected";
 
+        } else if (
+          state ===
+          "failed"
+        ) {
+
+          activeCallStatus.textContent =
+            "Connection failed";
+
+        } else if (
+          state ===
+          "closed"
+        ) {
+
+          activeCallStatus.textContent =
+            "Call ended";
+
         }
 
       }
+
+    };
+
+  peerConnection.oniceconnectionstatechange =
+    () => {
+
+      console.log(
+        "ICE state:",
+        peerConnection
+          ?.iceConnectionState
+      );
 
     };
 
@@ -2950,6 +4009,19 @@ async function getLocalMedia(
     callType ===
     "video";
 
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    alert(
+      "Your browser does not support camera/microphone access."
+    );
+
+    return false;
+
+  }
+
   try {
 
     localStream =
@@ -2963,11 +4035,19 @@ async function getLocalMedia(
 
         });
 
+    if (!peerConnection) {
+
+      throw new Error(
+        "Peer connection is not ready."
+      );
+
+    }
+
     localStream
       .getTracks()
       .forEach(track => {
 
-        peerConnection?.addTrack(
+        peerConnection.addTrack(
           track,
           localStream
         );
@@ -2980,6 +4060,14 @@ async function getLocalMedia(
         video
           ? localStream
           : null;
+
+      if (video) {
+
+        localVideo
+          .play()
+          .catch(() => {});
+
+      }
 
     }
 
@@ -3073,9 +4161,6 @@ function hideIncomingCall() {
     "hidden"
   );
 
-  incomingCallData =
-    null;
-
 }
 
 
@@ -3107,11 +4192,31 @@ function showIncomingCall(
 
   }
 
+  if (incomingCallAvatar) {
+
+    if (data.callerAvatar) {
+
+      incomingCallAvatar.innerHTML =
+        `<img src="${escapeHtml(
+          data.callerAvatar
+        )}" alt="">`;
+
+    } else {
+
+      incomingCallAvatar.textContent =
+        getInitial(
+          data.callerName
+        );
+
+    }
+
+  }
+
 }
 
 
 // ============================================================
-// 27. CALL SIGNALING CHANNEL
+// 27. CALL SIGNALING
 // ============================================================
 
 async function setupCallInbox() {
@@ -3154,7 +4259,30 @@ async function setupCallInbox() {
 
         }
       )
-      .subscribe();
+      .subscribe(
+        (status, error) => {
+
+          console.log(
+            "Call inbox:",
+            status
+          );
+
+          if (
+            status ===
+              "CHANNEL_ERROR" ||
+            status ===
+              "TIMED_OUT"
+          ) {
+
+            console.error(
+              "Call inbox error:",
+              error
+            );
+
+          }
+
+        }
+      );
 
 }
 
@@ -3163,7 +4291,10 @@ async function setupCallPairChannel(
   peerId
 ) {
 
-  if (!currentUser || !peerId) {
+  if (
+    !currentUser ||
+    !peerId
+  ) {
     return;
   }
 
@@ -3202,7 +4333,100 @@ async function setupCallPairChannel(
 
         }
       )
-      .subscribe();
+      .subscribe(
+        (status, error) => {
+
+          console.log(
+            "Call pair:",
+            status
+          );
+
+          if (
+            status ===
+              "CHANNEL_ERROR" ||
+            status ===
+              "TIMED_OUT"
+          ) {
+
+            console.error(
+              "Call pair error:",
+              error
+            );
+
+          }
+
+        }
+      );
+
+  await waitForChannelSubscribed(
+    callPairChannel
+  );
+
+}
+
+
+function waitForChannelSubscribed(
+  channel
+) {
+
+  return new Promise(
+    resolve => {
+
+      let finished =
+        false;
+
+      const finish = () => {
+
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+        resolve();
+
+      };
+
+      const timer =
+        setTimeout(
+          finish,
+          3000
+        );
+
+      const original =
+        channel.__qeviraSubscribeCallback;
+
+      channel.__qeviraSubscribeCallback =
+        status => {
+
+          if (
+            status ===
+            "SUBSCRIBED"
+          ) {
+
+            clearTimeout(timer);
+            finish();
+
+          }
+
+          if (
+            original
+          ) {
+
+            original(
+              status
+            );
+
+          }
+
+        };
+
+      setTimeout(
+        finish,
+        2500
+      );
+
+    }
+  );
 
 }
 
@@ -3216,45 +4440,128 @@ async function sendCallSignal(
     !currentUser ||
     !peerId
   ) {
-    return;
+    return false;
   }
-
-  const channelName =
-    getCallInboxName(
-      peerId
-    );
 
   const channel =
     supabaseClient
       .channel(
-        channelName
+        getCallInboxName(
+          peerId
+        )
       );
 
   try {
 
-    await channel.subscribe();
+    const status =
+      await new Promise(
+        async resolve => {
 
-    await channel.send({
+          let done = false;
 
-      type:
-        "broadcast",
+          const finish =
+            value => {
 
-      event:
-        "call-signal",
+              if (done) {
+                return;
+              }
 
-      payload: {
+              done = true;
+              resolve(value);
 
-        ...payload,
+            };
 
-        from:
-          currentUser.id,
+          channel.subscribe(
+            status => {
 
-        to:
-          peerId
+              if (
+                status ===
+                "SUBSCRIBED"
+              ) {
 
-      }
+                channel
+                  .send({
 
-    });
+                    type:
+                      "broadcast",
+
+                    event:
+                      "call-signal",
+
+                    payload: {
+
+                      ...payload,
+
+                      from:
+                        currentUser.id,
+
+                      to:
+                        peerId
+
+                    }
+
+                  })
+                  .then(
+                    result => {
+
+                      if (result) {
+
+                        finish(
+                          true
+                        );
+
+                      } else {
+
+                        finish(
+                          false
+                        );
+
+                      }
+
+                    }
+                  )
+                  .catch(
+                    error => {
+
+                      console.error(
+                        "Call send:",
+                        error
+                      );
+
+                      finish(
+                        false
+                      );
+
+                    }
+                  );
+
+              }
+
+              if (
+                status ===
+                  "CHANNEL_ERROR" ||
+                status ===
+                  "TIMED_OUT"
+              ) {
+
+                finish(
+                  false
+                );
+
+              }
+
+            }
+          );
+
+          setTimeout(
+            () => finish(false),
+            5000
+          );
+
+        }
+      );
+
+    return status;
 
   } catch (error) {
 
@@ -3262,6 +4569,8 @@ async function sendCallSignal(
       "Call signal error:",
       error
     );
+
+    return false;
 
   } finally {
 
@@ -3299,6 +4608,7 @@ async function startCall(
   ) {
 
     return;
+
   }
 
   activeCallPeerId =
@@ -3333,11 +4643,8 @@ async function startCall(
     await cleanupCall();
 
     return;
-  }
 
-  await setupCallPairChannel(
-    activeCallPeerId
-  );
+  }
 
   showActiveCallUI(
     currentChatUser,
@@ -3345,6 +4652,10 @@ async function startCall(
   );
 
   try {
+
+    await setupCallPairChannel(
+      activeCallPeerId
+    );
 
     const offer =
       await peerConnection
@@ -3355,6 +4666,7 @@ async function startCall(
         offer
       );
 
+    // First notify receiver.
     await sendCallSignal(
       activeCallPeerId,
       {
@@ -3377,6 +4689,7 @@ async function startCall(
       }
     );
 
+    // Then send the WebRTC offer.
     await sendCallSignal(
       activeCallPeerId,
       {
@@ -3384,7 +4697,10 @@ async function startCall(
         type:
           "call-offer",
 
-        offer,
+        offer:
+
+          peerConnection
+            .localDescription,
 
         callType
 
@@ -3396,6 +4712,10 @@ async function startCall(
     console.error(
       "Start call:",
       error
+    );
+
+    alert(
+      "Could not start the call."
     );
 
     await cleanupCall();
@@ -3450,13 +4770,32 @@ async function handleCallSignal(
   }
 
   // ----------------------------------------------------------
-  // Incoming call
+  // Incoming call notification
   // ----------------------------------------------------------
 
   if (
     payload.type ===
     "incoming-call"
   ) {
+
+    // Don't overwrite an already active call.
+    if (
+      activeCallPeerId &&
+      activeCallPeerId !==
+        from
+    ) {
+
+      await sendCallSignal(
+        from,
+        {
+          type:
+            "call-decline"
+        }
+      );
+
+      return;
+
+    }
 
     incomingCallData = {
 
@@ -3485,7 +4824,7 @@ async function handleCallSignal(
 
 
   // ----------------------------------------------------------
-  // Offer
+  // OFFER
   // ----------------------------------------------------------
 
   if (
@@ -3503,10 +4842,6 @@ async function handleCallSignal(
       payload.callType ||
       "voice";
 
-    await setupCallPairChannel(
-      from
-    );
-
     if (!peerConnection) {
 
       createPeerConnection(
@@ -3523,7 +4858,17 @@ async function handleCallSignal(
         );
 
       if (!ready) {
+
+        await sendCallSignal(
+          from,
+          {
+            type:
+              "call-decline"
+          }
+        );
+
         return;
+
       }
 
     }
@@ -3539,12 +4884,71 @@ async function handleCallSignal(
 
       await processPendingIce();
 
+      // ======================================================
+      // IMPORTANT FIX:
+      // RECEIVER CREATES ANSWER
+      // ======================================================
+
+      const answer =
+        await peerConnection
+          .createAnswer();
+
+      await peerConnection
+        .setLocalDescription(
+          answer
+        );
+
+      activeCallAccepted =
+        true;
+
+      // Send answer back to caller.
+      await sendCallSignal(
+        from,
+        {
+
+          type:
+            "call-answer",
+
+          answer:
+            peerConnection
+              .localDescription,
+
+          callType:
+            activeCallType
+
+        }
+      );
+
+      showActiveCallUI(
+        {
+          display_name:
+            incomingCallData
+              ?.callerName ||
+            "QEVIRA User",
+
+          avatar_url:
+            incomingCallData
+              ?.callerAvatar ||
+            ""
+
+        },
+        activeCallType
+      );
+
+      hideIncomingCall();
+
     } catch (error) {
 
       console.error(
-        "Set remote offer:",
+        "Handle offer:",
         error
       );
+
+      alert(
+        "Could not accept the call."
+      );
+
+      await cleanupCall();
 
     }
 
@@ -3553,7 +4957,7 @@ async function handleCallSignal(
 
 
   // ----------------------------------------------------------
-  // Answer
+  // ANSWER
   // ----------------------------------------------------------
 
   if (
@@ -3581,6 +4985,13 @@ async function handleCallSignal(
 
       await processPendingIce();
 
+      if (activeCallStatus) {
+
+        activeCallStatus.textContent =
+          "Connecting...";
+
+      }
+
     } catch (error) {
 
       console.error(
@@ -3595,7 +5006,7 @@ async function handleCallSignal(
 
 
   // ----------------------------------------------------------
-  // ICE candidate
+  // ICE CANDIDATE
   // ----------------------------------------------------------
 
   if (
@@ -3605,6 +5016,10 @@ async function handleCallSignal(
 
     const candidate =
       payload.candidate;
+
+    if (!candidate) {
+      return;
+    }
 
     if (
       peerConnection &&
@@ -3643,7 +5058,7 @@ async function handleCallSignal(
 
 
   // ----------------------------------------------------------
-  // Hang up
+  // HANG UP
   // ----------------------------------------------------------
 
   if (
@@ -3660,7 +5075,7 @@ async function handleCallSignal(
 
 
   // ----------------------------------------------------------
-  // Declined
+  // DECLINED
   // ----------------------------------------------------------
 
   if (
@@ -3742,8 +5157,6 @@ acceptCallBtn?.addEventListener(
     const data =
       incomingCallData;
 
-    hideIncomingCall();
-
     activeCallPeerId =
       data.from;
 
@@ -3755,42 +5168,63 @@ acceptCallBtn?.addEventListener(
       "voice";
 
     activeCallAccepted =
-      true;
+      false;
 
-    createPeerConnection(
-      activeCallPeerId
-    );
+    hideIncomingCall();
 
-    const ready =
-      await getLocalMedia(
+    try {
+
+      createPeerConnection(
+        activeCallPeerId
+      );
+
+      const ready =
+        await getLocalMedia(
+          activeCallType
+        );
+
+      if (!ready) {
+
+        await cleanupCall();
+
+        return;
+
+      }
+
+      await setupCallPairChannel(
+        activeCallPeerId
+      );
+
+      showActiveCallUI(
+        {
+          display_name:
+            data.callerName,
+
+          avatar_url:
+            data.callerAvatar
+
+        },
         activeCallType
       );
 
-    if (!ready) {
+      // The actual offer will arrive through
+      // the inbox and the handler will create
+      // the answer automatically.
+
+    } catch (error) {
+
+      console.error(
+        "Accept call:",
+        error
+      );
+
+      alert(
+        "Could not accept the call."
+      );
 
       await cleanupCall();
 
-      return;
     }
-
-    await setupCallPairChannel(
-      activeCallPeerId
-    );
-
-    showActiveCallUI(
-      {
-        display_name:
-          data.callerName,
-
-        avatar_url:
-          data.callerAvatar
-
-      },
-      activeCallType
-    );
-
-    // The offer is received through
-    // the pair channel after this point.
 
   }
 );
@@ -3804,12 +5238,13 @@ declineCallBtn?.addEventListener(
   "click",
   async () => {
 
-    if (
-      incomingCallData?.from
-    ) {
+    const peerId =
+      incomingCallData?.from;
+
+    if (peerId) {
 
       await sendCallSignal(
-        incomingCallData.from,
+        peerId,
         {
           type:
             "call-decline"
@@ -3819,6 +5254,9 @@ declineCallBtn?.addEventListener(
     }
 
     hideIncomingCall();
+
+    incomingCallData =
+      null;
 
   }
 );
@@ -3940,13 +5378,16 @@ async function cleanupCall(
   notifyPeer = false
 ) {
 
+  const peerId =
+    activeCallPeerId;
+
   if (
     notifyPeer &&
-    activeCallPeerId
+    peerId
   ) {
 
     await sendCallSignal(
-      activeCallPeerId,
+      peerId,
       {
         type:
           "call-hangup"
@@ -4059,6 +5500,9 @@ async function cleanupCall(
   pendingIceCandidates =
     [];
 
+  incomingCallData =
+    null;
+
   isMuted =
     false;
 
@@ -4076,6 +5520,20 @@ async function cleanupCall(
 
     localVideo.srcObject =
       null;
+
+  }
+
+  if (muteCallBtn) {
+
+    muteCallBtn.textContent =
+      "🎙️";
+
+  }
+
+  if (cameraCallBtn) {
+
+    cameraCallBtn.textContent =
+      "🎥";
 
   }
 
@@ -4140,7 +5598,26 @@ async function setupProfileRealtime() {
 
         }
       )
-      .subscribe();
+      .subscribe(
+        (status, error) => {
+
+          if (
+            status ===
+              "CHANNEL_ERROR" ||
+            status ===
+              "TIMED_OUT"
+          ) {
+
+            console.error(
+              "Profile realtime:",
+              status,
+              error
+            );
+
+          }
+
+        }
+      );
 
 }
 
@@ -4162,6 +5639,8 @@ logoutBtn?.addEventListener(
     }
 
     try {
+
+      await markUserOffline();
 
       await cleanupApp();
 
@@ -4207,9 +5686,20 @@ logoutBtn?.addEventListener(
 
 async function cleanupApp() {
 
-  await cleanupCall(
-    false
-  );
+  try {
+
+    await cleanupCall(
+      false
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "Call cleanup:",
+      error
+    );
+
+  }
 
   if (messagesChannel) {
 
@@ -4262,6 +5752,9 @@ async function cleanupApp() {
   currentChatUser =
     null;
 
+  currentMessages =
+    [];
+
 }
 
 
@@ -4278,12 +5771,27 @@ async function startApp(
     showAuth();
 
     return;
+
+  }
+
+  if (
+    currentUser &&
+    currentUser.id ===
+      user.id
+  ) {
+
+    showApp();
+
+    return;
+
   }
 
   currentUser =
     user;
 
   showApp();
+
+  loadTheme();
 
   try {
 
@@ -4306,6 +5814,19 @@ async function startApp(
 
     console.error(
       "loadProfile:",
+      error
+    );
+
+  }
+
+  try {
+
+    await markUserOnline();
+
+  } catch (error) {
+
+    console.error(
+      "markUserOnline:",
       error
     );
 
@@ -4376,8 +5897,6 @@ async function startApp(
 
   }
 
-  loadTheme();
-
   showPage(
     "chats"
   );
@@ -4390,7 +5909,46 @@ async function startApp(
 
 
 // ============================================================
-// 41. INITIALIZE QEVIRA
+// 41. PAGE VISIBILITY / ONLINE STATE
+// ============================================================
+
+document.addEventListener(
+  "visibilitychange",
+  async () => {
+
+    if (
+      !currentUser
+    ) {
+      return;
+    }
+
+    if (
+      document.visibilityState ===
+      "visible"
+    ) {
+
+      await markUserOnline();
+
+    }
+
+  }
+);
+
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    // Best effort only.
+    // Browsers may not wait for async database calls here.
+    markUserOffline();
+
+  }
+);
+
+
+// ============================================================
+// 42. INITIALIZE QEVIRA
 // ============================================================
 
 async function initializeQevira() {
@@ -4422,7 +5980,7 @@ async function initializeQevira() {
 
 
 // ============================================================
-// 42. START
+// 43. START
 // ============================================================
 
 if (
@@ -4439,4 +5997,4 @@ if (
 
   initializeQevira();
 
-                      }
+  }
