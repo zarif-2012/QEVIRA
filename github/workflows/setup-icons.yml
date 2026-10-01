@@ -1,0 +1,25 @@
+name: Setup QEVIRA Icons Automatically
+on:
+  workflow_dispatch: # Allows you to run this with one click
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Folders and Fetch Correct Icons
+        run: |
+          mkdir -p icons
+          curl -L -o icons/icon-192.png "https://githubusercontent.com" || echo "Creating blank fallback"
+          curl -L -o icons/icon-512.png "https://githubusercontent.com" || echo "Creating blank fallback"
+          touch icons/.gitkeep
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "Zarif Bot"
+          git config --global user.email "zarif@qevira.local"
+          git add icons/
+          git commit -m "Automated setup of clean icon directories" || exit 0
+          git push
