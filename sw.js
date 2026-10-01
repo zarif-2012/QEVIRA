@@ -5,12 +5,15 @@
 
 const CACHE_NAME = "qevira-v2";
 
+// Absolute repository routing fixes file resolution on GitHub Pages
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json"
+  "/QEVIRA/",
+  "/QEVIRA/index.html",
+  "/QEVIRA/style.css",
+  "/QEVIRA/app.js",
+  "/QEVIRA/manifest.json",
+  "/QEVIRA/icons/icon-192.png",
+  "/QEVIRA/icons/icon-512.png"
 ];
 
 // ======================================================
@@ -94,7 +97,7 @@ self.addEventListener("fetch", event => {
             // If a page request fails offline,
             // return the cached app shell.
             if (request.mode === "navigate") {
-              return caches.match("./index.html");
+              return caches.match("/QEVIRA/index.html");
             }
 
             return new Response(
