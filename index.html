@@ -1,202 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-
+  <meta charset="UTF-8" />
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
-
-  <meta name="theme-color" content="#6c5ce7">
-
-  <meta
-    name="description"
-    content="QEVIRA — chat, call, connect and discover."
-  >
-
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="default"
-  >
-  <meta
-    name="apple-mobile-web-app-title"
-    content="QEVIRA"
-  >
+  />
 
   <title>QEVIRA</title>
 
-  <link
-    rel="icon"
-    href="./icons/icon-192.png"
-    type="image/png"
-  >
+  <meta
+    name="description"
+    content="QEVIRA — chat, call, share status, learn and discover."
+  />
 
-  <link
-    rel="apple-touch-icon"
-    href="./icons/icon-192.png"
-  >
+  <meta name="theme-color" content="#6c5ce7" />
 
-  <link
-    rel="manifest"
-    href="./manifest.json"
-  >
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/icon-192.png" />
 
-  <link
-    rel="stylesheet"
-    href="./style.css"
-  >
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       QEVIRA AUTHENTICATION
-       ===================================================== -->
+<!-- ======================================================
+     QEVIRA LOADING
+====================================================== -->
 
-  <section
-    id="authScreen"
-    class="auth-screen"
-  >
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-logo">Q</div>
+  <h1>QEVIRA</h1>
+  <p>Connect. Chat. Discover.</p>
+  <div class="loading-spinner"></div>
+</div>
 
-    <div class="auth-card">
 
-      <div
-        class="auth-logo"
-        aria-label="QEVIRA logo"
-      >
-        Q
-      </div>
+<!-- ======================================================
+     AUTH SCREEN
+====================================================== -->
 
+<section id="authScreen" class="auth-screen hidden">
+
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="q-logo">Q</div>
       <h1>QEVIRA</h1>
+      <p>Connect. Chat. Discover.</p>
+    </div>
+
+
+    <!-- LOGIN -->
+
+    <form id="loginForm">
+
+      <h2>Welcome Back 👋</h2>
 
       <p class="auth-subtitle">
-        Connect. Chat. Discover.
+        Login to your QEVIRA account
       </p>
 
+      <div class="input-group">
+        <label for="loginEmail">Email</label>
 
-      <!-- ================= LOGIN ================= -->
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          required
+        />
+      </div>
 
-      <form
-        id="loginForm"
-        autocomplete="on"
-      >
+      <div class="input-group">
+        <label for="loginPassword">Password</label>
 
-        <div class="input-group">
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
 
-          <label for="loginEmail">
-            Email
-          </label>
+      <button id="loginBtn" type="submit" class="primary-btn">
+        Login
+      </button>
 
-          <input
-            id="loginEmail"
-            type="email"
-            placeholder="Enter your email"
-            autocomplete="email"
-            required
-          >
-
-        </div>
-
-
-        <div class="input-group">
-
-          <label for="loginPassword">
-            Password
-          </label>
-
-          <input
-            id="loginPassword"
-            type="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          >
-
-        </div>
-
-
+      <p class="auth-switch">
+        Don't have an account?
         <button
-          id="loginBtn"
-          type="submit"
-          class="primary-btn"
+          type="button"
+          id="switchAuthBtn"
+          class="link-btn"
+        >
+          Create account
+        </button>
+      </p>
+
+    </form>
+
+
+    <!-- SIGNUP -->
+
+    <form id="signupForm" class="hidden">
+
+      <h2>Create Account 🚀</h2>
+
+      <p class="auth-subtitle">
+        Join QEVIRA today
+      </p>
+
+      <div class="input-group">
+        <label for="signupEmail">Email</label>
+
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="signupPassword">Password</label>
+
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Create a password"
+          autocomplete="new-password"
+          minlength="6"
+          required
+        />
+      </div>
+
+      <button id="signupBtn" type="submit" class="primary-btn">
+        Create Account
+      </button>
+
+      <p class="auth-switch">
+        Already have an account?
+        <button
+          type="button"
+          id="switchAuthBtn2"
+          class="link-btn"
         >
           Login
         </button>
+      </p>
 
-      </form>
+    </form>
 
 
-      <!-- ================= SIGN UP ================= -->
+    <div id="authMessage" class="auth-message"></div>
 
-      <form
-        id="signupForm"
-        class="hidden"
-        autocomplete="on"
+  </div>
+
+</section>
+
+
+<!-- ======================================================
+     MAIN QEVIRA APP
+====================================================== -->
+
+<main id="app" class="app hidden">
+
+
+  <!-- ====================================================
+       TOP BAR
+  ==================================================== -->
+
+  <header class="topbar">
+
+    <div class="topbar-brand">
+
+      <div class="mini-q-logo">
+        Q
+      </div>
+
+      <div>
+        <h1>QEVIRA</h1>
+        <span id="topbarSubtitle">
+          Connect. Chat. Discover.
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="topbar-actions">
+
+      <button
+        id="notificationBtn"
+        class="icon-btn"
+        type="button"
+        aria-label="Notifications"
       >
-
-        <div class="input-group">
-
-          <label for="signupEmail">
-            Email
-          </label>
-
-          <input
-            id="signupEmail"
-            type="email"
-            placeholder="Enter your email"
-            autocomplete="email"
-            required
-          >
-
-        </div>
-
-
-        <div class="input-group">
-
-          <label for="signupPassword">
-            Password
-          </label>
-
-          <input
-            id="signupPassword"
-            type="password"
-            placeholder="Create a password"
-            autocomplete="new-password"
-            minlength="6"
-            required
-          >
-
-        </div>
-
-
-        <button
-          id="signupBtn"
-          type="submit"
-          class="primary-btn"
-        >
-          Create Account
-        </button>
-
-      </form>
-
-
-      <div
-        id="authMessage"
-        class="auth-message"
-        role="status"
-        aria-live="polite"
-      ></div>
+        🔔
+        <span id="notificationBadge" class="notification-badge hidden">
+          0
+        </span>
+      </button>
 
 
       <button
-        id="switchAuthBtn"
+        id="darkModeBtn"
+        class="icon-btn"
         type="button"
-        class="text-btn"
+        aria-label="Dark mode"
       >
-        Create a new account
+        🌙
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- ====================================================
+       NOTIFICATION PANEL
+  ==================================================== -->
+
+  <section
+    id="notificationPanel"
+    class="notification-panel hidden"
+  >
+
+    <div class="panel-header">
+
+      <h2 id="notificationTitle">
+        Notifications
+      </h2>
+
+      <button
+        id="closeNotificationBtn"
+        class="close-btn"
+        type="button"
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <div id="notificationList" class="notification-list">
+      <!-- Notifications loaded by app.js -->
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
+       PAGE: CHATS
+  ==================================================== -->
+
+  <section id="chatsPage" class="page active">
+
+    <div class="page-heading">
+
+      <div>
+        <h2>Chats</h2>
+        <p>Message your friends</p>
+      </div>
+
+      <button
+        id="newChatBtn"
+        class="round-action-btn"
+        type="button"
+        onclick="startNewChat()"
+      >
+        +
+      </button>
+
+    </div>
+
+
+    <div class="search-box">
+
+      <span>🔎</span>
+
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search chats..."
+      />
+
+    </div>
+
+
+    <div id="chatList" class="chat-list">
+      <!-- Chats loaded by app.js -->
+    </div>
+
+
+    <div id="chatEmpty" class="empty-state">
+
+      <div class="empty-icon">
+        💬
+      </div>
+
+      <h3>No chats yet</h3>
+
+      <p>
+        Start a conversation with someone.
+      </p>
+
+      <button
+        type="button"
+        class="primary-btn small-btn"
+        onclick="startNewChat()"
+      >
+        Start Chat
       </button>
 
     </div>
@@ -204,872 +324,944 @@
   </section>
 
 
-  <!-- =====================================================
-       MAIN QEVIRA APPLICATION
-       ===================================================== -->
+  <!-- ====================================================
+       PAGE: CONTACTS
+  ==================================================== -->
 
-  <main
-    id="app"
-    class="app hidden"
-  >
+  <section id="contactsPage" class="page hidden">
 
-    <!-- ===================================================
-         TOP BAR
-         =================================================== -->
+    <div class="page-heading">
 
-    <header class="topbar">
-
-      <div class="brand">
-
-        <div class="brand-logo">
-          Q
-        </div>
-
-        <div class="brand-name">
-          QEVIRA
-        </div>
-
+      <div>
+        <h2>Contacts</h2>
+        <p>Find people on QEVIRA</p>
       </div>
-
-
-      <div class="topbar-actions">
-
-        <button
-          id="notificationBtn"
-          type="button"
-          class="icon-btn"
-          aria-label="Notifications"
-          title="Notifications"
-        >
-          🔔
-        </button>
-
-
-        <button
-          id="darkModeBtn"
-          type="button"
-          class="icon-btn"
-          aria-label="Toggle dark mode"
-          title="Dark mode"
-        >
-          🌙
-        </button>
-
-      </div>
-
-    </header>
-
-
-    <!-- ===================================================
-         MAIN PAGE CONTAINER
-         =================================================== -->
-
-    <div class="page-container">
-
-
-      <!-- =================================================
-           CHATS
-           ================================================= -->
-
-      <section
-        id="chatsPage"
-        class="page"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              Chats
-            </h2>
-
-            <p class="page-subtitle">
-              Your conversations
-            </p>
-
-          </div>
-
-
-          <button
-            id="newChatBtn"
-            type="button"
-            class="round-btn"
-            onclick="startNewChat()"
-            aria-label="Start new chat"
-            title="New chat"
-          >
-            +
-          </button>
-
-        </div>
-
-
-        <!-- CHAT SEARCH -->
-
-        <div class="search-box">
-
-          <span class="search-icon">
-            🔎
-          </span>
-
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search chats..."
-            autocomplete="off"
-          >
-
-        </div>
-
-
-        <!-- CHAT LIST -->
-
-        <div
-          id="chatList"
-          class="list"
-        ></div>
-
-
-        <!-- EMPTY CHAT STATE -->
-
-        <div
-          id="chatEmpty"
-          class="empty-state hidden"
-        >
-
-          <div class="empty-icon">
-            💬
-          </div>
-
-          <h3>
-            No chats yet
-          </h3>
-
-          <p>
-            Start a conversation with someone on QEVIRA.
-          </p>
-
-          <button
-            type="button"
-            class="primary-btn small-btn"
-            onclick="startNewChat()"
-          >
-            Start a new chat
-          </button>
-
-        </div>
-
-      </section>
-
-
-
-      <!-- =================================================
-           CONTACTS
-           ================================================= -->
-
-      <section
-        id="contactsPage"
-        class="page hidden"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              Contacts
-            </h2>
-
-            <p class="page-subtitle">
-              Find people on QEVIRA
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- CONTACT SEARCH -->
-
-        <div class="search-box">
-
-          <span class="search-icon">
-            🔎
-          </span>
-
-          <input
-            id="contactsSearchInput"
-            type="search"
-            placeholder="Search people..."
-            autocomplete="off"
-          >
-
-        </div>
-
-
-        <!-- CONTACT LIST -->
-
-        <div
-          id="contactsList"
-          class="list"
-        ></div>
-
-      </section>
-
-
-
-      <!-- =================================================
-           STATUS
-           ================================================= -->
-
-      <section
-        id="statusPage"
-        class="page hidden"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              Status
-            </h2>
-
-            <p class="page-subtitle">
-              Share something for 24 hours
-            </p>
-
-          </div>
-
-
-          <button
-            id="createStatusBtn"
-            type="button"
-            class="round-btn"
-            aria-label="Create status"
-            title="Create status"
-          >
-            +
-          </button>
-
-        </div>
-
-
-        <div
-          id="myStatus"
-          class="status-section"
-        ></div>
-
-
-        <div
-          id="statusList"
-          class="list"
-        ></div>
-
-      </section>
-
-
-
-      <!-- =================================================
-           QEVIRA DAILY
-           ================================================= -->
-
-      <section
-        id="dailyPage"
-        class="page hidden"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              QEVIRA Daily
-            </h2>
-
-            <p class="page-subtitle">
-              News, technology, sports and more
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div
-          id="dailyCategories"
-          class="category-tabs"
-        >
-
-          <button
-            type="button"
-            class="category-btn active"
-            data-category="india"
-          >
-            🇮🇳 India
-          </button>
-
-          <button
-            type="button"
-            class="category-btn"
-            data-category="world"
-          >
-            🌍 World
-          </button>
-
-          <button
-            type="button"
-            class="category-btn"
-            data-category="technology"
-          >
-            💻 Technology
-          </button>
-
-          <button
-            type="button"
-            class="category-btn"
-            data-category="sports"
-          >
-            🏏 Sports
-          </button>
-
-          <button
-            type="button"
-            class="category-btn"
-            data-category="trending"
-          >
-            🔥 Trending
-          </button>
-
-        </div>
-
-
-        <div
-          id="dailyList"
-          class="list"
-        ></div>
-
-      </section>
-
-
-
-      <!-- =================================================
-           QUIZ
-           ================================================= -->
-
-      <section
-        id="quizPage"
-        class="page hidden"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              QEVIRA Quiz
-            </h2>
-
-            <p class="page-subtitle">
-              Learn. Practice. Improve.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div
-          id="quizStart"
-          class="quiz-container"
-        >
-
-          <button
-            type="button"
-            class="quiz-option"
-            data-exam="foundation"
-          >
-            <strong>
-              📚 Foundation
-            </strong>
-
-            <span>
-              School-level learning
-            </span>
-          </button>
-
-
-          <button
-            type="button"
-            class="quiz-option"
-            data-exam="jee"
-          >
-            <strong>
-              🎯 JEE
-            </strong>
-
-            <span>
-              Engineering entrance practice
-            </span>
-          </button>
-
-
-          <button
-            type="button"
-            class="quiz-option"
-            data-exam="neet"
-          >
-            <strong>
-              🧬 NEET
-            </strong>
-
-            <span>
-              Medical entrance practice
-            </span>
-          </button>
-
-        </div>
-
-
-        <div
-          id="quizContent"
-          class="hidden"
-        ></div>
-
-      </section>
-
-
-
-      <!-- =================================================
-           PROFILE
-           ================================================= -->
-
-      <section
-        id="profilePage"
-        class="page hidden"
-      >
-
-        <div class="page-header">
-
-          <div>
-
-            <h2>
-              Profile
-            </h2>
-
-            <p class="page-subtitle">
-              Your QEVIRA account
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- PROFILE HEADER -->
-
-        <div class="profile-card">
-
-          <div
-            id="profileAvatar"
-            class="profile-avatar"
-            aria-label="Profile photo"
-          >
-            Q
-          </div>
-
-
-          <div class="profile-main-info">
-
-            <h2 id="profileName">
-              QEVIRA User
-            </h2>
-
-            <p id="profileUsername">
-              @username
-            </p>
-
-            <p id="profileEmail">
-              email@example.com
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- ONLINE STATUS -->
-
-        <div class="profile-info-card">
-
-          <div class="profile-info-icon">
-            🟢
-          </div>
-
-          <div class="profile-info-content">
-
-            <strong>
-              Status
-            </strong>
-
-            <span id="profileOnlineStatus">
-              Offline
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- BIO -->
-
-        <div class="profile-info-card">
-
-          <div class="profile-info-icon">
-            ✨
-          </div>
-
-          <div class="profile-info-content">
-
-            <strong>
-              Bio
-            </strong>
-
-            <span id="profileBio">
-              No bio yet.
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- REFERRAL -->
-
-        <div class="profile-info-card">
-
-          <div class="profile-info-icon">
-            🎁
-          </div>
-
-          <div class="profile-info-content">
-
-            <strong>
-              Referral
-            </strong>
-
-            <span id="referralCode">
-              Your invite code
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- EDIT PROFILE -->
-
-        <button
-          id="editProfileBtn"
-          type="button"
-          class="primary-btn"
-        >
-          Edit Profile
-        </button>
-
-
-        <div
-          id="profileEdit"
-          class="profile-editor hidden"
-        >
-
-          <div class="editor-title">
-            Edit Profile
-          </div>
-
-
-          <div class="input-group">
-
-            <label for="editDisplayName">
-              Display Name
-            </label>
-
-            <input
-              id="editDisplayName"
-              type="text"
-              placeholder="Your name"
-              maxlength="50"
-              autocomplete="name"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label for="editUsername">
-              Username
-            </label>
-
-            <input
-              id="editUsername"
-              type="text"
-              placeholder="username"
-              maxlength="30"
-              autocomplete="off"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label for="editBio">
-              Bio
-            </label>
-
-            <textarea
-              id="editBio"
-              placeholder="Tell people something about you..."
-              maxlength="160"
-              rows="4"
-            ></textarea>
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label for="editAvatarUrl">
-              Profile Photo URL
-            </label>
-
-            <input
-              id="editAvatarUrl"
-              type="url"
-              placeholder="https://..."
-              autocomplete="off"
-            >
-
-          </div>
-
-
-          <div class="editor-actions">
-
-            <button
-              id="saveProfileBtn"
-              type="button"
-              class="primary-btn"
-            >
-              Save Changes
-            </button>
-
-
-            <button
-              id="cancelProfileEditBtn"
-              type="button"
-              class="secondary-btn"
-            >
-              Cancel
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- LOGOUT -->
-
-        <button
-          id="logoutBtn"
-          type="button"
-          class="danger-btn"
-        >
-          Logout
-        </button>
-
-      </section>
 
     </div>
 
 
+    <div class="search-box">
 
-    <!-- ===================================================
-         BOTTOM NAVIGATION
-         =================================================== -->
+      <span>🔎</span>
 
-    <nav
-      class="bottom-nav"
-      aria-label="Main navigation"
+      <input
+        id="contactsSearchInput"
+        type="search"
+        placeholder="Search username or name..."
+      />
+
+    </div>
+
+
+    <div id="contactsList" class="contacts-list">
+      <!-- Contacts loaded by app.js -->
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
+       PAGE: STATUS
+       WHATSAPP-STYLE
+  ==================================================== -->
+
+  <section id="statusPage" class="page hidden">
+
+    <div class="page-heading">
+
+      <div>
+        <h2>Status</h2>
+        <p>Share photos, videos and updates</p>
+      </div>
+
+    </div>
+
+
+    <!-- MY STATUS -->
+
+    <div class="status-my-card">
+
+      <div
+        id="myStatusAvatar"
+        class="status-avatar-large"
+      >
+        <img
+          id="myStatusAvatarImg"
+          src=""
+          alt="Your profile"
+        />
+
+        <span class="status-add-icon">
+          +
+        </span>
+      </div>
+
+
+      <div class="status-my-info">
+
+        <h3>My Status</h3>
+
+        <p id="myStatusSubtitle">
+          Add a status update
+        </p>
+
+      </div>
+
+
+      <button
+        id="createStatusBtn"
+        class="status-create-btn"
+        type="button"
+      >
+        +
+      </button>
+
+    </div>
+
+
+    <!-- STATUS OPTIONS -->
+
+    <div class="status-create-options">
+
+      <button
+        id="statusPhotoBtn"
+        class="status-option"
+        type="button"
+      >
+        <span class="status-option-icon photo">
+          📷
+        </span>
+
+        <span>
+          <strong>Photo</strong>
+          <small>Share a photo</small>
+        </span>
+      </button>
+
+
+      <button
+        id="statusVideoBtn"
+        class="status-option"
+        type="button"
+      >
+        <span class="status-option-icon video">
+          🎥
+        </span>
+
+        <span>
+          <strong>Video</strong>
+          <small>Share a video</small>
+        </span>
+      </button>
+
+
+      <button
+        id="statusTextBtn"
+        class="status-option"
+        type="button"
+      >
+        <span class="status-option-icon text">
+          ✍️
+        </span>
+
+        <span>
+          <strong>Text</strong>
+          <small>Write a status</small>
+        </span>
+      </button>
+
+    </div>
+
+
+    <!-- RECENT UPDATES -->
+
+    <div class="section-title">
+
+      <h3>
+        Recent updates
+      </h3>
+
+    </div>
+
+
+    <div id="statusList" class="status-list">
+      <!-- Status updates loaded by app.js -->
+    </div>
+
+
+    <div id="statusEmpty" class="empty-state">
+
+      <div class="empty-icon">
+        📸
+      </div>
+
+      <h3>No new status</h3>
+
+      <p>
+        When your contacts post a status,
+        you'll see it here.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
+       PAGE: QEVIRA DAILY
+  ==================================================== -->
+
+  <section id="dailyPage" class="page hidden">
+
+    <div class="page-heading">
+
+      <div>
+        <h2>QEVIRA Daily 📰</h2>
+        <p>What's happening around you</p>
+      </div>
+
+    </div>
+
+
+    <div class="daily-categories">
+
+      <button
+        class="daily-category active"
+        data-category="india"
+        type="button"
+      >
+        🇮🇳 India
+      </button>
+
+      <button
+        class="daily-category"
+        data-category="world"
+        type="button"
+      >
+        🌎 World
+      </button>
+
+      <button
+        class="daily-category"
+        data-category="technology"
+        type="button"
+      >
+        💻 Technology
+      </button>
+
+      <button
+        class="daily-category"
+        data-category="sports"
+        type="button"
+      >
+        🏏 Sports
+      </button>
+
+      <button
+        class="daily-category"
+        data-category="trending"
+        type="button"
+      >
+        🔥 Trending
+      </button>
+
+    </div>
+
+
+    <div
+      id="dailyLoading"
+      class="daily-loading hidden"
+    >
+      <div class="loading-spinner"></div>
+      <p>Loading latest news...</p>
+    </div>
+
+
+    <div id="dailyList" class="daily-list">
+      <!-- Real news loaded by app.js/backend -->
+    </div>
+
+
+    <div id="dailyEmpty" class="empty-state">
+
+      <div class="empty-icon">
+        📰
+      </div>
+
+      <h3>News will appear here</h3>
+
+      <p>
+        QEVIRA Daily will show the latest stories.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
+       PAGE: QUIZ
+  ==================================================== -->
+
+  <section id="quizPage" class="page hidden">
+
+    <div class="page-heading">
+
+      <div>
+        <h2>QEVIRA Quiz 🧠</h2>
+        <p>Learn. Challenge. Earn.</p>
+      </div>
+
+      <div class="coin-display">
+
+        <span>🪙</span>
+
+        <strong id="quizCoinBalance">
+          0
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- QUIZ HOME -->
+
+    <div id="quizHome">
+
+      <div class="quiz-hero">
+
+        <div class="quiz-hero-icon">
+          🧠
+        </div>
+
+        <h2>
+          Test Your Knowledge
+        </h2>
+
+        <p>
+          Answer questions and earn QEVIRA coins.
+        </p>
+
+      </div>
+
+
+      <div class="quiz-exam-grid">
+
+        <button
+          class="quiz-exam-card"
+          data-exam="foundation"
+          type="button"
+        >
+
+          <span class="quiz-card-icon">
+            📚
+          </span>
+
+          <strong>
+            Foundation
+          </strong>
+
+          <small>
+            School & NCERT
+          </small>
+
+        </button>
+
+
+        <button
+          class="quiz-exam-card"
+          data-exam="jee"
+          type="button"
+        >
+
+          <span class="quiz-card-icon">
+            🎓
+          </span>
+
+          <strong>
+            JEE
+          </strong>
+
+          <small>
+            Previous Year Questions
+          </small>
+
+        </button>
+
+
+        <button
+          class="quiz-exam-card"
+          data-exam="neet"
+          type="button"
+        >
+
+          <span class="quiz-card-icon">
+            🩺
+          </span>
+
+          <strong>
+            NEET
+          </strong>
+
+          <small>
+            Previous Year Questions
+          </small>
+
+        </button>
+
+      </div>
+
+
+      <!-- CLASS SELECTOR -->
+
+      <div
+        id="quizClassSelector"
+        class="quiz-class-selector hidden"
+      >
+
+        <h3>
+          Select Class
+        </h3>
+
+        <div
+          id="quizClassGrid"
+          class="quiz-class-grid"
+        >
+
+          <button data-class="1" type="button">
+            Class 1
+          </button>
+
+          <button data-class="2" type="button">
+            Class 2
+          </button>
+
+          <button data-class="3" type="button">
+            Class 3
+          </button>
+
+          <button data-class="4" type="button">
+            Class 4
+          </button>
+
+          <button data-class="5" type="button">
+            Class 5
+          </button>
+
+          <button data-class="6" type="button">
+            Class 6
+          </button>
+
+          <button data-class="7" type="button">
+            Class 7
+          </button>
+
+          <button data-class="8" type="button">
+            Class 8
+          </button>
+
+          <button data-class="9" type="button">
+            Class 9
+          </button>
+
+          <button data-class="10" type="button">
+            Class 10
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- SUBJECT SELECTOR -->
+
+      <div
+        id="quizSubjectSelector"
+        class="quiz-subject-selector hidden"
+      >
+
+        <h3>
+          Select Subject
+        </h3>
+
+        <div
+          id="quizSubjectGrid"
+          class="quiz-subject-grid"
+        >
+          <!-- Subjects generated by app.js -->
+        </div>
+
+      </div>
+
+
+      <!-- START QUIZ -->
+
+      <button
+        id="quizStart"
+        class="primary-btn quiz-start-btn hidden"
+        type="button"
+      >
+        Start Quiz 🚀
+      </button>
+
+    </div>
+
+
+    <!-- QUIZ CONTENT -->
+
+    <div
+      id="quizContent"
+      class="quiz-content hidden"
+    >
+      <!-- Quiz questions generated by app.js -->
+    </div>
+
+
+    <!-- QUIZ RESULT -->
+
+    <div
+      id="quizResult"
+      class="quiz-result hidden"
     >
 
-      <button
-        id="chatsNavBtn"
-        type="button"
-        class="nav-btn active"
-        aria-label="Chats"
+      <div class="quiz-result-icon">
+        🏆
+      </div>
+
+      <h2>
+        Quiz Complete!
+      </h2>
+
+      <div
+        id="quizScore"
+        class="quiz-score"
       >
+        0 / 0
+      </div>
 
-        <span class="nav-icon">
-          💬
-        </span>
+      <p id="quizResultMessage">
+        Great work!
+      </p>
 
-        <span class="nav-label">
-          Chats
-        </span>
+      <div class="quiz-earned-coins">
 
+        <span>🪙</span>
+
+        <strong id="quizEarnedCoins">
+          +0
+        </strong>
+
+      </div>
+
+      <button
+        id="quizAgainBtn"
+        class="primary-btn"
+        type="button"
+      >
+        Play Again
+      </button>
+
+    </div>
+
+
+    <!-- LEADERBOARD -->
+
+    <div class="leaderboard-section">
+
+      <div class="section-title">
+
+        <div>
+          <h3>
+            🏆 Leaderboard
+          </h3>
+
+          <p>
+            See how you rank
+          </p>
+        </div>
+
+        <button
+          id="viewLeaderboardBtn"
+          class="text-action-btn"
+          type="button"
+        >
+          View All
+        </button>
+
+      </div>
+
+
+      <div
+        id="leaderboardPreview"
+        class="leaderboard-preview"
+      >
+        <!-- Top users loaded by app.js -->
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
+       PAGE: PROFILE
+  ==================================================== -->
+
+  <section id="profilePage" class="page hidden">
+
+    <div class="profile-header">
+
+      <div
+        id="profileAvatar"
+        class="profile-avatar"
+      >
+        <img
+          id="profileAvatarImg"
+          src=""
+          alt="Profile"
+        />
+      </div>
+
+
+      <h2 id="profileName">
+        User
+      </h2>
+
+      <p id="profileUsername">
+        @username
+      </p>
+
+
+      <div
+        id="profileOnlineStatus"
+        class="profile-online-status"
+      >
+        ● Online
+      </div>
+
+    </div>
+
+
+    <!-- PROFILE BIO -->
+
+    <div class="profile-info-card">
+
+      <h3>
+        About
+      </h3>
+
+      <p id="profileBio">
+        No bio yet.
+      </p>
+
+      <p id="profileEmail">
+        email@example.com
+      </p>
+
+    </div>
+
+
+    <!-- COINS -->
+
+    <div class="profile-stat-grid">
+
+      <div class="profile-stat-card">
+
+        <span>🪙</span>
+
+        <strong id="profileCoins">
+          0
+        </strong>
+
+        <small>
+          Coins
+        </small>
+
+      </div>
+
+
+      <div class="profile-stat-card">
+
+        <span>🏆</span>
+
+        <strong id="profileRank">
+          -
+        </strong>
+
+        <small>
+          Rank
+        </small>
+
+      </div>
+
+
+      <div class="profile-stat-card">
+
+        <span>👥</span>
+
+        <strong id="profileReferralCount">
+          0
+        </strong>
+
+        <small>
+          Referrals
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- REFERRAL -->
+
+    <div class="referral-card">
+
+      <div class="referral-icon">
+        🎁
+      </div>
+
+      <div class="referral-content">
+
+        <h3>
+          Invite Friends
+        </h3>
+
+        <p>
+          Invite friends to QEVIRA and earn rewards.
+        </p>
+
+        <div class="referral-code-box">
+
+          <span>
+            Your code
+          </span>
+
+          <strong id="referralCode">
+            QEVIRA
+          </strong>
+
+          <button
+            id="copyReferralBtn"
+            type="button"
+          >
+            Copy
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- PROFILE ACTIONS -->
+
+    <div class="profile-actions">
+
+      <button
+        id="editProfileBtn"
+        class="profile-action-btn"
+        type="button"
+      >
+        ✏️ Edit Profile
       </button>
 
 
       <button
-        id="statusNavBtn"
+        id="callHistoryBtn"
+        class="profile-action-btn"
         type="button"
-        class="nav-btn"
-        aria-label="Status"
       >
-
-        <span class="nav-icon">
-          🟢
-        </span>
-
-        <span class="nav-label">
-          Status
-        </span>
-
+        📞 Call History
       </button>
 
 
       <button
-        id="contactsNavBtn"
+        id="rewardsBtn"
+        class="profile-action-btn"
         type="button"
-        class="nav-btn"
-        aria-label="Contacts"
       >
-
-        <span class="nav-icon">
-          👥
-        </span>
-
-        <span class="nav-label">
-          Contacts
-        </span>
-
+        🎁 Rewards
       </button>
 
 
       <button
-        id="dailyNavBtn"
+        id="logoutBtn"
+        class="profile-action-btn danger"
         type="button"
-        class="nav-btn"
-        aria-label="QEVIRA Daily"
       >
-
-        <span class="nav-icon">
-          📰
-        </span>
-
-        <span class="nav-label">
-          Daily
-        </span>
-
+        🚪 Logout
       </button>
 
-
-      <button
-        id="profileNavBtn"
-        type="button"
-        class="nav-btn"
-        aria-label="Profile"
-      >
-
-        <span class="nav-icon">
-          👤
-        </span>
-
-        <span class="nav-label">
-          Profile
-        </span>
-
-      </button>
-
-    </nav>
-
-  </main>
+    </div>
 
 
+    <!-- PROFILE EDIT -->
 
-  <!-- =====================================================
+    <div
+      id="profileEdit"
+      class="profile-edit hidden"
+    >
+
+      <h3>
+        Edit Profile
+      </h3>
+
+
+      <div class="input-group">
+
+        <label for="editDisplayName">
+          Display name
+        </label>
+
+        <input
+          id="editDisplayName"
+          type="text"
+          maxlength="50"
+        />
+
+      </div>
+
+
+      <div class="input-group">
+
+        <label for="editUsername">
+          Username
+        </label>
+
+        <input
+          id="editUsername"
+          type="text"
+          maxlength="30"
+        />
+
+      </div>
+
+
+      <div class="input-group">
+
+        <label for="editBio">
+          Bio
+        </label>
+
+        <textarea
+          id="editBio"
+          maxlength="160"
+          rows="3"
+        ></textarea>
+
+      </div>
+
+
+      <div class="input-group">
+
+        <label for="editAvatarUrl">
+          Profile photo URL
+        </label>
+
+        <input
+          id="editAvatarUrl"
+          type="url"
+          placeholder="https://..."
+        />
+
+      </div>
+
+
+      <div class="profile-edit-actions">
+
+        <button
+          id="saveProfileBtn"
+          class="primary-btn"
+          type="button"
+        >
+          Save
+        </button>
+
+        <button
+          id="cancelProfileEditBtn"
+          class="secondary-btn"
+          type="button"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ====================================================
        CHAT MODAL
-       ===================================================== -->
+  ==================================================== -->
 
   <div
     id="chatModal"
     class="modal hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="chatTitle"
   >
 
     <div class="chat-window">
-
-
-      <!-- CHAT HEADER -->
 
       <header class="chat-header">
 
         <button
           id="closeChatModal"
-          type="button"
           class="icon-btn"
-          aria-label="Close chat"
+          type="button"
         >
           ←
         </button>
 
 
-        <div
-          id="chatAvatar"
-          class="chat-avatar"
-        >
-          Q
+        <div class="chat-user-info">
+
+          <div
+            id="chatAvatar"
+            class="chat-avatar"
+          >
+            <img
+              id="chatAvatarImg"
+              src=""
+              alt=""
+            />
+          </div>
+
+          <div>
+
+            <h3 id="chatTitle">
+              Chat
+            </h3>
+
+            <p id="chatStatus">
+              Offline
+            </p>
+
+          </div>
+
         </div>
 
 
-        <div class="chat-header-info">
-
-          <h3 id="chatTitle">
-            Chat
-          </h3>
-
-          <span id="chatStatus">
-            Offline
-          </span>
-
-        </div>
-
-
-        <div class="chat-actions">
+        <div class="chat-header-actions">
 
           <button
             id="voiceCallBtn"
-            type="button"
             class="icon-btn"
-            aria-label="Voice call"
+            type="button"
             title="Voice call"
           >
             📞
           </button>
 
-
           <button
             id="videoCallBtn"
-            type="button"
             class="icon-btn"
-            aria-label="Video call"
+            type="button"
             title="Video call"
           >
-            📹
+            🎥
           </button>
 
         </div>
@@ -1077,39 +1269,78 @@
       </header>
 
 
-      <!-- MESSAGES -->
-
       <div
         id="messages"
         class="messages"
-        aria-live="polite"
-      ></div>
+      >
+        <!-- Messages -->
+      </div>
 
 
-      <!-- MESSAGE FORM -->
+      <!-- CHAT ATTACHMENT MENU -->
+
+      <div
+        id="attachmentMenu"
+        class="attachment-menu hidden"
+      >
+
+        <button
+          id="sendPhotoBtn"
+          type="button"
+        >
+          🖼️ Photo
+        </button>
+
+        <button
+          id="sendVideoBtn"
+          type="button"
+        >
+          🎥 Video
+        </button>
+
+        <button
+          id="sendFileBtn"
+          type="button"
+        >
+          📄 Document
+        </button>
+
+        <button
+          id="sendCameraBtn"
+          type="button"
+        >
+          📷 Camera
+        </button>
+
+      </div>
+
 
       <form
         id="messageForm"
         class="message-form"
-        autocomplete="off"
       >
+
+        <button
+          id="attachmentBtn"
+          class="attachment-btn"
+          type="button"
+        >
+          +
+        </button>
+
 
         <input
           id="messageInput"
           type="text"
           placeholder="Type a message..."
-          maxlength="5000"
           autocomplete="off"
-          aria-label="Message"
-        >
+        />
 
 
         <button
           id="sendMessageBtn"
-          type="submit"
           class="send-btn"
-          aria-label="Send message"
-          title="Send message"
+          type="submit"
         >
           ➤
         </button>
@@ -1121,30 +1352,206 @@
   </div>
 
 
+  <!-- ====================================================
+       STATUS CREATOR MODAL
+  ==================================================== -->
 
-  <!-- =====================================================
+  <div
+    id="statusCreatorModal"
+    class="modal hidden"
+  >
+
+    <div class="status-creator">
+
+      <header class="modal-header">
+
+        <h2>
+          Create Status
+        </h2>
+
+        <button
+          id="closeStatusCreator"
+          class="close-btn"
+          type="button"
+        >
+          ✕
+        </button>
+
+      </header>
+
+
+      <div
+        id="statusPreview"
+        class="status-preview"
+      >
+        <div class="status-preview-placeholder">
+          Select a photo, video or write something.
+        </div>
+      </div>
+
+
+      <div class="status-caption">
+
+        <textarea
+          id="statusTextInput"
+          placeholder="Add a caption..."
+          maxlength="700"
+          rows="3"
+        ></textarea>
+
+      </div>
+
+
+      <div class="status-creator-actions">
+
+        <button
+          id="chooseStatusPhotoBtn"
+          class="secondary-btn"
+          type="button"
+        >
+          🖼️ Photo
+        </button>
+
+        <button
+          id="chooseStatusVideoBtn"
+          class="secondary-btn"
+          type="button"
+        >
+          🎥 Video
+        </button>
+
+        <button
+          id="publishStatusBtn"
+          class="primary-btn"
+          type="button"
+        >
+          Share Status
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       STATUS VIEWER
+  ==================================================== -->
+
+  <div
+    id="statusViewer"
+    class="status-viewer hidden"
+  >
+
+    <div class="status-viewer-progress">
+      <span></span>
+    </div>
+
+
+    <header class="status-viewer-header">
+
+      <button
+        id="closeStatusViewer"
+        class="status-viewer-close"
+        type="button"
+      >
+        ✕
+      </button>
+
+
+      <div class="status-viewer-user">
+
+        <div class="status-viewer-avatar">
+          <img
+            id="viewerAvatar"
+            src=""
+            alt=""
+          />
+        </div>
+
+        <div>
+
+          <strong id="viewerName">
+            User
+          </strong>
+
+          <small id="viewerTime">
+            Just now
+          </small>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <div
+      id="statusViewerContent"
+      class="status-viewer-content"
+    >
+      <!-- Status media -->
+    </div>
+
+
+    <button
+      id="statusPreviousBtn"
+      class="status-nav previous"
+      type="button"
+    >
+      ‹
+    </button>
+
+    <button
+      id="statusNextBtn"
+      class="status-nav next"
+      type="button"
+    >
+      ›
+    </button>
+
+
+    <div class="status-reply">
+
+      <input
+        id="statusReplyInput"
+        type="text"
+        placeholder="Reply to status..."
+      />
+
+      <button
+        id="statusReplyBtn"
+        type="button"
+      >
+        ➤
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
        INCOMING CALL
-       ===================================================== -->
+  ==================================================== -->
 
   <div
     id="incomingCallOverlay"
-    class="call-overlay hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="incomingCallName"
+    class="call-overlay incoming hidden"
   >
 
-    <div class="incoming-call-card">
+    <div class="call-card">
 
-      <div class="call-pulse">
-
-        <div
-          id="incomingCallAvatar"
-          class="call-avatar"
-        >
-          Q
-        </div>
-
+      <div
+        id="incomingCallAvatar"
+        class="call-avatar"
+      >
+        <img
+          id="incomingCallAvatarImg"
+          src=""
+          alt=""
+        />
       </div>
 
 
@@ -1152,31 +1559,27 @@
         Incoming Call
       </h2>
 
-
       <p id="incomingCallType">
-        Incoming QEVIRA call...
+        Voice call
       </p>
 
 
       <div class="call-actions">
 
         <button
-          id="acceptCallBtn"
-          type="button"
-          class="accept-call-btn"
-          aria-label="Accept call"
-        >
-          📞
-        </button>
-
-
-        <button
           id="declineCallBtn"
+          class="call-decline-btn"
           type="button"
-          class="decline-call-btn"
-          aria-label="Decline call"
         >
           ✕
+        </button>
+
+        <button
+          id="acceptCallBtn"
+          class="call-accept-btn"
+          type="button"
+        >
+          ✓
         </button>
 
       </div>
@@ -1186,59 +1589,51 @@
   </div>
 
 
-
-  <!-- =====================================================
+  <!-- ====================================================
        ACTIVE CALL
-       ===================================================== -->
+  ==================================================== -->
 
   <div
     id="activeCallOverlay"
-    class="call-overlay hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="activeCallName"
+    class="call-overlay active hidden"
   >
 
-    <div class="active-call-screen">
+    <video
+      id="remoteVideo"
+      class="remote-video"
+      autoplay
+      playsinline
+    ></video>
 
 
-      <!-- REMOTE VIDEO -->
-
-      <video
-        id="remoteVideo"
-        class="remote-video"
-        autoplay
-        playsinline
-      ></video>
-
-
-      <!-- LOCAL VIDEO -->
-
-      <video
-        id="localVideo"
-        class="local-video"
-        autoplay
-        muted
-        playsinline
-      ></video>
+    <video
+      id="localVideo"
+      class="local-video"
+      autoplay
+      muted
+      playsinline
+    ></video>
 
 
-      <!-- CALL INFORMATION -->
+    <div class="active-call-top">
 
-      <div class="active-call-info">
+      <div
+        id="activeCallAvatar"
+        class="call-avatar"
+      >
+        <img
+          id="activeCallAvatarImg"
+          src=""
+          alt=""
+        />
+      </div>
 
-        <div
-          id="activeCallAvatar"
-          class="call-avatar"
-        >
-          Q
-        </div>
 
+      <div>
 
         <h2 id="activeCallName">
-          Calling...
+          Call
         </h2>
-
 
         <p id="activeCallStatus">
           Connecting...
@@ -1246,145 +1641,389 @@
 
       </div>
 
-
-      <!-- CALL CONTROLS -->
-
-      <div class="active-call-controls">
-
-        <button
-          id="muteCallBtn"
-          type="button"
-          class="call-control-btn"
-          aria-label="Mute microphone"
-          title="Mute microphone"
-        >
-          🎙️
-        </button>
+    </div>
 
 
-        <button
-          id="cameraCallBtn"
-          type="button"
-          class="call-control-btn"
-          aria-label="Toggle camera"
-          title="Toggle camera"
-        >
-          📹
-        </button>
+    <div class="active-call-controls">
 
+      <button
+        id="muteCallBtn"
+        type="button"
+      >
+        🎙️
+      </button>
 
-        <button
-          id="endCallBtn"
-          type="button"
-          class="end-call-btn"
-          aria-label="End call"
-          title="End call"
-        >
-          ☎️
-        </button>
+      <button
+        id="cameraCallBtn"
+        type="button"
+      >
+        📷
+      </button>
 
-      </div>
+      <button
+        id="speakerCallBtn"
+        type="button"
+      >
+        🔊
+      </button>
+
+      <button
+        id="endCallBtn"
+        class="end-call"
+        type="button"
+      >
+        📞
+      </button>
 
     </div>
 
   </div>
 
 
-
-  <!-- =====================================================
-       NOTIFICATION PANEL
-       ===================================================== -->
+  <!-- ====================================================
+       LEADERBOARD MODAL
+  ==================================================== -->
 
   <div
-    id="notificationPanel"
+    id="leaderboardModal"
     class="modal hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="notificationTitle"
   >
 
-    <div class="notification-window">
+    <div class="panel-modal">
 
-      <div class="modal-header">
+      <header class="modal-header">
 
-        <h3 id="notificationTitle">
-          Notifications
-        </h3>
+        <div>
+
+          <h2>
+            🏆 QEVIRA Leaderboard
+          </h2>
+
+          <p>
+            Challenge yourself and climb the ranks.
+          </p>
+
+        </div>
 
         <button
-          id="closeNotificationBtn"
+          id="closeLeaderboardBtn"
+          class="close-btn"
           type="button"
-          class="icon-btn"
-          aria-label="Close notifications"
         >
           ✕
+        </button>
+
+      </header>
+
+
+      <div class="leaderboard-tabs">
+
+        <button
+          class="leaderboard-tab active"
+          data-board="global"
+          type="button"
+        >
+          Global
+        </button>
+
+        <button
+          class="leaderboard-tab"
+          data-board="weekly"
+          type="button"
+        >
+          Weekly
+        </button>
+
+        <button
+          class="leaderboard-tab"
+          data-board="quiz"
+          type="button"
+        >
+          Quiz
         </button>
 
       </div>
 
 
       <div
-        id="notificationList"
-        class="list"
-      ></div>
+        id="leaderboardList"
+        class="leaderboard-list"
+      >
+        <!-- Leaderboard loaded by app.js -->
+      </div>
 
     </div>
 
   </div>
 
 
+  <!-- ====================================================
+       CALL HISTORY MODAL
+  ==================================================== -->
 
-  <!-- =====================================================
-       SUPABASE
-       ===================================================== -->
+  <div
+    id="callHistoryModal"
+    class="modal hidden"
+  >
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
+    <div class="panel-modal">
+
+      <header class="modal-header">
+
+        <div>
+
+          <h2>
+            📞 Call History
+          </h2>
+
+          <p>
+            Your recent calls
+          </p>
+
+        </div>
+
+        <button
+          id="closeCallHistoryBtn"
+          class="close-btn"
+          type="button"
+        >
+          ✕
+        </button>
+
+      </header>
 
 
-  <!-- =====================================================
-       QEVIRA APPLICATION
-       ===================================================== -->
+      <div
+        id="callHistoryList"
+        class="call-history-list"
+      >
+        <!-- History loaded by app.js -->
+      </div>
 
-  <script
-    src="./app.js"
-  ></script>
+    </div>
+
+  </div>
 
 
-  <!-- =====================================================
-       SERVICE WORKER
-       ===================================================== -->
+  <!-- ====================================================
+       REWARDS MODAL
+  ==================================================== -->
 
-  <script>
+  <div
+    id="rewardsModal"
+    class="modal hidden"
+  >
 
-    if ("serviceWorker" in navigator) {
+    <div class="panel-modal">
 
-      window.addEventListener("load", () => {
+      <header class="modal-header">
 
-        navigator.serviceWorker
-          .register("./sw.js")
-          .then(() => {
+        <div>
 
-            console.log(
-              "QEVIRA Service Worker registered"
-            );
+          <h2>
+            🎁 Rewards
+          </h2>
 
-          })
-          .catch((error) => {
+          <p>
+            Use your QEVIRA coins.
+          </p>
 
-            console.warn(
-              "QEVIRA Service Worker registration failed:",
-              error
-            );
+        </div>
 
-          });
+        <button
+          id="closeRewardsBtn"
+          class="close-btn"
+          type="button"
+        >
+          ✕
+        </button>
 
-      });
+      </header>
 
-    }
 
-  </script>
+      <div
+        id="rewardsList"
+        class="rewards-list"
+      >
+        <!-- Rewards loaded by app.js -->
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ====================================================
+       HIDDEN FILE INPUTS
+  ==================================================== -->
+
+  <input
+    id="chatFileInput"
+    type="file"
+    class="hidden"
+    accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip"
+  />
+
+
+  <input
+    id="statusPhotoInput"
+    type="file"
+    class="hidden"
+    accept="image/*"
+  />
+
+
+  <input
+    id="statusVideoInput"
+    type="file"
+    class="hidden"
+    accept="video/*"
+  />
+
+
+  <!-- ====================================================
+       BOTTOM NAVIGATION
+  ==================================================== -->
+
+  <nav class="bottom-nav">
+
+    <button
+      id="chatsNavBtn"
+      class="nav-btn active"
+      type="button"
+      data-page="chatsPage"
+    >
+
+      <span>💬</span>
+      <small>Chats</small>
+
+    </button>
+
+
+    <button
+      id="statusNavBtn"
+      class="nav-btn"
+      type="button"
+      data-page="statusPage"
+    >
+
+      <span>⭕</span>
+      <small>Status</small>
+
+    </button>
+
+
+    <button
+      id="contactsNavBtn"
+      class="nav-btn"
+      type="button"
+      data-page="contactsPage"
+    >
+
+      <span>👥</span>
+      <small>Contacts</small>
+
+    </button>
+
+
+    <button
+      id="dailyNavBtn"
+      class="nav-btn"
+      type="button"
+      data-page="dailyPage"
+    >
+
+      <span>📰</span>
+      <small>Daily</small>
+
+    </button>
+
+
+    <button
+      id="quizNavBtn"
+      class="nav-btn"
+      type="button"
+      data-page="quizPage"
+    >
+
+      <span>🧠</span>
+      <small>Quiz</small>
+
+    </button>
+
+
+    <button
+      id="profileNavBtn"
+      class="nav-btn"
+      type="button"
+      data-page="profilePage"
+    >
+
+      <span>👤</span>
+      <small>Profile</small>
+
+    </button>
+
+  </nav>
+
+</main>
+
+
+<!-- ======================================================
+     SUPABASE + QEVIRA APP
+====================================================== -->
+
+<script src="./app.js"></script>
+
+
+<script>
+  /*
+    QEVIRA boot loader.
+
+    app.js contains the real application logic.
+    This only makes sure the loading screen does not
+    remain forever if a JavaScript error occurs.
+  */
+
+  window.addEventListener("load", () => {
+
+    setTimeout(() => {
+
+      const loading =
+        document.getElementById("loadingScreen");
+
+      if (loading) {
+        loading.classList.add("hidden");
+      }
+
+    }, 700);
+
+  });
+</script>
+
+
+<!-- ======================================================
+     SERVICE WORKER
+====================================================== -->
+
+<script>
+  if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+      navigator.serviceWorker
+        .register("./sw.js")
+        .catch((error) => {
+          console.warn(
+            "QEVIRA Service Worker:",
+            error
+          );
+        });
+
+    });
+
+  }
+</script>
 
 </body>
-  </html>
+      </html>
