@@ -1,25 +1,35 @@
-name: Setup QEVIRA Icons Automatically
+
+name: Fix QEVIRA Folder Structure
 on:
-  workflow_dispatch: # Allows you to run this with one click
+  workflow_dispatch: # Allows you to run this manually with one click
 
 jobs:
-  build:
+  move-files:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create Folders and Fetch Correct Icons
+      - name: Create Icons Folder and Relocate Images
         run: |
+          # 1. Create the correct icons folder path if missing
           mkdir -p icons
-          curl -L -o icons/icon-192.png "https://githubusercontent.com" || echo "Creating blank fallback"
-          curl -L -o icons/icon-512.png "https://githubusercontent.com" || echo "Creating blank fallback"
+          
+          # 2. Safely move the icons from workflows out to the clean directory
+          if [ -f .github/workflows/icon-192.png ]; then
+            mv .github/workflows/icon-192.png icons/icon-192.png
+          fi
+          if [ -f .github/workflows/icon-512.png ]; then
+            mv .github/workflows/icon-512.png icons/icon-512.png
+          fi
+          
+          # 3. Clean up the folder tracker file
           touch icons/.gitkeep
 
-      - name: Commit and Push Changes
+      - name: Commit and Push Changes Directly
         run: |
-          git config --global user.name "Zarif Bot"
-          git config --global user.email "zarif@qevira.local"
-          git add icons/
-          git commit -m "Automated setup of clean icon directories" || exit 0
+          git config --global user.name "Zarif Structural Bot"
+          git config --global user.email "zarif@qevira.dev"
+          git add icons/ .github/workflows/
+          git commit -m "Automated folder repair: Icons moved to /icons/" || exit 0
           git push
