@@ -1,0 +1,15 @@
+{
+  "name": "qevira",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QEVIRA Android packaging project",
+  "scripts": {
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/cli": "latest"
+  }
+}
