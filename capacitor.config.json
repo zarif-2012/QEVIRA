@@ -1,0 +1,8 @@
+{
+  "appId": "com.qevira.app",
+  "appName": "QEVIRA",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
